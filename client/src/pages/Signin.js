@@ -11,9 +11,7 @@ export default function Signin() {
     const [error, setError] = useState(null);
     const [textFieldColor, setTextFieldColor] = useState('');
 
-    const navigate = useNavigate();
-
-    
+    const navigate = useNavigate(); 
 
     useEffect(() => {
         fetch("/api/checkLoggedInStatus")
@@ -48,7 +46,7 @@ export default function Signin() {
             <Form method="post" onSubmit={(e) => handleSubmit(e, navigate, setError, setTextFieldColor)}>
                 <div className="mb-4">
                 <Form.Label >Email address</Form.Label>
-                <Form.Control type="text" placeholder="Enter your email address" name="email"/>
+                <Form.Control style={{borderColor: textFieldColor}} type="text" placeholder="Enter your email address" name="email"/>
                 </div>
                 <div className="mb-4">
                 <Form.Label className="d-flex justify-content-between">Password <Link to="">Forgot password?</Link></Form.Label>
@@ -98,11 +96,16 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         {
             navigate('/dashboard/finance');
         }
+
+        if(data.status === 'invalidCredentials')
+        {
+            setError('Login failed, please check your credentials.')
+            setTextFieldColor('red');
+            navigate('/pages/signin');
+        }
     })
     .catch((error) => {
-        setError('Login failed, please check your credentials.')
-        setTextFieldColor('red');
-        navigate('/pages/signin');
+        console.log("Error while authenticating client: ", error);
     });
 }
 
