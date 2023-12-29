@@ -8,6 +8,7 @@ const sequelize = new Sequelize('multitenantDB','root','root',{
 const user = sequelize.define('user', {
     userId: {
         type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true
     },
     name: DataTypes.STRING,
