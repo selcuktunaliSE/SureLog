@@ -14,31 +14,67 @@ export default function Signin() {
     const navigate = useNavigate(); 
 
     useEffect(() => {
-        fetch("/api/checkLoggedInStatus")
+        fetch("http://127.0.0.1:9000/api/checkLoggedInStatus", {
+            method: "get",
+            headers: {
+                withCredentials: true,
+            }
+        })
             .then((response) => response.json())
             .then((data) => {
+                console.log(data.isLoggedIn);
                 if(data.status === "success" && data.isLoggedIn)
                 {
                     setIsLoggedIn(true);
+                }
+                else
+                {
+                    setIsLoggedIn(false);
                 }
                 console.log(data.status);
             })
             .catch((error) =>
             {
                 console.error("Error checking logged in status: ", error);
+                setIsLoggedIn(true);
             });
         }, []);
 
+    const handleSwitchAccount = () => {
+        // Implement your switch account logic here
+        navigate("/"); // Redirect to the homepage or another login page
+        };
+    
+    const handleSignOut = () => {
+    // Implement your sign out logic here
+    navigate("/"); // Redirect to the homepage or another page
+    };
+
     if(isLoggedIn)
     {
-        // TODO Implement already logged in page here
+        return (
+            <div className="page-sign">
+              <Card className="card-sign">
+                <Card.Header>
+                  <Link to="/" className="header-logo mb-4">SureLog</Link>
+                  <Card.Title>Already Logged In</Card.Title>
+                  <Card.Text>You are already logged in.</Card.Text>
+                </Card.Header>
+                <Card.Body>
+                  <p>Do you want to switch to another account or sign out?</p>
+                  <Button variant="primary" onClick={handleSwitchAccount}>Switch Account</Button>
+                  <Button variant="secondary" onClick={handleSignOut}>Sign Out</Button>
+                </Card.Body>
+              </Card>
+            </div>
+          );
     }
 
     return (
         <div className="page-sign">
         <Card className="card-sign">
             <Card.Header>
-            <Link to="/" className="header-logo mb-4">dashbyte</Link>
+            <Link to="/" className="header-logo mb-4">SureLog</Link>
             <Card.Title>Sign In</Card.Title>
             <Card.Text>Welcome back! Please signin to continue.</Card.Text>
             </Card.Header>
