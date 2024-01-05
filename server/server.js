@@ -66,7 +66,9 @@ app.use(express.static(path.join(__dirname, '../clientbuild')));
 
 app.use(cors({
     origin: "http://localhost:3000",
-    credentials: true
+    credentials: true,
+    allowedHeaders: "X-PINGOTHER, Content-Type",   
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 })); // Enable CORS
 app.use(bodyParser.json());
 app.use(session(sessionOptions));
@@ -78,7 +80,7 @@ const revokedTokens = new Set();
 // Handle login form submission
 app.post('/api/authenticate-client', async (req, res) => {
 
-    console.log(req.session);
+    console.log("Authentication request received...");
 
     if(req.session.loggedUser)
     {
@@ -100,26 +102,67 @@ app.post('/api/authenticate-client', async (req, res) => {
                 tenantId : userModel.tenantId
             }
             await req.session.save();
-            console.log(req.session);   
-            res.status(200).json(req.session);
+            console.log(req.session); 
+            res.json({
+                "userId": req.session.loggedUser.userId,
+                "status" : "success"
+            })
+            .send();
             
         } else {
             console.log("Login failed due to invalid credentials.");
-            res.json({ status: 'invalidCredentials', message: 'Invalid credentials!' });
+            res.json({ 
+                status: "invalidCredentials",
+                message: 'Login failed due to invalid credentials.'})
+                .send();
         }
     } catch (error) {
         console.error("Error logging in: ", error);
-        res.status(500).json({ status: 'error', message: 'Error logging in' });
+        res.json({ status: 500, message: 'Error logging in' }.send());
     }
 });
 
-app.get('/api/checkLoggedInStatus', async(req, res)=> {
-    if(! req.session) return false; 
+app.post('/api/checkLoggedInStatus', async(req, res)=> {
+    console.log("client request cookies: ", req.cookies);
     console.log(req.sessionID);
     console.log(req.session);
     res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});
 }); 
 
+app.post('/api/registerUser', async (req,res) => {
+    const {email, password, firstName, middleName, lastName} = req.body;
+    try{
+        const userModel = await user.findOne({where: {email}});
+        if(! userModel){
+            const newUser = await user.create({
+                email,
+                password, 
+                firstName,
+                middleName,
+                lastName
+            });
+
+            res.json({
+                status: "success",
+                message: "User registered successfully",
+                userId: newUser.userId,
+            }).send();
+        }
+        else{
+            res.json({
+                status: "userExists",
+                message: "User already exists"
+            }).send();
+        }
+    }
+    catch(error)
+    {
+        console.error("Error checking user existence in database upon registration: ", error);
+        res.json({status: 500, message: "Registration Error"}).send();
+    }
+
+    
+})
 
 
 db.sequelize.sync().then((req) => {

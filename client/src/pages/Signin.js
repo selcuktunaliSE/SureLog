@@ -1,9 +1,8 @@
 import React from "react";
 import {useEffect, useState} from "react";
-import { useNavigate } from "react-router-dom";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 
 
 export default function Signin() {
@@ -17,9 +16,17 @@ export default function Signin() {
     useEffect(() => {
         if(!shouldFetchData) return;
 
-        fetch("http://127.0.0.1:9000/api/checkLoggedInStatus", {
-            method: "get",
+        // TODO Re-connect this to the server API once the CORS problems are solved
+        /* fetch("http://127.0.0.1:9000/api/checkLoggedInStatus", {
+            method: "post",
             credentials: "include",
+            mode: "cors",
+            headers: {
+                "Content-Type": "text-xml",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "X-PINGOTHER, Content-Type",
+
+            }
         })
             .then((response) => response.json())
             .then((data) => {
@@ -40,17 +47,31 @@ export default function Signin() {
                 setIsLoggedIn(false);
                 setError("authentication-error");
             });
-            setShouldFetchData(false);
+            setShouldFetchData(false); */
+
+            if(localStorage.getItem("userId")){   
+                setIsLoggedIn(true);
+            }
+            else{
+                setIsLoggedIn(false);
+            }
         }, [shouldFetchData]);
 
+        
+        
+
     const handleSwitchAccount = () => {
-        // Implement your switch account logic here
-        navigate("/"); // Redirect to the homepage or another login page
+        if(! localStorage.getItem("userId")) return;
+        localStorage.removeItem("userId");
+        setIsLoggedIn(false);
+        navigate("/pages/signin"); 
         };
     
     const handleSignOut = () => {
-    // Implement your sign out logic here
-    navigate("/"); // Redirect to the homepage or another page
+        if(! localStorage.getItem("userId")) return;
+        localStorage.removeItem("userId");
+        setIsLoggedIn(false);
+        navigate("/");
     };
 
     if(error === "authentication-error")
@@ -154,12 +175,14 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
     })
     .then((response) => response.json())
     .then((data) => {
-        if(data.status === 'success')
+        console.log("authentication response data: ", data);    
+        if(data.status === "success")
         {
+            localStorage.setItem("userId", data.userId);
             navigate('/dashboard/finance');
         }
 
-        if(data.status === 'invalidCredentials')
+        if(data.status === "invalidCredentials")
         {
             setError('Login failed, please check your credentials.')
             setTextFieldColor('red');

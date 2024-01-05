@@ -29,6 +29,8 @@ import Activity from "../pages/Activity";
 import Events from "../pages/Events";
 import Settings from "../pages/Settings";
 
+import Users from "../pages/Users";
+
 // UI Elements
 import LayoutColumns from "../docs/LayoutColumns";
 import LayoutGrid from "../docs/LayoutGrid";
@@ -154,7 +156,9 @@ const protectedRoutes = [
   { path: "docs/util/position", element: <UtilPosition /> },
   { path: "docs/util/typography", element: <UtilTypography /> },
   { path: "docs/util/shadows", element: <UtilShadows /> },
-  { path: "docs/util/extras", element: <UtilExtras /> }
+  { path: "docs/util/extras", element: <UtilExtras /> },
+  // paths below are not part of the template:
+  { path: "dashboard/users", element: <Users />},
 ]
 
 export default protectedRoutes;
