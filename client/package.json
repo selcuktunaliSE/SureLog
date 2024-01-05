@@ -1,5 +1,6 @@
 {
   "name": "dashbyte-react",
+  "proxy": "http://127.0.0.1:9000",   
   "homepage": "http://dashbyte-react.themepixels.me",
   "version": "1.0.2",
   "private": true,

@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const crypto = require('crypto');
 const MySQLStore = require('express-mysql-session')(session);
+const path = require('path');
 
 const sessionConfig = require('./config/sessionConfig.json');
 const envConfig = require('./config/envConfig.json');
@@ -30,12 +31,16 @@ console.log("ENV: ", process.env.NODE_ENV);
 
 const sessionCookie = process.env.NODE_ENV == "development" ? {
     secure: false,
+    httpOnly: false,
     sameSite: "lax",
-    maxAge: 10368000000 // 2 days in milliseconds
+    maxAge: 10368000000, // 2 days in milliseconds
+    path : "/"
 } : {
     secure: true,
+    httpOnly: true,
     sameSite: "none",
-    maxAge: 10368000000 // 2 days in milliseconds
+    maxAge: 10368000000, // 2 days in milliseconds
+    path : "/"
 }
 
 const sessionStore = new MySQLStore(sessionStoreMySQLOptions);
@@ -43,6 +48,7 @@ const sessionStore = new MySQLStore(sessionStoreMySQLOptions);
 const sessionOptions = {
     name: "user-session",
     secret : sessionConfig.secret,
+    proxy: false,
     resave: false,
     saveUninitialized: true,
     store: sessionStore,
@@ -54,9 +60,17 @@ const {user} = require('./models');
 const { Server } = require('http');
 const app = express();
 
-app.use(cors()); // Enable CORS
+
+app.use(express.static(path.join(__dirname, '../clientbuild')));
+
+
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true
+})); // Enable CORS
 app.use(bodyParser.json());
 app.use(session(sessionOptions));
+
 
 // Maintain a list of revoked tokens
 const revokedTokens = new Set(); 
@@ -85,7 +99,7 @@ app.post('/api/authenticate-client', async (req, res) => {
                 role : userModel.role,
                 tenantId : userModel.tenantId
             }
-            req.session.save();
+            await req.session.save();
             console.log(req.session);   
             res.status(200).json(req.session);
             
@@ -100,6 +114,7 @@ app.post('/api/authenticate-client', async (req, res) => {
 });
 
 app.get('/api/checkLoggedInStatus', async(req, res)=> {
+    if(! req.session) return false; 
     console.log(req.sessionID);
     console.log(req.session);
     res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});

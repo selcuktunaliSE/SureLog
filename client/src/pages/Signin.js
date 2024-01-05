@@ -10,15 +10,16 @@ export default function Signin() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [error, setError] = useState(null);
     const [textFieldColor, setTextFieldColor] = useState('');
+    const [shouldFetchData, setShouldFetchData] = useState(true);
 
     const navigate = useNavigate(); 
 
     useEffect(() => {
+        if(!shouldFetchData) return;
+
         fetch("http://127.0.0.1:9000/api/checkLoggedInStatus", {
             method: "get",
-            headers: {
-                withCredentials: true,
-            }
+            credentials: "include",
         })
             .then((response) => response.json())
             .then((data) => {
@@ -36,9 +37,11 @@ export default function Signin() {
             .catch((error) =>
             {
                 console.error("Error checking logged in status: ", error);
-                setIsLoggedIn(true);
+                setIsLoggedIn(false);
+                setError("authentication-error");
             });
-        }, []);
+            setShouldFetchData(false);
+        }, [shouldFetchData]);
 
     const handleSwitchAccount = () => {
         // Implement your switch account logic here
@@ -49,6 +52,25 @@ export default function Signin() {
     // Implement your sign out logic here
     navigate("/"); // Redirect to the homepage or another page
     };
+
+    if(error === "authentication-error")
+    {
+        return (
+            <div className="page-sign">
+            <Card className="card-sign">
+                <Card.Header>
+                <Link to="/" className="header-logo mb-4">SureLog</Link>
+                <Card.Title>Authentication Error</Card.Title>
+                <Card.Text>Something went wrong with authentication. Please try again.</Card.Text>
+                </Card.Header>
+                <Card.Body>
+                <p>Please click the button below to return to the login page:</p>
+                <Button variant="primary" onClick={handleReturnToLogin(navigate, setError, setIsLoggedIn)}>Return to Login</Button>
+                </Card.Body>
+            </Card>
+            </div>
+        );
+    }
 
     if(isLoggedIn)
     {
@@ -106,8 +128,12 @@ export default function Signin() {
         </Card>
         </div>
     )
+}
 
-    
+const handleReturnToLogin = (navigate, setError, setIsLoggedIn) => {
+    setError(null);
+    setIsLoggedIn(false);
+    navigate("/pages/signin");
 }
 
 const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
