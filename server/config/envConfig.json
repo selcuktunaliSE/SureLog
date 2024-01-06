@@ -2,12 +2,12 @@
     "environments": {
         "development" : {
             "host" : "127.0.0.1",
-            "httpPort" : 3000,
+            "httpPort" : 9000,
             "envName" : "development"
         },
         "production" : {
             "host" : "127.0.0.1",
-            "httpPort": 3000,
+            "httpPort": 9000,
             "envName" : "production"
         }   
     }

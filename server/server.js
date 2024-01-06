@@ -56,7 +56,6 @@ const sessionOptions = {
 }
 
 const db = require("./models");
-const {user} = require('./models');
 const { Server } = require('http');
 const app = express();
 const api = require('./api/api');

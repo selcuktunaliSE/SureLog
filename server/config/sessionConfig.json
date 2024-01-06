@@ -3,9 +3,9 @@
     "sessionStore": {
         "database": "multitenantdb",
         "user": "root",
-        "password": "root",
+        "password": "#B!je?651*rK",
         "host": "localhost",
-        "port": 8889,
+        "port": 3306,
         "clearExpired": true, 
         "checkExpirationInterval": 900000, 
         "expiration": 86400000
