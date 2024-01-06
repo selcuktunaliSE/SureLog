@@ -30,6 +30,7 @@ import Events from "../pages/Events";
 import Settings from "../pages/Settings";
 
 import Users from "../pages/Users";
+import Tenants from "../pages/Tenants";
 
 // UI Elements
 import LayoutColumns from "../docs/LayoutColumns";
@@ -159,6 +160,7 @@ const protectedRoutes = [
   { path: "docs/util/extras", element: <UtilExtras /> },
   // paths below are not part of the template:
   { path: "dashboard/users", element: <Users />},
+  { path: "dashboard/tenants", element: <Tenants />},
 ]
 
 export default protectedRoutes;

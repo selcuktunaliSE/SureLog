@@ -1,8 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown } from "react-bootstrap";
+import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl } from "react-bootstrap";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import moment from "moment"; // for date formatting
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Avatar from "../components/Avatar";
@@ -20,6 +21,11 @@ export default function Users() {
   const [userDict, setUserDict] = useState({});
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc"); // Initial sort order
+  const [sortBy, setSortBy] = useState("createdAt"); 
+  const [filteredUsers, setFilteredUsers] = useState({}); 
+
 
   const navigate = useNavigate();
 
@@ -55,17 +61,21 @@ export default function Users() {
             };
           });
           setUserDict(users);
+          setFilteredUsers(users);
+          setIsError(false);
+          setErrorMessage("");
 
           console.log("fetched users: ", userDict);
-        } else if(data.status === "roleNotFound") {
+        } else if(data.status === "roleNotFound" || data.status === 505) {
           setIsError(true);
-          setErrorMessage("role-not-found");
+          setErrorMessage("You do not have a role defined for this tenant. Please contact your administrator.");
+        }else if(data.status === "accessDenied"){
+          setIsError(true);
+          setErrorMessage("You do not have the necessary access permissions for this request in this tenant. Please contact your administrator.");
         }
         else if(data.status === 503){
-          navigate("/pages/error-503");
-        }
-        else if(data.status === 505){
-          navigate("/pages/error-505");
+          setIsError(true);
+          setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
         }
 
       })
@@ -109,13 +119,13 @@ export default function Users() {
             }
             if(data.status === 404){
               setIsError(true);
-              setErrorMessage("No role was found for your User ID. Please contact your administrator.");
-            }
+              setErrorMessage("You are not registered to any tenants. Please contact your administrator.");
+          }
             if(data.status === 500){
               navigate("/pages/error-500");
             }
         })
-        .catch(error => {
+        .catch(error => { 
           console.error("Error fetching Tenant Roles from the server: ", error);
           navigate("/pages/error-503");
         });
@@ -124,6 +134,18 @@ export default function Users() {
   const handleTenantSelect = (tenantId) => {
     setSelectedTenantId(tenantId);
     fetchUsersFromTenant(tenantId);
+  };
+
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+  };
+  
+  const handleSortOrderChange = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+  
+  const handleSearch = (event) => {
+    setSearchQuery(event.target.value);
   };
 
   const goToUserProfile = async (targetUserId) => {
@@ -173,7 +195,13 @@ export default function Users() {
         <Row className="g-5">
           <Col>
             <h2 className="main-title">User List</h2>
-            <DropdownButton id="dropdown-basic-button" title="Select Tenant">
+            {isError && <Alert variant="danger">{errorMessage}</Alert>}
+  
+            {/* Tenant Selector Dropdown */}
+            <DropdownButton
+              id="tenant-dropdown"
+              title={`Select Tenant`}
+            >
               {Object.entries(tenantRoles).map(([tenantId, role]) => (
                 <Dropdown.Item key={tenantId} onClick={() => handleTenantSelect(tenantId)}>
                   {tenantNames[tenantId]}
@@ -181,18 +209,48 @@ export default function Users() {
               ))}
             </DropdownButton>
   
+            {/* Search Input */}
+            <FormControl
+              type="text"
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={handleSearch}
+            />
+  
+            {/* Sort Dropdown */}
+            <DropdownButton
+              id="sort-dropdown"
+              title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
+            >
+              <Dropdown.Item onClick={handleSortOrderChange}>
+                Toggle Sort Order
+              </Dropdown.Item>
+              <Dropdown.Divider />
+              <Dropdown.Item value="createdAt" onClick={handleSortChange}>
+                Created At
+              </Dropdown.Item>
+              <Dropdown.Item value="updatedAt" onClick={handleSortChange}>
+                Updated At
+              </Dropdown.Item>
+            </DropdownButton>
+  
             <Row className="g-2 g-xxl-3 mb-5">
-              {Object.values(userDict).map((user, index) => (
-                <Col sm="6" md="4" key={index} onClick={() => goToUserProfile(user.userId)}>
-                  <Card className="card-people">
-                    <Card.Body>
-                      <Avatar img={user.img} size="xl" />
-                      <h6 className="mt-3">{user.firstName} {user.middleName} {user.lastName}</h6>
-                      <p>{user.email}</p>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+              {Object.keys(filteredUsers).map((userId) => {
+                const user = filteredUsers[userId];
+                return (
+                  <Col sm="6" md="4" key={userId} onClick={() => goToUserProfile(userId)}>
+                    <Card className="card-people">
+                      <Card.Body>
+                        <Avatar img={user.img} size="xl" />
+                        <h6 className="mt-3">
+                          {user.firstName} {user.middleName} {user.lastName}
+                        </h6>
+                        <p>{user.email}</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
           </Col>
         </Row>
@@ -200,5 +258,7 @@ export default function Users() {
       </div>
     </React.Fragment>
   );
+  
+  
   
 }

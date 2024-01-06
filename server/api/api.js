@@ -12,7 +12,7 @@ if (databaseConfig.use_env_variable) {
 }
 
 const models = require('../models/models')(sequelize, DataTypes);
-const { UserModel, TenantModel, TenantUserModel, TenantRolePermissionModel, associate} = models;
+const { UserModel, TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterRolePermissionModel, associate} = models;
 
 associate();
 
@@ -197,6 +197,105 @@ module.exports = {
                 }).send();
             }
 
+        },
+
+        "/api/check-master-user": async(req, res) => {
+            console.log("Checking master user...");
+            const {userId} = req.body;
+            if(! userId) {
+                res.json({
+                    status: "userIdNotFound"
+                }).send();
+                return;
+            }
+            try{
+                const master = await MasterModel.findOne({where: { userId: userId}});
+                if(! master){
+                    console.log(`Master user for User ID:${userId} was not found.`);
+                    res.json({
+                        status: "masterNotFound"
+                    }).send();
+                    return;
+                }
+                res.json({
+                    status: "success"
+                }).send();
+
+            }catch(error){
+                console.log("Error checking master user status: ", error);
+                res.json({
+                    status: 500
+                }).send();
+            }
+
+        },
+
+        "/api/fetch-tenants": async(req, res) => {
+            console.log("Fetching tenants...");
+            const {userId} = req.body;
+            if(! userId) {
+                res.json({
+                    status: "userIdNotFound"
+                }).send();
+                return;
+            }
+
+            try {
+                // Find the master by userId
+                const master = await MasterModel.findOne({
+                  where: { userId },
+                  include: [
+                    {
+                      model: MasterRolePermissionModel,
+                      attributes: ['masterId'],
+                      include: [
+                        {
+                          model: TenantModel,
+                          attributes: ['tenantId', 'name'], // You can specify the attributes you need from TenantModel
+                        },
+                      ],
+                    },
+                  ],
+                });
+              
+                if (!master) {
+                  console.log(`Master user with User ID:${userId} was not found.`);
+                  res.json({
+                    status: "masterNotFound"
+                  }).send();
+                  return;
+                }
+
+                console.log("Master: ", master);
+
+                if(! master.MasterRolePermissionModels){
+                    console.log("Master does not have any permission models");
+                    res.json({
+                        status: "roleNotFound"
+                    }).send();
+                    return;
+                }
+              
+                // Extract tenant data from the master's role permissions
+                const tenants = master.MasterRolePermissionModels.map((rolePermission) => {
+                  return {
+                    tenantId: rolePermission.TenantModel.tenantId,
+                    name: rolePermission.TenantModel.name,
+                  };
+                });
+              
+                console.log("Sending tenants:", tenants);
+              
+                res.json({
+                  status: "success",
+                  tenants: JSON.stringify(tenants)
+                }).send();
+              } catch (error) {
+                console.log("Error:", error);
+                res.status(500).json({
+                  status: "error"
+                }).send();
+              }
         }
 
 

@@ -57,8 +57,6 @@ export default function Signin() {
             }
         }, [shouldFetchData]);
 
-        
-        
 
     const handleSwitchAccount = () => {
         if(! localStorage.getItem("userId")) return;
@@ -74,8 +72,7 @@ export default function Signin() {
         navigate("/pages/signin");
     };
 
-    if(error === "authentication-error")
-    {
+    if(error === "authentication-error") {
         return (
             <div className="page-sign">
             <Card className="card-sign">
@@ -93,8 +90,7 @@ export default function Signin() {
         );
     }
 
-    if(isLoggedIn)
-    {
+    if(isLoggedIn) {
         return (
             <div className="page-sign">
               <Card className="card-sign">
@@ -106,7 +102,7 @@ export default function Signin() {
                 <Card.Body>
                   <p>Do you want to switch to another account or sign out?</p>
                   <Button variant="primary" onClick={handleSwitchAccount}>Switch Account</Button>
-                  <Button variant="secondary" onClick={handleSignOut}>Sign Out</Button>
+                  <Button variant="secondary" onClick={handleSignOut} className="button mt-3">Sign Out</Button>
                 </Card.Body>
               </Card>
             </div>
