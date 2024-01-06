@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl } from "react-bootstrap";
+import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button } from "react-bootstrap";
+import {Search} from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
@@ -16,10 +17,18 @@ export default function Tenants() {
   
   const [isMaster, setIsMaster] = useState(false);
   const [tenants, setTenants] = useState([]); 
+  const [filteredTenants, setFilteredTenants] = useState({});
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSearchKey, setSelectedSearchKey] = useState("");
+  const [searchKeyList, setSearchKeyList] = useState([]);
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [skinMode, setSkinMode] = useState(""); // Define the state for skin mode
+
+  const searchKeys = ["K1, K2"];
 
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
@@ -97,9 +106,22 @@ export default function Tenants() {
       });
   };
 
+  const handleSkinModeChange = (skin) => {
+    setSkinMode(skin);
+    // You can add any other logic you need here for handling skin mode changes
+  };
+
   const handleTenantSelect = (tenantId) => {
     setSelectedTenant(tenantId);
     // You can navigate or perform actions when a tenant is selected
+  };
+
+  const handleSortChange = (event) => {
+    setSortBy(event.target.value);
+  };
+  
+  const handleSortOrderChange = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
 
   const handleSearch = (event) => {
@@ -107,26 +129,83 @@ export default function Tenants() {
     // You can filter tenants based on searchQuery
   };
 
+  const handleSearchKeySelect = (key) => {
+    setSelectedSearchKey(key);
+  };
+
+  const handleProcessSearchQuery = () => {
+    // Process the search query using selectedSearchKey and searchQuery
+    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey);
+    // Add your search logic here
+  };
+
   return (
     <React.Fragment>
       <HeaderMobile />
-      <Header />
-      <div className="main p-4 p-lg-5">
+      <Header onSkin={handleSkinModeChange} />
+      <div className="main p-4 p-lg-5 mt-5">
         <Row className="g-5">
           <Col>
             <h2 className="main-title">Tenants List</h2>
-            {isError && <Alert variant="danger">{errorMessage}</Alert>}
+            {isError && <Alert variant="danger" className="mb-3">{errorMessage}</Alert>}
 
-            {/* Search Input */}
-            <FormControl className="mb-3"
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={handleSearch}
-            />
+            <Col md={6}>
+              <DropdownButton
+                id="sort-dropdown"
+                title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
+              >
+                <Dropdown.Item onClick={handleSortOrderChange}>
+                  Toggle Sort Order
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item value="createdAt" onClick={handleSortChange}>
+                  Created At
+                </Dropdown.Item>
+                <Dropdown.Item value="updatedAt" onClick={handleSortChange}>
+                  Updated At
+                </Dropdown.Item>
+              </DropdownButton>
+            </Col>
+
+            <Row className="mt-3">
+              <Col>
+                <InputGroup
+                >
+                  {/* Search Input */}
+                  <FormControl
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                  />
+
+                  {/* Search Button */}
+                  <Button 
+                    variant="outline-secondary"
+                    onClick={handleProcessSearchQuery}
+                    style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
+                    <Search /> {/* Search icon */}
+                  </Button>
+
+                  {/* Dropdown for selecting search key */}
+                  <DropdownButton
+                    as={InputGroup}
+                    title={selectedSearchKey || "Select Key"} // Show selected key or "Select Key"
+                    id="input-group-dropdown"
+                  >
+                    {searchKeys.map((key) => (
+                      <Dropdown.Item key={key} onClick={() => handleSearchKeySelect(key)}>
+                        {key}
+                      </Dropdown.Item>
+                    ))}
+                  </DropdownButton>
+                  
+                </InputGroup>  
+              </Col>
+            </Row>
 
             {/* Display Tenants */}
-            <Row className="g-2 g-xxl-3 mb-5">
+            <Row className="g-2 g-xxl-3 mb-5 mt-3">
               {
               tenants.map((tenant) => ( 
                 <Col sm="6" md="4" key={tenant.tenantId}>

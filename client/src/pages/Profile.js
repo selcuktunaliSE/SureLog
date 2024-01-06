@@ -3,6 +3,7 @@ import { Card, Col, Row, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
+import Header from "../layouts/Header";
 import img1 from "../assets/img/img1.jpg"; // Placeholder image for user profile
 
 const fetchConfig = require("../config/fetchConfig.json");
@@ -12,6 +13,7 @@ const fetchAddress = `http://${host}:${port}`;
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
+  const [skinMode, setSkinMode] = useState("");
   
   const navigate = useNavigate();
 
@@ -39,6 +41,10 @@ export default function Profile() {
     }
   };
 
+  const handleSkinModeChange = (skin) => {
+    setSkinMode(skin)
+  }
+
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -50,7 +56,8 @@ export default function Profile() {
   return (
     <React.Fragment>
       <HeaderMobile />
-      <div className="main p-4 p-lg-5">
+      <Header onSkin={handleSkinModeChange}/>
+      <div className="main p-4 p-lg-5 mt-5">
         <Row className="justify-content-center">
           <Col md={6} lg={5}>
             <Card className="mb-5 text-center">
