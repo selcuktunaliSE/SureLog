@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, Col, Nav, Row } from "react-bootstrap";
 import Footer from "../layouts/Footer";
@@ -16,6 +16,36 @@ import img11 from "../assets/img/img11.jpg";
 import img12 from "../assets/img/img12.jpg";
 
 export default function Profile() {
+  const [userData, setUserData] = useState(null);
+  const fetchUserData = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      console.error("No userId found in local storage");
+      return { status: "error", message: "No userId found" };
+    }
+    try {
+      const response = await fetch(`http://localhost:3000/api/getUserDetails?userId=${userId}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching user data: ", error);
+      return { status: "error", message: "Failed to fetch user data" };
+    }
+  };
+  
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId"); // Retrieve userId from local storage
+    if (userId) {
+      fetchUserData(userId).then(data => {
+        if (data.status === "success") {
+          setUserData(data.user);
+        } else {
+          console.error(data.message);
+        }
+      });
+    }
+  }, []);
   return (
     <React.Fragment>
       <HeaderMobile />
@@ -27,7 +57,7 @@ export default function Profile() {
                 <img src={img1} className="img-fluid" alt="..." />
               </div>
               <div className="media-body">
-                <h5 className="media-name">Shaira Diaz</h5>
+                <h5 className="media-name">{userData.firstName} {userData.lastName}</h5>
                 <p className="d-flex gap-2 mb-4"><i className="ri-map-pin-line"></i> San Francisco, California</p>
                 <p className="mb-0">Redhead, Innovator, Saviour of Mankind, Hopeless Romantic, Attractive 20-something Yogurt Enthusiast. You can replace this with any content and adjust it as needed... <Link to="">Read more</Link></p>
               </div>
@@ -300,4 +330,5 @@ export default function Profile() {
       </div>
     </React.Fragment>
   );
+  
 }

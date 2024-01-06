@@ -11,10 +11,8 @@ import img7 from "../assets/img/img7.jpg";
 // ... (rest of the image imports)
 
 export default function Users() {
-  // Placeholder function for profile redirection
   const goToUserProfile = (username) => {
     console.log(`Redirect to ${username}'s profile`);
-    // Implementation for navigation to user's profile
   };
 
   const users = [

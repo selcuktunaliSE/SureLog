@@ -71,7 +71,7 @@ export default function Signin() {
         if(! localStorage.getItem("userId")) return;
         localStorage.removeItem("userId");
         setIsLoggedIn(false);
-        navigate("/");
+        navigate("/pages/signin");
     };
 
     if(error === "authentication-error")
@@ -166,7 +166,7 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         formDataJson[key] = value;
     });
 
-    fetch("http://localhost:9000/api/authenticate-client", {
+    fetch("http://localhost:3000/api/authenticate-client", {
         method : 'post',
         body: JSON.stringify(formDataJson),
         headers: {
@@ -179,7 +179,7 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         if(data.status === "success")
         {
             localStorage.setItem("userId", data.userId);
-            navigate('/dashboard/finance');
+            navigate('/dashboard/users');
         }
 
         if(data.status === "invalidCredentials")
