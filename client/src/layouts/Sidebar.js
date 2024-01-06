@@ -14,8 +14,6 @@ const fetchConfig = require("../config/fetchConfig.json");
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
 export default class Sidebar extends Component {
-
-
     
     state = {
         userData: null,
@@ -64,15 +62,15 @@ export default class Sidebar extends Component {
                             <img src={userAvatar} alt="" />
                         </div>
                         <div className="sidebar-footer-body">
-                            <h6><Link to="../pages/profile.html">{userData ? `${userData.firstName} ${userData.lastName}` : 'Loading...'}</Link></h6>
+                            <h6><Link to="../pages/profile">{userData ? `${userData.firstName} ${userData.lastName}` : 'Loading...'}</Link></h6>
                             
                         </div>
                         <Link onClick={this.toggleFooterMenu} to="" className="dropdown-link"><i className="ri-arrow-down-s-line"></i></Link>
                     </div>
                     <div className="sidebar-footer-menu">
                         <nav className="nav">
-                            <Link to=""><i className="ri-edit-2-line"></i> Edit Profile</Link>
-                            <Link to=""><i className="ri-profile-line"></i> View Profile</Link>
+                            <Link to="../pages/profile"><i className="ri-edit-2-line"></i> Edit Profile</Link>
+                            <Link to="../pages/profile"><i className="ri-profile-line"></i> View Profile</Link>
                         </nav>
                         <hr />
                         <nav className="nav">

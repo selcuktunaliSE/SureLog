@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
+import Header from "../layouts/Header";
+import Footer from "../layouts/Footer";
+import "../scss/customStyle.scss";
+
 const fetchConfig = require("../config/fetchConfig.json");
 
 const {host, port} = fetchConfig;
@@ -106,6 +110,7 @@ export default function Tenants() {
   return (
     <React.Fragment>
       <HeaderMobile />
+      <Header />
       <div className="main p-4 p-lg-5">
         <Row className="g-5">
           <Col>
@@ -125,7 +130,7 @@ export default function Tenants() {
               {
               tenants.map((tenant) => ( 
                 <Col sm="6" md="4" key={tenant.tenantId}>
-                  <Card className="card-tenant">
+                  <Card className="card-tenant hover-tilt-effect" style={{color: "#e2e5ec"}}>
                     <Card.Body>
                       <h6 className="mt-3">{tenant.name}</h6>
                       <p>{tenant.description}</p>
@@ -138,6 +143,7 @@ export default function Tenants() {
           </Col>
         </Row>
       </div>
+      <Footer />
     </React.Fragment>
   );
 }

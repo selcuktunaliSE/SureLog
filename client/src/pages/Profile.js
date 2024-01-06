@@ -54,7 +54,7 @@ export default function Profile() {
         <Row className="justify-content-center">
           <Col md={6} lg={5}>
             <Card className="mb-5 text-center">
-              <Card.Body>
+              <Card.Body style={{color: "#e2e5ec"}}>
                 <Image 
                   src={img1} 
                   roundedCircle 

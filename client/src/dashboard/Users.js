@@ -1,12 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl } from "react-bootstrap";
+import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
+import { Search } from "react-bootstrap-icons";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import moment from "moment"; // for date formatting
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
+import Header from "../layouts/Header";
 import Avatar from "../components/Avatar";
+import "../scss/customStyle.scss";
 
 import img1 from "../assets/img/img1.jpg";
 import img6 from "../assets/img/img6.jpg";
@@ -29,15 +32,18 @@ export default function Users() {
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSearchKey, setSelectedSearchKey] = useState("");
+  const [searchKeyList, setSearchKeyList] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc"); // Initial sort order
   const [sortBy, setSortBy] = useState("createdAt"); 
   const [filteredUsers, setFilteredUsers] = useState({}); 
 
+  const searchKeys= ["K1", "K2"];
 
   const navigate = useNavigate();
 
   const userId = localStorage.getItem("userId");
-  
+
 
   const fetchUsersFromTenant = async (tenantId) => {
     if(!userId) navigate("/pages/signin");
@@ -76,13 +82,19 @@ export default function Users() {
         } else if(data.status === "roleNotFound" || data.status === 505) {
           setIsError(true);
           setErrorMessage("You do not have a role defined for this tenant. Please contact your administrator.");
+          setUserDict({});
+          setFilteredUsers({});
         }else if(data.status === "accessDenied"){
           setIsError(true);
           setErrorMessage("You do not have the necessary access permissions for this request in this tenant. Please contact your administrator.");
+          setUserDict({});
+          setFilteredUsers({});
         }
         else if(data.status === 503){
           setIsError(true);
           setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
+          setUserDict({});
+          setFilteredUsers({});
         }
 
       })
@@ -155,6 +167,16 @@ export default function Users() {
     setSearchQuery(event.target.value);
   };
 
+  const handleSearchKeySelect = (key) => {
+    setSelectedSearchKey(key);
+  };
+
+  const handleProcessSearchQuery = () => {
+    // Process the search query using selectedSearchKey and searchQuery
+    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey);
+    // Add your search logic here
+  };
+
   const goToUserProfile = async (targetUserId) => {
     const senderUserId = localStorage.getItem("userId"); 
     const tenantId = selectedTenantId; 
@@ -198,13 +220,25 @@ export default function Users() {
   return (
     <React.Fragment>
       <HeaderMobile />
+      <Header />
       <div className="main p-4 p-lg-5">
-        <Row className="g-5">
+        <Row>
           <Col>
             <h2 className="main-title">User List</h2>
-            {isError && <Alert variant="danger">{errorMessage}</Alert>}
-  
-            {/* Tenant Selector Dropdown */}
+          </Col>
+        </Row>
+
+        {isError && (
+          <Row>
+            <Col>
+              <Alert variant="danger">{errorMessage}</Alert>
+            </Col>
+          </Row>
+        )}
+
+        <Row className="mb-3">
+          {/* Tenant Selector Dropdown */}
+          <Col md={2}>
             <DropdownButton
               id="tenant-dropdown"
               title={`Select Tenant`}
@@ -215,16 +249,10 @@ export default function Users() {
                 </Dropdown.Item>
               ))}
             </DropdownButton>
-  
-            {/* Search Input */}
-            <FormControl
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={handleSearch}
-            />
-  
-            {/* Sort Dropdown */}
+          </Col>
+
+          {/* Sort Dropdown */}
+          <Col md={6}>
             <DropdownButton
               id="sort-dropdown"
               title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
@@ -240,29 +268,66 @@ export default function Users() {
                 Updated At
               </Dropdown.Item>
             </DropdownButton>
-  
-            <Row className="g-2 g-xxl-3 mb-5">
-              {Object.keys(filteredUsers).map((userId) => {
-                const user = filteredUsers[userId];
-                return (
-                  <Col sm="6" md="4" key={userId} onClick={() => goToUserProfile(userId)}>
-                    <Card className="card-people">
-                      <Card.Body>
-                        <Avatar img={user.img} size="xl" />
-                        <h6 className="mt-3">
-                          {user.firstName} {user.middleName} {user.lastName}
-                        </h6>
-                        <p>{user.email}</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                );
-              })}
-            </Row>
           </Col>
         </Row>
-        <Footer />
+
+        <Row>
+          <Col>
+            <InputGroup
+            >
+              {/* Search Input */}
+              <FormControl
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={handleSearch}
+              />
+
+              {/* Search Button */}
+              <Button 
+                variant="outline-secondary"
+                onClick={handleProcessSearchQuery}
+                style= {{borderColor: "rgb(200,200,200)"}}>
+                <Search /> {/* Search icon */}
+              </Button>
+
+              {/* Dropdown for selecting search key */}
+              <DropdownButton
+                as={InputGroup}
+                title={selectedSearchKey || "Select Key"} // Show selected key or "Select Key"
+                id="input-group-dropdown"
+              >
+                {searchKeys.map((key) => (
+                  <Dropdown.Item key={key} onClick={() => handleSearchKeySelect(key)}>
+                    {key}
+                  </Dropdown.Item>
+                ))}
+              </DropdownButton>
+              
+            </InputGroup>  
+          </Col>
+        </Row>
+
+        <Row className="g-2 g-xxl-3 mt-3 mb-5">
+          {Object.keys(filteredUsers).map((userId) => {
+            const user = filteredUsers[userId];
+            return (
+              <Col sm="6" md="4" key={userId} onClick={() => goToUserProfile(userId)}>
+                <Card className="card-people hover-tilt-effect">
+                  <Card.Body style={{color: "#e2e5ec"}}>
+                    <Avatar img={user.img} size="xl" />
+                    <h6 className="mt-3">
+                      {user.firstName} {user.middleName} {user.lastName}
+                    </h6>
+                    <p>{user.email}</p>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
       </div>
+      <Footer />
     </React.Fragment>
   );
   

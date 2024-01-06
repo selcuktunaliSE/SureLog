@@ -1,0 +1,21 @@
+@import '_variables';
+@import '~bootstrap/scss/bootstrap';
+
+.hover-tilt-effect {
+    transition: all 0.5s ease-out;
+    
+    &:hover {
+      transform: translateY(-5px) rotate(-1deg);
+      box-shadow: $box-shadow-lg;
+      
+      // Assuming html[data-skin="light"]
+      html[data-skin="light"] & {
+        background-color: lighten($body-bg, 50%);
+      }
+  
+      // Assuming html[data-skin="dark"]
+      html[data-skin="dark"] & {
+        background-color: darken($dark-highlight, 5%);
+      }
+    }
+  }

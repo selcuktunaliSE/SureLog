@@ -160,7 +160,7 @@ const pagesMenu = [
 ];
 
 const uiElementsMenu = [
-  /* {
+  {
     "label": "Getting Started",
     "icon": "ri-pencil-ruler-2-line",
     "submenu": [
@@ -395,7 +395,7 @@ const uiElementsMenu = [
         "link": "/docs/util/extras"
       }
     ]
-  } */
+  }
 ];
 
 export { dashboardMenu, applicationsMenu, pagesMenu, uiElementsMenu };
