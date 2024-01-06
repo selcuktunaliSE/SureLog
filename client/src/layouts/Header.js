@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import Dropdown from 'react-bootstrap/Dropdown';
 import userAvatar from "../assets/img/img1.jpg";
 import notification from "../data/Notification";
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
 
 export default function Header({ onSkin }) {
   const [userData, setUserData] = useState(null);
@@ -13,7 +17,7 @@ export default function Header({ onSkin }) {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
+      const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
       const data = await response.json();
       if (data.status === "success") {
         setUserData(data.user);

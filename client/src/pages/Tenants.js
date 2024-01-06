@@ -3,8 +3,13 @@ import { Link } from "react-router-dom";
 import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
 
 export default function Tenants() {
+  
   const [isMaster, setIsMaster] = useState(false);
   const [tenants, setTenants] = useState([]); 
   const [selectedTenant, setSelectedTenant] = useState(null);
@@ -22,7 +27,7 @@ export default function Tenants() {
         console.log("User ID not found");
         navigate("/pages/signin");
     }
-    fetch("http://127.0.0.1:9000/api/check-master-user", {
+    fetch(`${fetchAddress}/api/check-master-user`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +60,7 @@ export default function Tenants() {
 
   const fetchTenants = () => {
     // Fetch the list of tenants for the master user
-    fetch("http://127.0.0.1:9000/api/fetch-tenants", {
+    fetch(`${fetchAddress}/api/fetch-tenants`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",

@@ -11,9 +11,16 @@ import Avatar from "../components/Avatar";
 import img1 from "../assets/img/img1.jpg";
 import img6 from "../assets/img/img6.jpg";
 import img7 from "../assets/img/img7.jpg";
+
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
+
 // ... (rest of the image imports)
 
 export default function Users() {
+ 
 
   const [tenantRoles, setTenantRoles] = useState({});
   const [tenantNames, setTenantNames] = useState({});
@@ -37,7 +44,7 @@ export default function Users() {
 
     console.log(`Fetching users from tenant with User ID: ${userId} & Tenant ID: ${tenantId} & Role: ${tenantRoles[tenantId]}`);
 
-    await fetch("http://127.0.0.1:9000/api/fetch-users", {
+    await fetch(`${fetchAddress}/api/fetch-users`, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -86,7 +93,7 @@ export default function Users() {
   }
 
   const fetchTenantRoles = async () => {
-     await fetch("http://127.0.0.1:9000/api/fetch-tenant-roles", {
+     await fetch(`${fetchAddress}/api/fetch-tenant-roles`, {
         method: "post",
         body: JSON.stringify({
           "userId": userId
@@ -158,7 +165,7 @@ export default function Users() {
       tenantId: tenantId,
     };
   
-    await fetch("http://127.0.0.1:9000/api/go-to-user-profile", {
+    await fetch(`${fetchAddress}/api/go-to-user-profile`, {
       method: "post",
       body: JSON.stringify(requestData),
       headers: {

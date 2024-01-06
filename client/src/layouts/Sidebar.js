@@ -9,7 +9,14 @@ import {
     uiElementsMenu
 } from "../data/Menu";
 
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
 export default class Sidebar extends Component {
+
+
+    
     state = {
         userData: null,
       };
@@ -23,7 +30,7 @@ export default class Sidebar extends Component {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
+            const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
             const data = await response.json();
             if (data.status === "success") {
                 this.setState({ userData: data.user });

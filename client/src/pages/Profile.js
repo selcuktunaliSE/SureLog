@@ -5,6 +5,11 @@ import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import img1 from "../assets/img/img1.jpg"; // Placeholder image for user profile
 
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
+
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   
@@ -20,7 +25,7 @@ export default function Profile() {
     }
 
     try {
-      const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
+      const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
       const data = await response.json();
       if (data.status === "success") {
         setUserData(data.user);

@@ -5,8 +5,13 @@ import { Link } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+const fetchConfig = require("../config/fetchConfig.json");
+
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
 
 export default function Signup() {
+  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSignUpSuccess, setIsSignUpSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
@@ -46,7 +51,7 @@ export default function Signup() {
 
         console.log("Form Data: ", formData);
 
-        const response = await fetch('http://127.0.0.1:9000/api/register-user', {
+        const response = await fetch(`${fetchAddress}/api/register-user`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

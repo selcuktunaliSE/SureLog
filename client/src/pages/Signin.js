@@ -3,9 +3,13 @@ import {useEffect, useState} from "react";
 import { Button, Card, Col, Form, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+const fetchConfig = require("../config/fetchConfig.json");
 
+const {host, port} = fetchConfig;
+const fetchAddress = `http://${host}:${port}`;
 
 export default function Signin() {
+
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [error, setError] = useState(null);
     const [textFieldColor, setTextFieldColor] = useState('');
@@ -118,7 +122,7 @@ export default function Signin() {
             <Card.Text>Welcome back! Please signin to continue.</Card.Text>
             </Card.Header>
             <Card.Body>
-            <Form method="post" onSubmit={(e) => handleSubmit(e, navigate, setError, setTextFieldColor)}>
+            <Form method="post" onSubmit={(e) => handleSubmit(fetchAddress, e, navigate, setError, setTextFieldColor)}>
                 <div className="mb-4">
                 <Form.Label >Email address</Form.Label>
                 <Form.Control style={{borderColor: textFieldColor}} type="text" placeholder="Enter your email address" name="email"/>
@@ -153,7 +157,7 @@ const handleReturnToLogin = (navigate, setError, setIsLoggedIn) => {
     navigate("/pages/signin");
 }
 
-const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
+const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const formDataJson = {};
@@ -162,7 +166,7 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         formDataJson[key] = value;
     });
 
-    fetch("http://localhost:9000/api/authenticate-client", {
+    fetch(`${fetchAddress}/api/authenticate-client`, {
         method : 'post',
         body: JSON.stringify(formDataJson),
         headers: {
