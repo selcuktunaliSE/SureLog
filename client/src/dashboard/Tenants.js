@@ -26,7 +26,7 @@ export default function Tenants() {
   const [searchKeyList, setSearchKeyList] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState("createdAt");
-  const [skinMode, setSkinMode] = useState(""); // Define the state for skin mode
+  const [skinMode, setSkinMode] = useState("");
 
   const searchKeys = ["K1, K2"];
 

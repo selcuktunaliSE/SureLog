@@ -53,11 +53,11 @@ module.exports = (sequelize, DataTypes) => {
     },
     createdAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     },
     updatedAt: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
     }
   }, {
     tableName: 'users',
@@ -169,6 +169,21 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     const associate = () => {
+
+      // Add beforeCreate and beforeUpdate hooks
+      UserModel.beforeCreate((user, options) => {
+        // Set createdAt and updatedAt to the current date and time
+        const currentDate = new Date();
+        user.createdAt = currentDate;
+        user.updatedAt = currentDate;
+      });
+
+      UserModel.beforeUpdate((user, options) => {
+        // Set updatedAt to the current date and time
+        const currentDate = new Date();
+        user.updatedAt = currentDate;
+      });
+
       // Create a direct association between Masters and MasterRolePermissionModel
       MasterModel.hasMany(MasterRolePermissionModel, { foreignKey: 'masterId' });
       MasterRolePermissionModel.belongsTo(MasterModel, { foreignKey: 'masterId' });
