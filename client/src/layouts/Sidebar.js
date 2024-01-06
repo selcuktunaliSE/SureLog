@@ -23,7 +23,7 @@ export default class Sidebar extends Component {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:3000/api/get-user-details?userId=${userId}`);
+            const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
             const data = await response.json();
             if (data.status === "success") {
                 this.setState({ userData: data.user });
