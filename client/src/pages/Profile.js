@@ -24,7 +24,7 @@ export default function Profile() {
       return { status: "error", message: "No userId found" };
     }
     try {
-      const response = await fetch(`http://localhost:3000/api/getUserDetails?userId=${userId}`);
+      const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -46,6 +46,7 @@ export default function Profile() {
       });
     }
   }, []);
+
   return (
     <React.Fragment>
       <HeaderMobile />
@@ -57,7 +58,9 @@ export default function Profile() {
                 <img src={img1} className="img-fluid" alt="..." />
               </div>
               <div className="media-body">
+              {userData && (
                 <h5 className="media-name">{userData.firstName} {userData.lastName}</h5>
+              )}
                 <p className="d-flex gap-2 mb-4"><i className="ri-map-pin-line"></i> San Francisco, California</p>
                 <p className="mb-0">Redhead, Innovator, Saviour of Mankind, Hopeless Romantic, Attractive 20-something Yogurt Enthusiast. You can replace this with any content and adjust it as needed... <Link to="">Read more</Link></p>
               </div>

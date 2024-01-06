@@ -166,7 +166,7 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         formDataJson[key] = value;
     });
 
-    fetch("http://localhost:3000/api/authenticate-client", {
+    fetch("http://localhost:9000/api/authenticate-client", {
         method : 'post',
         body: JSON.stringify(formDataJson),
         headers: {
