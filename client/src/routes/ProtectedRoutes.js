@@ -29,8 +29,8 @@ import Activity from "../pages/Activity";
 import Events from "../pages/Events";
 import Settings from "../pages/Settings";
 
-import Users from "../pages/Users";
-import Tenants from "../pages/Tenants";
+import Users from "../dashboard/Users";
+import Tenants from "../dashboard/Tenants";
 
 // UI Elements
 import LayoutColumns from "../docs/LayoutColumns";
