@@ -190,7 +190,7 @@ const handleSubmit = (event, navigate, setError, setTextFieldColor) => {
         }
     })
     .catch((error) => {
-        console.log("Error while authenticating client: ", error);
+        navigate("/pages/error-503");
     });
 }
 

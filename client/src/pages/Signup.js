@@ -67,6 +67,7 @@ export default function Signup() {
     } catch (error) {
       setIsError(true);
       setNotifyMessage('Could not reach server for registration request.');
+      navigate("/pages/error-503");
     }
   };
 
