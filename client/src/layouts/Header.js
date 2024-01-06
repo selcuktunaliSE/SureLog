@@ -1,10 +1,37 @@
-import React from "react"
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Dropdown from 'react-bootstrap/Dropdown';
 import userAvatar from "../assets/img/img1.jpg";
 import notification from "../data/Notification";
 
 export default function Header({ onSkin }) {
+  const [userData, setUserData] = useState(null);
+  const fetchUserData = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      console.error("No userId found in local storage");
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:3000/api/get-user-details?userId=${userId}`);
+      const data = await response.json();
+      if (data.status === "success") {
+        setUserData(data.user);
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching user data: ", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  if (!userData) {
+    return <div>Loading user data...</div>;
+  }
   const CustomToggle = React.forwardRef(({ children, onClick }, ref) => (
     <Link
       to=""
