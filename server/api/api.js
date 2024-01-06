@@ -1,4 +1,4 @@
-const {user} = require('../models');
+const {UserModel, TenantModel, TenantUserModel} = require('../models');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 
@@ -17,9 +17,9 @@ module.exports = {
         "/api/register-user": async (req,res) => {
             const {email, password, firstName, middleName, lastName} = req.body;
             try{
-                const userModel = await user.findOne({where: {email}});
+                const userModel = await UserModel.findOne({where: {email}});
                 if(! userModel){
-                    const newUser = await user.create({
+                    const newUser = await UserModel.create({
                         email,
                         password, 
                         firstName,
@@ -54,7 +54,7 @@ module.exports = {
             const { email, password } = req.body;
 
             try {
-                const userModel = await user.findOne({ where: { email, password } });
+                const userModel = await UserModel.findOne({ where: { email, password } });
                 if (userModel) {
                     const dynamicSecretKey = getDynamicSecretKeyForUser(userModel);
                     console.log(`Dynamic secret key for ${userModel.email}: ${dynamicSecretKey}`);
@@ -75,9 +75,35 @@ module.exports = {
                 }
             } catch (error) {
                 console.error("Error logging in: ", error);
-                res.json({ status: 500, message: 'Error logging in' }.send());
+                res.json({ status: 500, message: 'Error logging in'}).send();
             }
         },
+
+        "/api/fetch-tenant-roles": async(req, res) => {
+            console.log("Tenant roles fetch request received...");
+            const {userId} = req.body;
+
+            try{
+                const tenantRoles = await TenantUserModel.findAll({ where : { userId }});
+
+                if(tenantRoles && tenantRoles.length > 0){
+                    console.log("tenant roles list : ", tenantRoles);
+                    res.json({
+                        status: "success",
+                        tenantRoles: tenantRoles,
+                    }).send();
+                }else{
+                    res.json({status: 404})
+                    .send();
+                }
+            }
+            catch(error){
+                console.error("Error fetching tenant roles: ", error);
+                res.json({
+                    status:500
+                }).send();
+            }
+        }
 
 
     },
@@ -87,7 +113,7 @@ module.exports = {
             const {userId} = req.query;
             console.log("Fetching user details for userId: ", userId);
             try {
-                const userModel = await user.findOne({ where: { userId } });
+                const userModel = await UserModel.findOne({ where: { userId } });
                 if (userModel) {
                     res.json({
                         status: "success",

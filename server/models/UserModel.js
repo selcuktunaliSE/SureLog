@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  const UserModel = sequelize.define('user', {
+  const UserModel = sequelize.define('UserModel', {
     userId: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -19,6 +19,9 @@ module.exports = (sequelize, DataTypes) => {
     password: {
       type: DataTypes.STRING,
     },
+  }, {
+    tableName: 'users',
+    timestamps: false
   });
 
   return UserModel;

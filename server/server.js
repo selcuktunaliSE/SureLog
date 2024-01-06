@@ -64,7 +64,6 @@ const api = require('./api/api');
 
 app.use(express.static(path.join(__dirname, '../clientbuild')));
 
-
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true,
