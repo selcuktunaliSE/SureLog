@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, Col, Nav, Row } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Avatar from "../components/Avatar";
+
 
 import img1 from "../assets/img/img1.jpg";
 import img5 from "../assets/img/img5.jpg";
@@ -17,11 +19,15 @@ import img12 from "../assets/img/img12.jpg";
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
+
+  const navigate = useNavigate(); 
+
   const fetchUserData = async () => {
     const userId = localStorage.getItem("userId");
+
     if (!userId) {
       console.error("No userId found in local storage");
-      return { status: "error", message: "No userId found" };
+      navigate("/pages/signin");
     }
     try {
       const response = await fetch(`http://localhost:9000/api/get-user-details?userId=${userId}`);
@@ -29,7 +35,7 @@ export default function Profile() {
       return data;
     } catch (error) {
       console.error("Error fetching user data: ", error);
-      return { status: "error", message: "Failed to fetch user data" };
+      navigate("/pages/error-503");
     }
   };
   
@@ -44,6 +50,9 @@ export default function Profile() {
           console.error(data.message);
         }
       });
+    }
+    else{
+      navigate("/pages/signin");
     }
   }, []);
 
