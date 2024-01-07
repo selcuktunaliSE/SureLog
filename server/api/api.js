@@ -26,6 +26,33 @@ module.exports = {
         "/api/check-logged-in-status": async(req, res) => {
             res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});
         },
+       /* "/api/get-user-details": async (req, res) => {
+            const { userId } = req.body;
+            console.log("Fetching user details for userId: ", userId);
+            try {
+                const userModel = await UserModel.findOne({ where: { userId } });
+                if (userModel) {
+                    res.json({
+                        status: "success",
+                        message: "User details retrieved successfully",
+                        user: userModel
+                    });
+                } else {
+                    res.status(404).json({
+                        status: "userNotFound",
+                        message: "User not found"
+                    });
+                }
+            } catch (error) {
+                console.error("Error retrieving user details from database: ", error);
+                if (!res.headersSent) {
+                    res.status(500).json({
+                        status: "error",
+                        message: "Error retrieving user details"
+                    });
+                }
+            }
+        },*/
 
         "/api/register-user": async (req,res) => {
             const {email, password, firstName, middleName, lastName} = req.body;
@@ -129,8 +156,6 @@ module.exports = {
           },
 
         "/api/fetch-users": async(req, res) => {
-
-
             const {userId, tenantId, roleName} = req.body;
             if(! userId || ! tenantId || ! roleName){
                 res.json({

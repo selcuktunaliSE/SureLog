@@ -10,36 +10,37 @@ import {
 } from "../data/Menu";
 
 const fetchConfig = require("../config/fetchConfig.json");
-
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
 export default class Sidebar extends Component {
-    
-    state = {
-        userData: null,
-      };
-    componentDidMount() {
+    constructor(props) {
+        super(props);
+        this.state = {
+            userData: null,
+        };
         this.fetchUserData();
-      }
-      fetchUserData = async () => {
+    }
+    fetchUserData = async () => {
         const userId = localStorage.getItem("userId");
+        console.log("userId is ", userId);
         if (!userId) {
             console.log("No userId found in local storage");
-            return;
         }
         try {
-            const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
+            const response = await fetch(`http://localhost:3000/api/get-user-details?userId=${userId}`);
             const data = await response.json();
             if (data.status === "success") {
                 this.setState({ userData: data.user });
                 console.log("User data fetched successfully: ", data.user)
             } else {
+                console.log(data.status);
                 console.error("Failed to fetch user data: ", data.message);
             }
         } catch (error) {
             console.error("Error fetching user data: ", error);
         }
     };
+    
     toggleFooterMenu = (e) => {
         e.preventDefault();
         let parent = e.target.closest(".sidebar");
@@ -62,15 +63,14 @@ export default class Sidebar extends Component {
                             <img src={userAvatar} alt="" />
                         </div>
                         <div className="sidebar-footer-body">
-                            <h6><Link to="../pages/profile">{userData ? `${userData.firstName} ${userData.lastName}` : 'Loading...'}</Link></h6>
-                            
+                            <h6><Link to="/pages/profile">{userData ? `${userData.firstName} ${userData.lastName}` : 'Loading...'}</Link></h6>
                         </div>
                         <Link onClick={this.toggleFooterMenu} to="" className="dropdown-link"><i className="ri-arrow-down-s-line"></i></Link>
                     </div>
                     <div className="sidebar-footer-menu">
                         <nav className="nav">
-                            <Link to="../pages/profile"><i className="ri-edit-2-line"></i> Edit Profile</Link>
-                            <Link to="../pages/profile"><i className="ri-profile-line"></i> View Profile</Link>
+                            <Link to=""><i className="ri-edit-2-line"></i> Edit Profile</Link>
+                            <Link to=""><i className="ri-profile-line"></i> View Profile</Link>
                         </nav>
                         <hr />
                         <nav className="nav">

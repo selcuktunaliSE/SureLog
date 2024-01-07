@@ -4,10 +4,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import userAvatar from "../assets/img/img1.jpg";
 import notification from "../data/Notification";
 const fetchConfig = require("../config/fetchConfig.json");
-
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
-
 export default function Header({ onSkin }) {
   const [userData, setUserData] = useState(null);
   const fetchUserData = async () => {
@@ -188,12 +186,12 @@ export default function Header({ onSkin }) {
         <Dropdown.Menu className="mt-10-f">
           <div className="dropdown-menu-body">
             <div className="avatar avatar-xl online mb-3"><img src={userAvatar} alt="" /></div>
-            <h5 className="mb-1 text-dark fw-semibold">Shaira Diaz</h5>
-            <p className="fs-sm text-secondary">Premium Member</p>
+            <h5 className="mb-1 text-dark fw-semibold">{userData.firstName} {userData.lastName}</h5>
+            <p className="fs-sm text-secondary"></p>
 
             <nav className="nav">
               <Link to=""><i className="ri-edit-2-line"></i> Edit Profile</Link>
-              <Link to=""><i className="ri-profile-line"></i> View Profile</Link>
+              <Link to="/pages/profile"><i className="ri-profile-line"></i> View Profile</Link>
             </nav>
             <hr />
             <nav className="nav">

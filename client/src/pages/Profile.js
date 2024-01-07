@@ -12,7 +12,6 @@ const fetchAddress = `http://${host}:${port}`;
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
-  
   const navigate = useNavigate();
 
   const fetchUserData = async () => {
@@ -47,6 +46,14 @@ export default function Profile() {
     return <div>Loading user data...</div>;
   }
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
+    const year = date.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+
   return (
     <React.Fragment>
       <HeaderMobile />
@@ -65,7 +72,7 @@ export default function Profile() {
                 <h5>{userData.firstName} {userData.lastName}</h5>
                 <p><strong>Email:</strong> {userData.email}</p>
                 <p><strong>User ID:</strong> {userData.userId}</p>
-                <p><strong>Account Created:</strong> {userData.createdAt}</p>
+                <p><strong>Account Created:</strong> {formatDate(userData.createdAt)}</p>
               </Card.Body>
             </Card>
           </Col>

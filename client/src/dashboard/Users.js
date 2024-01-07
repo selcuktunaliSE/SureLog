@@ -4,14 +4,11 @@ import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGrou
 import { Search } from "react-bootstrap-icons";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
-import moment from "moment"; // for date formatting
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import Avatar from "../components/Avatar";
 import "../scss/customStyle.scss";
-
-import img1 from "../assets/img/img1.jpg";
 import img6 from "../assets/img/img6.jpg";
 import img7 from "../assets/img/img7.jpg";
 
@@ -32,13 +29,14 @@ export default function Users() {
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTenantName, setSelectedTenantName] = useState(""); // [TODO] Implement this
   const [selectedSearchKey, setSelectedSearchKey] = useState("");
   const [searchKeyList, setSearchKeyList] = useState([]);
   const [sortOrder, setSortOrder] = useState("asc"); // Initial sort order
   const [sortBy, setSortBy] = useState("createdAt"); 
   const [filteredUsers, setFilteredUsers] = useState({}); 
 
-  const searchKeys= ["K1", "K2"];
+  const searchKeys= ["firstName", "lastName", "email"];
 
   const navigate = useNavigate();
 
@@ -152,6 +150,7 @@ export default function Users() {
 
   const handleTenantSelect = (tenantId) => {
     setSelectedTenantId(tenantId);
+    setSelectedTenantName(tenantNames[tenantId]);
     fetchUsersFromTenant(tenantId);
   };
 
@@ -165,17 +164,34 @@ export default function Users() {
   
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
+    if(event.key === "Enter"){
+      handleProcessSearchQuery();
+    }
   };
 
   const handleSearchKeySelect = (key) => {
     setSelectedSearchKey(key);
+    
   };
 
   const handleProcessSearchQuery = () => {
-    // Process the search query using selectedSearchKey and searchQuery
-    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey);
-    // Add your search logic here
-  };
+    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey || "firstName");
+    let filtered = {};
+    const searchKey = selectedSearchKey || "firstName"; // Use selectedSearchKey or default to "firstName"
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    Object.keys(userDict).forEach(userId => {
+        const user = userDict[userId];
+        const fieldValue = user[searchKey] ? user[searchKey].toLowerCase() : ""; // Safely handle undefined values
+
+        if (fieldValue.includes(lowerCaseQuery)) {
+            filtered[userId] = user;
+        }
+    });
+
+    setFilteredUsers(filtered);
+};
+
 
   const goToUserProfile = async (targetUserId) => {
     const senderUserId = localStorage.getItem("userId"); 
@@ -221,8 +237,8 @@ export default function Users() {
     <React.Fragment>
       <HeaderMobile />
       <Header />
-      <div className="main p-4 p-lg-5">
-        <Row>
+      <div className="main p-4 p-lg-5 mt-5">
+        <Row className="g-5">
           <Col>
             <h2 className="main-title">User List</h2>
           </Col>
@@ -241,7 +257,7 @@ export default function Users() {
           <Col md={2}>
             <DropdownButton
               id="tenant-dropdown"
-              title={`Select Tenant`}
+              title={ selectedTenantName || `Select Tenant`}
             >
               {Object.entries(tenantRoles).map(([tenantId, role]) => (
                 <Dropdown.Item key={tenantId} onClick={() => handleTenantSelect(tenantId)}>
@@ -281,6 +297,7 @@ export default function Users() {
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={handleSearch}
+                onKeyDown={handleSearch}
               />
 
               {/* Search Button */}
@@ -307,7 +324,6 @@ export default function Users() {
             </InputGroup>  
           </Col>
         </Row>
-
         <Row className="g-2 g-xxl-3 mt-3 mb-5">
           {Object.keys(filteredUsers).map((userId) => {
             const user = filteredUsers[userId];

@@ -1,10 +1,10 @@
 {
   "development": {
     "username": "root",
-    "password": "#B!je?651*rK",
+    "password": "root",
     "database": "multitenantdb",
     "host": "localhost",
-    "port": 3306,
+    "port": 8889,
     "dialect": "mysql"
   },
   "test": {

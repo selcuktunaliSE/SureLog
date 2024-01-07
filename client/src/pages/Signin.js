@@ -177,9 +177,10 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
     .then((data) => {
         console.log("authentication response data: ", data);    
         if(data.status === "success")
-        {
+        {   
+            console.log("authentication success");
             localStorage.setItem("userId", data.userId);
-            navigate('/dashboard/users');
+            navigate('/');
         }
 
         if(data.status === "invalidCredentials")
@@ -190,6 +191,7 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
         }
     })
     .catch((error) => {
+        console.log("authentication error: ", error);
         navigate("/pages/error-503");
     });
 }

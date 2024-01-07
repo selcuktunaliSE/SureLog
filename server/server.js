@@ -56,7 +56,6 @@ const sessionOptions = {
 }
 
 const db = require("./models");
-const { Server } = require('http');
 const app = express();
 const api = require('./api/api');
 
@@ -64,7 +63,7 @@ const api = require('./api/api');
 app.use(express.static(path.join(__dirname, '../clientbuild')));
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3001",
     credentials: true,
     allowedHeaders: "X-PINGOTHER, Content-Type",   
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
