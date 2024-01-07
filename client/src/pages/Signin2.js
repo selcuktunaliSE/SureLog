@@ -10,7 +10,7 @@ export default function Signin2() {
         <Col md="7" lg="5" xl="4" className="col-wrapper">
           <Card className="card-sign">
             <Card.Header>
-              <Link to="/" className="header-logo mb-5">dashbyte</Link>
+              <Link to="/" className="header-logo mb-5">SureLog</Link>
               <Card.Title>Sign In</Card.Title>
               <Card.Text>Welcome back! Please signin to continue.</Card.Text>
             </Card.Header>
