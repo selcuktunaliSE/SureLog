@@ -100,13 +100,16 @@ export default function Signin() {
               <Card className="card-sign">
                 <Card.Header>
                   <Link to="/" className="header-logo mb-4">SureLog</Link>
-                  <Card.Title>Already Logged In</Card.Title>
-                  <Card.Text>You are already logged in.</Card.Text>
+                  <Card.Title className="text-warning mt-3">Already Logged In</Card.Title>
                 </Card.Header>
-                <Card.Body>
-                  <p>Do you want to switch to another account or sign out?</p>
+                <Card.Body >
+                  <p className="text-primary-light">Do you want to switch to another account or sign out?</p>
                   <Button variant="primary" onClick={handleSwitchAccount}>Switch Account</Button>
                   <Button variant="secondary" onClick={handleSignOut} className="button mt-3">Sign Out</Button>
+          
+                  <div className="text-center mt-3"> {/* Add text-center class here */}
+                    <Link to="/">Return To Home</Link>
+                  </div>
                 </Card.Body>
               </Card>
             </div>

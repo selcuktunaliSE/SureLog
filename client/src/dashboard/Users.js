@@ -35,6 +35,8 @@ export default function Users() {
   const [sortOrder, setSortOrder] = useState("asc"); // Initial sort order
   const [sortBy, setSortBy] = useState("createdAt"); 
   const [filteredUsers, setFilteredUsers] = useState({}); 
+  const [skinMode, setSkinMode] = useState(""); // Define the state for skin mode
+
 
   const searchKeys= ["firstName", "lastName", "email"];
 
@@ -148,6 +150,11 @@ export default function Users() {
         });
   }
 
+  const handleSkinModeChange = (skin) => {
+    setSkinMode(skin);
+    // You can add any other logic you need here for handling skin mode changes
+  };
+
   const handleTenantSelect = (tenantId) => {
     setSelectedTenantId(tenantId);
     setSelectedTenantName(tenantNames[tenantId]);
@@ -236,9 +243,9 @@ export default function Users() {
   return (
     <React.Fragment>
       <HeaderMobile />
-      <Header />
-      <div className="main p-4 p-lg-5 mt-5">
-        <Row className="g-5">
+      <Header onSkin={handleSkinModeChange}/>
+      <div className="main p-4 p-lg-5">
+        <Row>
           <Col>
             <h2 className="main-title">User List</h2>
           </Col>
@@ -285,6 +292,7 @@ export default function Users() {
               </Dropdown.Item>
             </DropdownButton>
           </Col>
+
         </Row>
 
         <Row>
@@ -304,7 +312,7 @@ export default function Users() {
               <Button 
                 variant="outline-secondary"
                 onClick={handleProcessSearchQuery}
-                style= {{borderColor: "rgb(200,200,200)"}}>
+                style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
                 <Search /> {/* Search icon */}
               </Button>
 
