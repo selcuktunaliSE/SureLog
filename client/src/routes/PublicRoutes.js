@@ -10,7 +10,7 @@ import Signin2 from "../pages/Signin2";
 import Signup from "../pages/Signup";
 import Signup2 from "../pages/Signup2";
 import VerifyAccount from "../pages/VerifyAccount";
-
+import Google_Authenticator from "../pages/Google_Authenticator";
 const publicRoutes = [
   { path: "signin", element: <Signin /> },
   { path: "pages/signin2", element: <Signin2 /> },
@@ -22,7 +22,9 @@ const publicRoutes = [
   { path: "error/404", element: <NotFound /> },
   { path: "error/500", element: <InternalServerError /> },
   { path: "error/503", element: <ServiceUnavailable /> },
-  { path: "error/505", element: <Forbidden /> }
+  { path: "error/505", element: <Forbidden /> },
+   // paths below are not part of the template:
+  {path:"authenticator", element: <Google_Authenticator />}
 ];
 
 export default publicRoutes;
