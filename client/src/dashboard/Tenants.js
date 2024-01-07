@@ -38,7 +38,7 @@ export default function Tenants() {
     // Check if the user is a master user and get their ID
     if(! userId) {
         console.log("User ID not found");
-        navigate("/pages/signin");
+        navigate("/signin");
     }
     fetch(`${fetchAddress}/api/check-master-user`, {
       method: "post",
@@ -56,7 +56,7 @@ export default function Tenants() {
           setIsMaster(true);
           fetchTenants();
         } else if (data.status === "userIdNotFound"){
-          navigate("/pages/signin");
+          navigate("/signin");
         } else if(data.status ===  "masterNotFound"){
             navigate("/");
         } else if(data.status === 500){

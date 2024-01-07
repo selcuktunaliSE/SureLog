@@ -152,7 +152,7 @@ export default function Signup() {
     if(! localStorage.getItem("userId")) return;
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
-    navigate("/pages/signin");
+    navigate("/signin");
   };
 
   const handleReturnToHome = () => {

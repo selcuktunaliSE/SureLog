@@ -22,7 +22,7 @@ export default function LockScreen() {
           <Button variant="primary" className="btn-sign">Unlock</Button>
         </Card.Body>
         <Card.Footer>
-          Not you? <Link to="/pages/signin">Sign in with different account</Link>
+          Not you? <Link to="/signin">Sign in with different account</Link>
         </Card.Footer>
       </Card>
     </div>

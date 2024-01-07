@@ -22,7 +22,7 @@ export default function Profile() {
 
     if (!userId) {
       console.error("No userId found in local storage");
-      navigate("/pages/signin");
+      navigate("/signin");
       return;
     }
 

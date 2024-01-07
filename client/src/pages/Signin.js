@@ -66,14 +66,14 @@ export default function Signin() {
         if(! localStorage.getItem("userId")) return;
         localStorage.removeItem("userId");
         setIsLoggedIn(false);
-        navigate("/pages/signin"); 
+        navigate("/signin"); 
         };
     
     const handleSignOut = () => {
         if(! localStorage.getItem("userId")) return;
         localStorage.removeItem("userId");
         setIsLoggedIn(false);
-        navigate("/pages/signin");
+        navigate("/signin");
     };
 
     if(error === "authentication-error") {
@@ -157,7 +157,7 @@ export default function Signin() {
 const handleReturnToLogin = (navigate, setError, setIsLoggedIn) => {
     setError(null);
     setIsLoggedIn(false);
-    navigate("/pages/signin");
+    navigate("/signin");
 }
 
 const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor) => {
@@ -190,7 +190,7 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
         {
             setError('Login failed, please check your credentials.')
             setTextFieldColor('red');
-            navigate('/pages/signin');
+            navigate('/signin');
         }
     })
     .catch((error) => {

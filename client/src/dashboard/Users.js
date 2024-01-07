@@ -46,7 +46,7 @@ export default function Users() {
 
 
   const fetchUsersFromTenant = async (tenantId) => {
-    if(!userId) navigate("/pages/signin");
+    if(!userId) navigate("/signin");
 
     console.log(`Fetching users from tenant with User ID: ${userId} & Tenant ID: ${tenantId} & Role: ${tenantRoles[tenantId]}`);
 
@@ -230,7 +230,7 @@ export default function Users() {
   };
 
   useEffect(() => {
-    if(! userId) navigate("/pages/signin");
+    if(! userId) navigate("/signin");
     fetchTenantRoles();
   }, [userId, navigate]);
 

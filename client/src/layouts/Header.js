@@ -198,7 +198,7 @@ export default function Header({ onSkin }) {
               <Link to=""><i className="ri-question-line"></i> Help Center</Link>
               <Link to=""><i className="ri-lock-line"></i> Privacy Settings</Link>
               <Link to=""><i className="ri-user-settings-line"></i> Account Settings</Link>
-              <Link to="/pages/signin"><i className="ri-logout-box-r-line"></i> Log Out</Link>
+              <Link to="/signin"><i className="ri-logout-box-r-line"></i> Log Out</Link>
             </nav>
           </div>
         </Dropdown.Menu>
