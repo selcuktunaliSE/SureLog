@@ -77,14 +77,14 @@ export default function Signup() {
           }
 
           if(data.status === 500){
-            navigate("/pages/error-500");
+            navigate("/error/500");
           }
         });
 
       } catch (error) {
         setIsError(true);
         setNotifyMessage('Could not reach server for registration request.');
-        navigate("/pages/error-503");
+        navigate("/error/503");
         console.log("Error while signing up: ", error);
       }
     },
@@ -136,7 +136,7 @@ export default function Signup() {
         }
 
         if(data.status === 500){
-          navigate("/pages/error-500");
+          navigate("/error/500");
         }
       })
 
@@ -144,7 +144,7 @@ export default function Signup() {
     } catch (error) {
       setIsError(true);
       setNotifyMessage('Could not reach server for registration request.');
-      navigate("/pages/error-503");
+      navigate("/error/503");
     }
   }; */
 

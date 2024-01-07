@@ -147,7 +147,7 @@ export default function Signin() {
             </Form>
             </Card.Body>
             <Card.Footer>
-                Don't have an account? <Link to="/pages/signup">Create an Account</Link>
+                Don't have an account? <Link to="/signup">Create an Account</Link>
             </Card.Footer>
         </Card>
         </div>
@@ -194,8 +194,8 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
         }
     })
     .catch((error) => {
-        console.log("authentication error: ", error);
-        navigate("/pages/error-503");
+    	console.log("authentication error: ", error);
+        navigate("/error/503");
     });
 }
 

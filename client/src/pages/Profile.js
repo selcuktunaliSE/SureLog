@@ -33,11 +33,11 @@ export default function Profile() {
         setUserData(data.user);
       } else {
         console.error("User data fetch request failed, server message: ", data.message);
-        navigate("/pages/error-505");
+        navigate("/error/505");
       }
     } catch (error) {
       console.error("Error fetching user data: ", error);
-      navigate("/pages/error-503");
+      navigate("/error/503");
     }
   };
 

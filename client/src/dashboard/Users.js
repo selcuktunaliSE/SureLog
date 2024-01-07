@@ -100,7 +100,7 @@ export default function Users() {
       })
       .catch(error => {
         console.log("Error fetching users from tenant, ", error);
-        navigate("/pages/error-503");
+        navigate("/error/503");
       });
   }
 
@@ -141,12 +141,12 @@ export default function Users() {
               setErrorMessage("You are not registered to any tenants. Please contact your administrator.");
           }
             if(data.status === 500){
-              navigate("/pages/error-500");
+              navigate("/error/500");
             }
         })
         .catch(error => { 
           console.error("Error fetching Tenant Roles from the server: ", error);
-          navigate("/pages/error-503");
+          navigate("/error/503");
         });
   }
 
@@ -220,7 +220,7 @@ export default function Users() {
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
-          navigate(`/pages/profile?userId=${targetUserId}`);
+          navigate(`/profile?userId=${targetUserId}`);
         } else {
         }
       })

@@ -60,14 +60,14 @@ export default function Tenants() {
         } else if(data.status ===  "masterNotFound"){
             navigate("/");
         } else if(data.status === 500){
-            navigate("/pages/error-500");
+            navigate("/error/500");
         } else {
             navigate("/");
         }
       })
       .catch((error) => {
         console.error("Error checking master user: ", error);
-        navigate("/pages/error-503");
+        navigate("/error/503");
       });
   }, [navigate, isMaster]);
 
@@ -93,7 +93,7 @@ export default function Tenants() {
           setIsError(true);
           setErrorMessage("You do not have any tenants registered to you. Please contact your administrator.");
         } else if (data.status === 500) {
-          navigate("/pages/error-500");
+          navigate("/error/500");
         }
           else if (data.status === "roleNotFound"){
             setIsError(true);
@@ -102,7 +102,7 @@ export default function Tenants() {
       })
       .catch((error) => {
         console.error("Error fetching tenants: ", error);
-        navigate("/pages/error-503");
+        navigate("/error/503");
       });
   };
 
@@ -213,7 +213,7 @@ export default function Tenants() {
                     <Card.Body>
                       <h6 className="mt-3">{tenant.name}</h6>
                       <p>{tenant.description}</p>
-                      <Link to={`/pages/tenant-details?tenantId=${tenant.tenantId}`}>View Details</Link>
+                      <Link to={`/tenant-details?tenantId=${tenant.tenantId}`}>View Details</Link>
                     </Card.Body>
                   </Card>
                 </Col>
