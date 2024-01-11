@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const bcrypt = require('bcrypt');
+
 module.exports = (sequelize, DataTypes) => {
 
   const TenantModel = sequelize.define('TenantModel',
@@ -39,7 +39,6 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       primaryKey: true,
     },
-    
     firstName: DataTypes.STRING,
     middleName: DataTypes.STRING, // Optional
     lastName: DataTypes.STRING,
@@ -62,49 +61,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'users',
-    timestamps: false,
-    hooks: {
-      beforeCreate: async (user) => {
-        if(user.password){
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-      }}
-      ,
-      beforeUpdate: async (user) => {
-        if (user.changed('password')) {
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-        }
-      },
-    }
+    timestamps: false
   });
-  
-  /* Hashing passwords of Existing Users
-  const migratePasswords = async () => {
-    try {
-      await sequelize.authenticate();
-      console.log('Database connection established.');
-  
-      const users = await UserModel.findAll();
-      for (const user of users) {
-        if (user.password) { 
-          const salt = await bcrypt.genSalt(10);
-          user.password = await bcrypt.hash(user.password, salt);
-          await user.save();
-          console.log(`Password updated for user: ${user.userId}`);
-        }
-      }
-  
-      console.log('All passwords have been migrated.');
-    } catch (error) {
-      console.error('Error during migration:', error);
-    } finally {
-      await sequelize.close();
-    }
-  }; 
-  
-  migratePasswords(); 
-  */
+
 
   const TenantUserModel = sequelize.define('TenantUserModel', {
     tenantId: {
@@ -208,7 +167,6 @@ module.exports = (sequelize, DataTypes) => {
       tableName: 'master_role_permissions', // Replace with your actual table name
       timestamps: false // Assuming your table doesn't have created_at and updated_at fields
     });
-
 
     const associate = () => {
 

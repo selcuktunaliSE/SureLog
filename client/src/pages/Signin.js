@@ -131,7 +131,7 @@ export default function Signin() {
                 <Form.Control style={{borderColor: textFieldColor}} type="text" placeholder="Enter your email address" name="email"/>
                 </div>
                 <div className="mb-4">
-                <Form.Label className="d-flex justify-content-between">Password <Link to="/pages/forgot">Forgot password?</Link></Form.Label>
+                <Form.Label className="d-flex justify-content-between">Password <Link to="">Forgot password?</Link></Form.Label>
                 <Form.Control style={{borderColor: textFieldColor}} type="password" placeholder="Enter your password" name="password"/>
                 </div>
 
@@ -147,7 +147,7 @@ export default function Signin() {
             </Form>
             </Card.Body>
             <Card.Footer>
-                Don't have an account? <Link to="/signup">Create an Account</Link>
+                Don't have an account? <Link to="/pages/signup">Create an Account</Link>
             </Card.Footer>
         </Card>
         </div>
