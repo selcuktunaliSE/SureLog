@@ -3,7 +3,10 @@ const jwt = require('jsonwebtoken');
 const { Sequelize, DataTypes } = require('sequelize');
 const env = process.env.NODE_ENV || 'development';
 const databaseConfig = require(__dirname + '/../config/databaseConfig.json')[env];
-
+const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
+const {google} = require('googleapis');
+const OAuth2 = google.auth.OAuth2;
 let sequelize;
 if (databaseConfig.use_env_variable) {
   sequelize = new Sequelize(process.env[databaseConfig.use_env_variable], databaseConfig);
@@ -16,9 +19,34 @@ const { UserModel, TenantModel, TenantUserModel, MasterModel, TenantRolePermissi
 
 associate();
 
-const getDynamicSecretKeyForUser = (user) => {
-    const secretKeyLength = 6; // You can adjust the length as needed
-    return crypto.randomInt(0, Math.pow(10, secretKeyLength)).toString();
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      type: 'OAuth2',
+      user: 'crims21mailer@gmail.com',
+      pass:'Selcuk1996.',
+      clientId: '205216410765-l2vs8hum25v9vkencnkd877o3at69ch8.apps.googleusercontent.com',
+      clientSecret: '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',
+      refreshToken: 'ya29.a0AfB_byDTcJP861sD6D1Q7FXGbBq0S2YOy6wNc-RPWgXKwwwL8HvAfOkrPIInoccaPX3uzz_1nJmUPZB7ZBbFLTfOt_p8_GsxS7hSGPKZEKjP9ZsQSp7NDEX847Z01YL4FAasSABTQy__ausBpIH8F8m0c3L8iMhktm_8aCgYKAbQSARESFQHGX2MiB14vsNpjFMoyjEcJ_ZYDJQ0171'
+    },
+});
+
+// Function to send password reset email
+const sendResetEmail = async (email, resetLink) => {
+    try {
+        // Send mail with defined transport object
+        await transporter.sendMail({
+            from: 'SureLog <crims21mailer@gmail.com>',
+            to: email,
+            subject: 'Password Reset Request',
+            html: `<p>Please click the following link to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+        });
+
+        console.log('Password reset email sent successfully.');
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        throw error;
+    }
 };
 
 module.exports = {
@@ -54,70 +82,71 @@ module.exports = {
             }
         },*/
 
-        "/api/register-user": async (req,res) => {
-            const {email, password, firstName, middleName, lastName} = req.body;
-            try{
-                const userModel = await UserModel.findOne({where: {email}});
-                if(! userModel){
+        "/api/register-user": async (req, res) => {
+            const { email, password, firstName, middleName, lastName } = req.body;
+            try {
+                const userModel = await UserModel.findOne({ where: { email } });
+                if (!userModel) {
+                    const hashedPassword = await bcrypt.hash(password, 10);
                     const newUser = await UserModel.create({
                         email,
-                        password, 
+                        password: hashedPassword,
                         firstName,
                         middleName,
                         lastName
                     });
-        
-                    res.json({
-                        status: "success",
-                        message: "User registered successfully",
-                        userId: newUser.userId,
-                    }).send();
-                }
-                else{
-                    res.json({
-                        status: "userExists",
-                        message: "User already exists"
-                    }).send();
-                }
-            }
-            catch(error)
-            {
-                console.error("Error checking user existence in database upon registration: ", error);
-                res.json({status: 500, message: "Registration Error"}).send();
-            }
-        
-            
-        },
-
-        "/api/authenticate-client": async(req, res) => {
-            console.log("Authentication request received...");
-            const { email, password } = req.body;
-
-            try {
-                const userModel = await UserModel.findOne({ where: { email, password } });
-                if (userModel) {
-                    const dynamicSecretKey = getDynamicSecretKeyForUser(userModel);
-                    console.log(`Dynamic secret key for ${userModel.email}: ${dynamicSecretKey}`);
-                    const payload = { userId: userModel.userId, email: userModel.email };
-                    const token = jwt.sign(payload, dynamicSecretKey, { expiresIn: '5m' });
-
-                    res.json({
-                        "userId": userModel.userId,
-                        "status" : "success"
-                    }).send();
-                    
+                    res.json({ status: "success", message: "User registered successfully", userId: newUser.userId }).send();
                 } else {
-                    console.log("Login failed due to invalid credentials.");
-                    res.json({ 
-                        status: "invalidCredentials",
-                        message: 'Login failed due to invalid credentials.'})
-                        .send();
+                    res.json({ status: "userExists", message: "User already exists" }).send();
                 }
             } catch (error) {
-                console.error("Error logging in: ", error);
-                res.json({ status: 500, message: 'Error logging in'}).send();
+                console.error("Error in user registration: ", error);
+                res.status(500).send("Error in user registration");
             }
         },
+
+        "/api/authenticate-client": async (req, res) => {
+            const { email, password } = req.body;
+            try {
+                const userModel = await UserModel.findOne({ where: { email } });
+                if (userModel && await bcrypt.compare(password, userModel.password)) {
+                    res.json({ userId: userModel.userId, status: "success" }).send();
+                } else {
+                    res.status(401).send("Invalid credentials");
+                }
+            } catch (error) {
+                console.error("Error in authentication: ", error);
+                res.status(500).send("Error in authentication");
+            }
+        },
+        "/api/send-password-reset-email": async (req, res) => {
+        const { email } = req.body;
+        console.log("Sending password reset email to: ", email);
+
+        try {
+        const userModel = await UserModel.findOne({ where: { email } });
+         
+        if (userModel) {
+            // Generate a reset token
+            const resetTokenPayload = {
+                userId: userModel.userId,
+                email: userModel.email,
+                expiration: Date.now() + 3600000, // 1 hour validity
+            };
+            const resetToken = jwt.sign(resetTokenPayload, '$3S$S10N$3CR3T');
+            const resetLink = `http://localhost:3000/reset-password/${resetToken}`; 
+            await sendResetEmail(email, resetLink);
+
+            res.json({ status: "success", message: "Password reset email sent successfully" }).send();
+        } else {
+            res.json({ status: "userNotFound", message: "User not found" }).send();
+        }
+    } catch (error) {
+        console.error("Error in sending password reset email: ", error);
+        res.status(500).send("Error in sending password reset email");
+    }
+},
+        
 
         "/api/fetch-tenant-roles": async (req, res) => {
             console.log("Tenant roles fetch request received...");
