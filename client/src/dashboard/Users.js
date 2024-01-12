@@ -14,11 +14,8 @@ import img7 from "../assets/img/img7.jpg";
 
 import DynamicTable from "../components/DynamicTable";
 
-
-const fetchService = require("../service/fetchService");
-const {FetchStatus} = require("../service/fetchService");
-
-
+const {FetchStatus} = require("../service/FetchService");
+const fetchService = require("../service/FetchService");
 
 // ... (rest of the image imports)
 
@@ -61,6 +58,7 @@ export default function Users() {
       let users = {}; 
           data.users.forEach(userModel => {
             users[userModel.userId] = {
+              "userId": userModel.userId,
               "firstName": userModel.firstName,
               "middleName": userModel.middleName,
               "lastName": userModel.lastName,
@@ -191,12 +189,14 @@ export default function Users() {
 };
 
 
-  const goToUserProfile = async (targetUserId) => {
-    
+  const goToUserProfile = (targetUserId) => {
+    console.log("going to profile with user id: ", targetUserId);
+    navigate("/profile", { state: { targetUserId : targetUserId}});
   };
 
   const handleRowClick = (user) => {
     console.log("clicked user: ", user);
+    goToUserProfile(user.userId);
   }
 
   const users = [
@@ -317,7 +317,12 @@ export default function Users() {
             );
           })}
         </Row> */}
-        <DynamicTable dataDict={userDict} onRowClick={handleRowClick}/>
+        <Row className="mt-3">
+          <Col md={12}> 
+            <DynamicTable  dataDict={userDict} onRowClick={handleRowClick}/>  
+          </Col> 
+        </Row>
+        
 
       </div>
       <Footer />

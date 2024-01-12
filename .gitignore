@@ -43,3 +43,6 @@ coverage/
 /build/
 /dist/
 /out/
+server/config/databaseConfig.json
+server/config/envConfig.json
+server/config/sessionConfig.json

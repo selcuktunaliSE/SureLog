@@ -11,8 +11,8 @@ import "../scss/customStyle.scss";
 import DynamicTable from "../components/DynamicTable";
 import BarChartCard from "../components/BarChartCard";
 
-const fetchService = require("../service/fetchService");
-const {FetchStatus} = require("../service/fetchService");
+const {FetchStatus} = require("../service/FetchService");
+const fetchService = require("../service/FetchService");
 
 export default function Tenants() {
   
@@ -53,7 +53,6 @@ export default function Tenants() {
 
   const fetchTenants = async () => {
     const response = await fetchService.fetchTenants(userId);
-    console.log("response: ", response);
     const data = response.data;
 
     if(! response.isError()){
@@ -204,7 +203,7 @@ export default function Tenants() {
               </Col>
             </Row>
 
-            <Row>
+            <Row className="mt-3">
               <Col md={12}>
                 <DynamicTable dataDict={tenantDict} onRowClick={handleRowClick}/>
               </Col>

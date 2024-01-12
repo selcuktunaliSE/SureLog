@@ -6,25 +6,26 @@ import notification from "../data/Notification";
 const fetchConfig = require("../config/fetchConfig.json");
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
+
+const {FetchStatus} = require("../service/FetchService");
+const fetchService = require("../service/FetchService");
+
 export default function Header({ onSkin }) {
+
   const [userData, setUserData] = useState(null);
+
   const fetchUserData = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("No userId found in local storage");
       return;
     }
-    try {
-      const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
-      const data = await response.json();
-      if (data.status === "success") {
-        setUserData(data.user);
-      } else {
-        console.error(data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching user data: ", error);
+
+    let response = await fetchService.fetchUserProfile(userId, userId);
+    if(!response.isError()){
+      setUserData(response.data.user);
     }
+
   };
 
   useEffect(() => {

@@ -1,53 +1,72 @@
 import React, { useState, useEffect } from "react";
 import { Card, Col, Row, Image } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import img1 from "../assets/img/img1.jpg"; // Placeholder image for user profile
 
-const fetchConfig = require("../config/fetchConfig.json");
-
-const {host, port} = fetchConfig;
-const fetchAddress = `http://${host}:${port}`;
+const {FetchStatus} = require("../service/FetchService");
+const fetchService = require("../service/FetchService");
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
   const [skinMode, setSkinMode] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
+
+  let userId;
+  let targetUserId;
 
   const fetchUserData = async () => {
-    const userId = localStorage.getItem("userId");
-
     if (!userId) {
       console.error("No userId found in local storage");
       navigate("/signin");
       return;
     }
 
-    try {
-      const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
-      const data = await response.json();
-      if (data.status === "success") {
-        setUserData(data.user);
-      } else {
-        console.error("User data fetch request failed, server message: ", data.message);
-        navigate("/error/505");
-      }
-    } catch (error) {
-      console.error("Error fetching user data: ", error);
-      navigate("/error/503");
+    console.log("source user id: " , userId, " target user id: ", targetUserId);
+    let response = await fetchService.fetchUserProfile(userId, targetUserId ? targetUserId : userId);
+
+    console.log("response: ", response);
+
+    if(!response.isError()){
+      setUserData(response.data.user);
+    }
+    else{
+      handleErrorResponse(response);
     }
   };
+
+  const handleErrorResponse = (response) => {
+    if(response.status === FetchStatus.AccessDenied){
+      navigate("/error/505");
+    }
+    else if(response.status === FetchStatus.UserNotFound){
+      setErrorMessage("Requested user was not found.");
+      setIsError(true);
+    }
+    else if(response.status === FetchStatus.ServerException){
+      navigate("/error/500");
+    }
+    else if(response.status === FetchStatus.FetchError){
+      console.log("Fetch Error: ", response.message);
+      navigate("/error/503");
+    }
+  }
 
   const handleSkinModeChange = (skin) => {
     setSkinMode(skin)
   }
 
   useEffect(() => {
+    userId = localStorage.getItem("userId");
+    targetUserId = location.state?.targetUserId;
     fetchUserData();
-  }, []);
+  }, [location.state]);
 
   if (!userData) {
     return <div>Loading user data...</div>;

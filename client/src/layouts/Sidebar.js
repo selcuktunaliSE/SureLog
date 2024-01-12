@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink} from "react-router-dom";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import userAvatar from "../assets/img/img1.jpg";
 import {
@@ -9,10 +9,11 @@ import {
     uiElementsMenu
 } from "../data/Menu";
 
-const fetchConfig = require("../config/fetchConfig.json");
-const {host, port} = fetchConfig;
-const fetchAddress = `http://${host}:${port}`;
+const {FetchStatus} = require("../service/FetchService");
+const fetchService = require("../service/FetchService");
+
 export default class Sidebar extends Component {
+
     constructor(props) {
         super(props);
         this.state = {
@@ -20,26 +21,21 @@ export default class Sidebar extends Component {
         };
         this.fetchUserData();
     }
+
     fetchUserData = async () => {
         const userId = localStorage.getItem("userId");
-        console.log("userId is ", userId);
         if (!userId) {
-            console.log("No userId found in local storage");
+            return;
         }
-        try {
-            const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
-            const data = await response.json();
-            if (data.status === "success") {
-                this.setState({ userData: data.user });
-                console.log("User data fetched successfully: ", data.user)
-            } else {
-                console.log(data.status);
-                console.error("Failed to fetch user data: ", data.message);
-            }
-        } catch (error) {
-            console.error("Error fetching user data: ", error);
+
+        let response = await fetchService.fetchUserProfile(userId, userId);
+
+        if(!response.isError()){
+            this.setState({ userData: response.data.user });
         }
     };
+
+    
     
     toggleFooterMenu = (e) => {
         e.preventDefault();
@@ -63,7 +59,7 @@ export default class Sidebar extends Component {
                             <img src={userAvatar} alt="" />
                         </div>
                         <div className="sidebar-footer-body">
-                            <h6><Link to="../profile">{userData ? `${userData.firstName} ${userData.lastName}` : 'Loading...'}</Link></h6>
+                            <h6><Link to="../profile">{userData ? `${userData.firstName} ${userData.lastName}` : 'Visitor'}</Link></h6>
                             
                         </div>
                         <Link onClick={this.toggleFooterMenu} to="" className="dropdown-link"><i className="ri-arrow-down-s-line"></i></Link>

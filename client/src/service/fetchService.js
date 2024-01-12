@@ -155,35 +155,42 @@ const checkMasterUser = async (userId) => {
   return fetchResponse;
 }
 
-/* const getUserProfile = async (userId, targetUserId, tenantId) => {
-    const senderUserId = localStorage.getItem("userId"); 
-    const tenantId = selectedTenantId; 
-  
-    const requestData = {
-      senderUserId: senderUserId,
-      targetUserId: targetUserId,
-      tenantId: tenantId,
-    };
-  
-    await fetch(`${fetchAddress}/api/go-to-user-profile`, {
-      method: "post",
-      body: JSON.stringify(requestData),
-      headers: {
-        "Content-Type": "application/json",
-      },
+const fetchUserProfile = async (sourceUserId, targetUserId) => {
+  let fetchResponse;
+  const requestData = {
+    sourceUserId: sourceUserId,
+    targetUserId: targetUserId,
+  };
+
+  await fetch(`${fetchAddress}/api/fetch-user-profile`, {
+    method: "post",
+    body: JSON.stringify(requestData),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("fetch response data: ", data);
+      if (data.status === "success") {
+        fetchResponse = new FetchResponse(FetchStatus.Success, {user: data.user});
+      } 
+      else if(data.status === "accessDenied"){
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+      else if(data.status === "userNotFound"){
+        fetchResponse = new FetchResponse(FetchStatus.UserNotFound);
+      }
+      else if(data.status === 500){
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === "success") {
-            return new FetchResponse(FetchStatus.Success)
-          navigate(`/profile?userId=${targetUserId}`);
-        } else {
-        }
-      })
-      .catch((error) => {
-        return new FetchResponse(FetchStatus.FetchError, null, error);
-      });
-} */
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
+
+    return fetchResponse;
+}
 
 
 export {
@@ -191,5 +198,6 @@ export {
     fetchUsersFromTenant,
     fetchTenantRoles,
     fetchTenants,
+    fetchUserProfile,
     checkMasterUser,
 }

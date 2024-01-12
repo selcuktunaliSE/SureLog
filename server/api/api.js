@@ -332,36 +332,85 @@ module.exports = {
               }
         },
 
+        "/api/fetch-user-profile": async (req, res) => {
+            const {sourceUserId, targetUserId} = req.body;
+            if(! sourceUserId || ! targetUserId){
+                res.json({
+                    status: "accessDenied"
+                }).send();
+                console.log("test 1");
+                return;
+            }
+            
+            console.log(`Processing fetch user details request from User:${sourceUserId} targetted at User:${targetUserId}`);
+            let hasPermission = false;
 
-    },
-    
-    "get": {
-        "/api/get-user-details": async (req, res) => {
-            const {userId} = req.query;
-            console.log("Fetching user details for userId: ", userId);
-            try {
-                const userModel = await UserModel.findOne({ where: { userId } });
+            // check if requesting self details
+            if(sourceUserId === targetUserId) hasPermission = true;
+            
+            try{
+
+                // check if user is master
+                if(!hasPermission && await MasterModel.findOne({where: {userId: sourceUserId}})){
+                    hasPermission = true;
+                }
+
+                // check if user has the necessary permissions to the target user's tenant
+                if(!hasPermission){
+                    const targetTenantUser = await TenantUserModel.findOne({where: {userId: targetUserId}});
+                    const sourceTenantUser = await TenantUserModel.findOne({where: {userId: sourceUserId}});
+                    if(sourceTenantUser.tenantId === targetTenantUser.tenantId ){
+                        const sourceTenantRolePermissions = TenantRolePermissionModel.findOne({
+                            where: {
+                                tenantId: sourceTenantUser.tenantId,
+                                roleName: sourceTenantUser.roleName}});
+                        
+                        if(sourceTenantRolePermissions.canViewUsers) hasPermission = true;
+                    }
+                }
+
+            
+                // if still not permitted, then deny access
+                if(!hasPermission){
+                    console.log("test 2");
+                    res.json({
+                        status: "accessDenied"
+                    }).send();
+                    return;
+                }
+
+                // find target's user model
+                const userModel = await UserModel.findOne({ where: { userId: targetUserId } });
+                console.log("user model: ", userModel);
                 if (userModel) {
+                    console.log("test 3");
                     res.json({
                         status: "success",
                         message: "User details retrieved successfully",
                         user: userModel
-                    }); 
+                    }).send(); 
+                    return;
                 } else {
-                    res.status(404).json({
+                    res.json({
                         status: "userNotFound",
                         message: "User not found"
-                    }); 
+                    }).send(); 
                 }
-            } catch (error) {
+
+                
+            } 
+            catch (error) {
                 console.error("Error retrieving user details from database: ", error);
                 if (!res.headersSent) { 
-                    res.status(500).json({
-                        status: "error",
-                        message: "Error retrieving user details"
-                    });
+                    res.status(500).send();
                 }
             }
         }
+
+
+    },
+    
+    "get": {
+        
     }
 }
