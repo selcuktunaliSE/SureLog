@@ -405,6 +405,46 @@ module.exports = {
                     res.status(500).send();
                 }
             }
+        },
+
+        "/api/fetch-tenant-profile": async(req, res) => {
+            const {userId, tenantId} = req.body;
+            if(! userId || ! tenantId){
+                res.status(505).send();
+                return;
+            }
+
+            let hasPermission = false;
+
+            try{
+                // check if user is master
+                if(await MasterModel.findOne({where : {userId: userId}})) hasPermission = true;
+
+                if(!hasPermission){
+                    res.status(505).send();
+                    return;
+                }
+
+                // check if tenant exists
+                const tenantModel = await TenantModel.findOne({where: {tenantId: tenantId}});
+
+                if(!tenantModel){
+                    res.status(404).send();
+                    return;
+                }
+
+                res.json({
+                    status: "success",
+                    tenant: tenantModel
+                }).send();
+
+            } catch(error){
+                console.error("Error retrieving tenant details from database. Error: ", error);
+                if(!res.headersSent){
+                    res.status(500).send();
+                }
+            }
+            
         }
 
 

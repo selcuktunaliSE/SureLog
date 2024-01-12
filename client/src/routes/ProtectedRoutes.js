@@ -23,14 +23,12 @@ import FileManager from "../apps/FileManager";
 // Pages
 import Pricing from "../pages/Pricing";
 import Faq from "../pages/Faq";
-import Profile from "../pages/Profile";
 import People from "../pages/People";
 import Activity from "../pages/Activity";
 import Events from "../pages/Events";
 import Settings from "../pages/Settings";
 
-import Users from "../dashboard/Users";
-import Tenants from "../dashboard/Tenants";
+
 
 // UI Elements
 import LayoutColumns from "../docs/LayoutColumns";
@@ -84,6 +82,14 @@ import MapVector from "../docs/MapVector";
 import IconRemix from "../docs/IconRemix";
 import IconFeather from "../docs/IconFeather";
 
+
+
+
+import Users from "../dashboard/Users";
+import Tenants from "../dashboard/Tenants";
+import Profile from "../pages/Profile";
+import TenantProfile from "../pages/TenantProfile";
+
 const protectedRoutes = [
   { path: "dashboard/finance", element: <FinanceMonitoring /> },
   { path: "dashboard/events", element: <EventManagement /> },
@@ -103,7 +109,7 @@ const protectedRoutes = [
   { path: "apps/file-manager", element: <FileManager /> },
   { path: "pages/pricing", element: <Pricing /> },
   { path: "pages/faq", element: <Faq /> },
-  { path: "profile", element: <Profile /> },
+  
   { path: "pages/people", element: <People /> },
   { path: "pages/activity", element: <Activity /> },
   { path: "pages/events", element: <Events /> },
@@ -158,9 +164,13 @@ const protectedRoutes = [
   { path: "docs/util/typography", element: <UtilTypography /> },
   { path: "docs/util/shadows", element: <UtilShadows /> },
   { path: "docs/util/extras", element: <UtilExtras /> },
-  // paths below are not part of the template:
+
+
+  // paths below are developed paths:
   { path: "dashboard/users", element: <Users />},
   { path: "dashboard/tenants", element: <Tenants />},
+  { path: "profile", element: <Profile /> },
+  { path: "tenant-profile", element: <TenantProfile />},
 ]
 
 export default protectedRoutes;

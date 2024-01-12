@@ -56,10 +56,8 @@ export default function Tenants() {
     const data = response.data;
 
     if(! response.isError()){
-      console.log("tenants before parsing: ", data.tenants);
       setTenants(JSON.parse(data.tenants));
       setTenantDict(JSON.parse(data.tenants));
-      console.log("tenants after parsing: ", JSON.parse(data.tenants));
       setIsError(false);
       setErrorMessage("");
     }
@@ -75,8 +73,6 @@ export default function Tenants() {
   }
 
   const handleErrorResponse = (response) => {
-
-    console.log("response for error: ", response);
     if (response.status === FetchStatus.UserNotFound){
       navigate("/signin");
     } 
@@ -130,8 +126,12 @@ export default function Tenants() {
     setSelectedSearchKey(key);
   };
 
-  const handleRowClick = (item) => {
+  const handleRowClick = (tenant) => {
+    goToTenantProfile(tenant.tenantId);
+  }
 
+  const goToTenantProfile = (tenantId) => {
+    navigate("/tenant-profile", {state: {tenantId: tenantId}});
   }
 
   const handleProcessSearchQuery = () => {

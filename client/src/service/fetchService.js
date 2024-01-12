@@ -20,6 +20,7 @@ const FetchStatus = {
     AccessDenied: "AccessDenied",
     UserNotFound: "UserNotFound",
     MasterNotFound: "MasterNotFound",
+    TenantNotFound: "TenantNotFound",
     RoleNotFound: "RoleNotFound",
     ServerException: "ServerException",
     FetchError: "FetchError",
@@ -171,7 +172,6 @@ const fetchUserProfile = async (sourceUserId, targetUserId) => {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log("fetch response data: ", data);
       if (data.status === "success") {
         fetchResponse = new FetchResponse(FetchStatus.Success, {user: data.user});
       } 
@@ -192,6 +192,43 @@ const fetchUserProfile = async (sourceUserId, targetUserId) => {
     return fetchResponse;
 }
 
+const fetchTenantProfile = async(userId, tenantId) => {
+  let fetchResponse;
+  const requestData = {
+    userId: userId,
+    tenantId: tenantId,
+  }
+
+  console.log(`Fetching tenant profile with ID:${tenantId} for user with ID:${userId}`);
+
+  await fetch(`${fetchAddress}/api/fetch-tenant-profile`, {
+    method: "post",
+    body: JSON.stringify(requestData),
+    headers: {
+      "Content-Type": "application/json"
+    },
+  }).then((response) => response.json())
+  .then((data) => {
+    if(data.status === "success"){
+      fetchResponse = new FetchResponse(FetchStatus.Success, {tenant: data.tenant});
+    }
+    else if(data.status === 404){
+      fetchResponse = new FetchResponse(FetchStatus.TenantNotFound);
+    }
+    else if(data.status === 500){
+      fetchResponse = new FetchResponse(FetchStatus.ServerException);
+    }
+    else if(data.status === 505){
+      fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+    }
+  })
+  .catch((error) => {
+    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+  });
+  
+  return fetchResponse;
+}
+
 
 export {
     FetchStatus,
@@ -199,5 +236,6 @@ export {
     fetchTenantRoles,
     fetchTenants,
     fetchUserProfile,
+    fetchTenantProfile,
     checkMasterUser,
 }

@@ -2,36 +2,36 @@ const { Sequelize, DataTypes } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
 
-  const TenantModel = sequelize.define('TenantModel',
-    {
-      tenantId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        primaryKey: true,
+    const TenantModel = sequelize.define('TenantModel',
+      {
+        tenantId: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          primaryKey: true,
+        },
+        name: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          primaryKey: false,
+        },
+        userCount: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        }
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        primaryKey: false,
-      },
-      userCount: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-      createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
-      updatedAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
+      {
+        tableName: 'tenants',
+        timestamps: true,
       }
-    },
-    {
-      tableName: 'tenants',
-      timestamps: true,
-    }
-  );
+    );
 
   const UserModel = sequelize.define('UserModel', {
     userId: {
