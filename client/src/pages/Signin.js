@@ -138,17 +138,11 @@ export default function Signin() {
                 {error && <p style={{ color: 'red' }}>{error}</p>}
                 <Button type="submit" variant="primary" className="btn-sign">Sign In</Button>
 
-                <div className="divider"><span>or sign in with</span></div>
+                
 
-                <Row className="gx-2">
-                <Col><Button variant="" className="btn-facebook"><i className="ri-facebook-fill"></i> Facebook</Button></Col>
-                <Col><Button variant="" className="btn-google"><i className="ri-google-fill"></i> Google</Button></Col>
-                </Row>
+                
             </Form>
             </Card.Body>
-            <Card.Footer>
-                Don't have an account? <Link to="/pages/signup">Create an Account</Link>
-            </Card.Footer>
         </Card>
         </div>
     )

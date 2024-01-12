@@ -27,7 +27,7 @@ export default class Sidebar extends Component {
             console.log("No userId found in local storage");
         }
         try {
-            const response = await fetch(`http://localhost:3000/api/get-user-details?userId=${userId}`);
+            const response = await fetch(`${fetchAddress}/api/get-user-details?userId=${userId}`);
             const data = await response.json();
             if (data.status === "success") {
                 this.setState({ userData: data.user });

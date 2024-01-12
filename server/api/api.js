@@ -166,7 +166,25 @@ module.exports = {
 
             console.log(`Fetching users from tenant with TenantID: ${tenantId} and Role: ${roleName}`);
             try{
+
+
+                const masterUserModel = await MasterModel.findOne({where: {userId: userId}});
                 const tenantUserModel = await TenantUserModel.findOne( {where: {userId, tenantId, roleName}});
+
+                const tenantUsers = await TenantModel.findOne({
+                    where: { tenantId: tenantId },
+                    include: [{
+                      model: UserModel,
+                    }]
+                });
+
+                if(masterUserModel){
+                    res.json({
+                        status: "success",
+                        users: tenantUsers.UserModels,
+                    }).send();
+                    return;
+                }
                 
                 if(tenantUserModel){
                     const tenantRolePermissionModel = await TenantRolePermissionModel.findOne( {where: {tenantId, roleName}});
@@ -188,15 +206,7 @@ module.exports = {
                         return;
                     }
 
-                    const tenantUsers = await TenantModel.findOne({
-                        where: { tenantId: tenantId },
-                        include: [{
-                          model: UserModel,
-                        }]
-                      });
-
                     console.log(tenantUsers);
-
                     
                     if (tenantUsers) {                        
                         res.json({
@@ -266,7 +276,6 @@ module.exports = {
             }
 
             try {
-                // Find the master by userId
                 const master = await MasterModel.findOne({
                   where: { userId },
                   include: [
@@ -276,7 +285,7 @@ module.exports = {
                       include: [
                         {
                           model: TenantModel,
-                          attributes: ['tenantId', 'name'], // You can specify the attributes you need from TenantModel
+                          attributes: ['tenantId', 'name'],
                         },
                       ],
                     },
@@ -301,13 +310,13 @@ module.exports = {
                     return;
                 }
               
-                // Extract tenant data from the master's role permissions
-                const tenants = master.MasterRolePermissionModels.map((rolePermission) => {
-                  return {
-                    tenantId: rolePermission.TenantModel.tenantId,
-                    name: rolePermission.TenantModel.name,
-                  };
-                });
+                const tenants = master.MasterRolePermissionModels.reduce((acc, rolePermission) => {
+                    const { tenantId, name } = rolePermission.TenantModel;
+                    acc[tenantId] = { 
+                        tenantId: tenantId, 
+                        name: name };
+                    return acc;
+                  }, {});
               
                 console.log("Sending tenants:", tenants);
               
@@ -321,7 +330,7 @@ module.exports = {
                   status: "error"
                 }).send();
               }
-        }
+        },
 
 
     },

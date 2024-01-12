@@ -8,10 +8,11 @@ import Header from "../layouts/Header";
 import Footer from "../layouts/Footer";
 import "../scss/customStyle.scss";
 
-const fetchConfig = require("../config/fetchConfig.json");
+import DynamicTable from "../components/DynamicTable";
+import BarChartCard from "../components/BarChartCard";
 
-const {host, port} = fetchConfig;
-const fetchAddress = `http://${host}:${port}`;
+const fetchService = require("../service/fetchService");
+const {FetchStatus} = require("../service/fetchService");
 
 export default function Tenants() {
   
@@ -27,6 +28,8 @@ export default function Tenants() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [skinMode, setSkinMode] = useState("");
+  const [tenantDict, setTenantDict] = useState({});
+
 
   const searchKeys = ["name"];
 
@@ -40,71 +43,66 @@ export default function Tenants() {
         console.log("User ID not found");
         navigate("/signin");
     }
-    fetch(`${fetchAddress}/api/check-master-user`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: userId,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("status: ", data.status);
-        if (data.status === "success") {
-          setIsMaster(true);
-          fetchTenants();
-        } else if (data.status === "userIdNotFound"){
-          navigate("/signin");
-        } else if(data.status ===  "masterNotFound"){
-            navigate("/");
-        } else if(data.status === 500){
-            navigate("/error/500");
-        } else {
-            navigate("/");
-        }
-      })
-      .catch((error) => {
-        console.error("Error checking master user: ", error);
-        navigate("/error/503");
-      });
+
+    if(checkMasterUser()){
+      setIsMaster(true);
+      fetchTenants();
+    }
+    
   }, [navigate, isMaster]);
 
-  const fetchTenants = () => {
-    // Fetch the list of tenants for the master user
-    fetch(`${fetchAddress}/api/fetch-tenants`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: userId,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === "success") {
-          console.log("tenants:", data.tenants);
-          setTenants(JSON.parse(data.tenants));
-          setIsError(false);
-          setErrorMessage("");
-        } else if (data.status === 404) {
-          setIsError(true);
-          setErrorMessage("You do not have any tenants registered to you. Please contact your administrator.");
-        } else if (data.status === 500) {
-          navigate("/error/500");
-        }
-          else if (data.status === "roleNotFound"){
-            setIsError(true);
-            setErrorMessage("You do not have any roles in any tenants. Please contact your administrator.");
-          }
-      })
-      .catch((error) => {
-        console.error("Error fetching tenants: ", error);
-        navigate("/error/503");
-      });
+  const fetchTenants = async () => {
+    const response = await fetchService.fetchTenants(userId);
+    console.log("response: ", response);
+    const data = response.data;
+
+    if(! response.isError()){
+      console.log("tenants before parsing: ", data.tenants);
+      setTenants(JSON.parse(data.tenants));
+      setTenantDict(JSON.parse(data.tenants));
+      console.log("tenants after parsing: ", JSON.parse(data.tenants));
+      setIsError(false);
+      setErrorMessage("");
+    }
+    else{
+      handleErrorResponse(response);
+    }
   };
+
+  const checkMasterUser = async () => {
+    const response = await fetchService.checkMasterUser(userId);
+    if(response.isError()) handleErrorResponse(response);
+    return ! response.isError();
+  }
+
+  const handleErrorResponse = (response) => {
+
+    console.log("response for error: ", response);
+    if (response.status === FetchStatus.UserNotFound){
+      navigate("/signin");
+    } 
+    else if(response.status ===  FetchStatus.MasterNotFound){
+        navigate("/");
+    }
+    else if(response.status === FetchStatus.ServerException){
+        navigate("/error/500");
+    }
+    else if(response.status === FetchStatus.AccessDenied){
+      setIsError(true);
+      setErrorMessage("You do not have any tenants registered to you. Please contact your administrator.");
+    }
+    else if(response.status === FetchStatus.RoleNotFound){
+      setIsError(true);
+      setErrorMessage("You do not have any roles in any tenants. Please contact your administrator.");
+    }
+    else if(response.status === FetchStatus.FetchError){
+      console.error("Error fetching tenants: ", response.message);
+      navigate("/error/503");
+    }
+    else {
+        navigate("/");
+    }
+  }  
 
   const handleSkinModeChange = (skin) => {
     setSkinMode(skin);
@@ -133,10 +131,29 @@ export default function Tenants() {
     setSelectedSearchKey(key);
   };
 
+  const handleRowClick = (item) => {
+
+  }
+
   const handleProcessSearchQuery = () => {
     // Process the search query using selectedSearchKey and searchQuery
-    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey);
-    // Add your search logic here
+    console.log("Searching for:", searchQuery, "with key:", selectedSearchKey || "firstName");
+    let filtered = {};
+    const searchKey = selectedSearchKey || "firstName"; // Use selectedSearchKey or default to "firstName"
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    Object.keys(tenantDict).forEach(tenantId => {
+      console.log("tenant: ", tenant);
+      const tenant = tenantDict[tenantId];
+      const fieldValue = tenant[searchKey] ? tenant[searchKey].toLowerCase() : ""; // Safely handle undefined values
+
+      if (fieldValue.includes(lowerCaseQuery)) {
+          filtered[tenantId] = tenant;
+      }
+    });
+
+    console.log("filtered tenants: ", filtered);
+    setFilteredTenants(filtered);
   };
 
   return (
@@ -144,31 +161,14 @@ export default function Tenants() {
       <HeaderMobile />
       <Header onSkin={handleSkinModeChange} />
       <div className="main p-4 p-lg-5 mt-5">
-        <Row className="g-5">
-          <Col>
+        <Row className="g-5 d-flex align-items-center justify-content-between mb-4">
+          <Col md={12}>
             <h2 className="main-title">Tenant List</h2>
             {isError && <Alert variant="danger" className="mb-3">{errorMessage}</Alert>}
 
-            <Col md={6}>
-              <DropdownButton
-                id="sort-dropdown"
-                title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
-              >
-                <Dropdown.Item onClick={handleSortOrderChange}>
-                  Toggle Sort Order
-                </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Item value="createdAt" onClick={handleSortChange}>
-                  Created At
-                </Dropdown.Item>
-                <Dropdown.Item value="updatedAt" onClick={handleSortChange}>
-                  Updated At
-                </Dropdown.Item>
-              </DropdownButton>
-            </Col>
 
             <Row className="mt-3">
-              <Col>
+              <Col md={12}>
                 <InputGroup
                 >
                   {/* Search Input */}
@@ -204,21 +204,24 @@ export default function Tenants() {
               </Col>
             </Row>
 
-            {/* Display Tenants */}
-            <Row className="g-2 g-xxl-3 mb-5 mt-3">
-              {
-              tenants.map((tenant) => ( 
-                <Col sm="6" md="4" key={tenant.tenantId}>
-                  <Card className="card-tenant hover-tilt-effect" style={{color: "#e2e5ec"}}>
-                    <Card.Body>
-                      <h6 className="mt-3">{tenant.name}</h6>
-                      <p>{tenant.description}</p>
-                      <Link to={`/tenant-details?tenantId=${tenant.tenantId}`}>View Details</Link>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
+            <Row>
+              <Col md={12}>
+                <DynamicTable dataDict={tenantDict} onRowClick={handleRowClick}/>
+              </Col>
             </Row>
+
+            <Row style={{ height: '80vh' }} className="flex-grow-1">
+              <Col md={6} className="d-flex">
+                <div className="w-100 d-flex flex-column">
+                  <BarChartCard />
+                </div>
+              </Col>
+
+              <Col md={6}>
+                  COMING SOON
+              </Col> 
+            </Row>  
+
           </Col>
         </Row>
       </div>

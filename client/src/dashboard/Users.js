@@ -12,16 +12,18 @@ import "../scss/customStyle.scss";
 import img6 from "../assets/img/img6.jpg";
 import img7 from "../assets/img/img7.jpg";
 
-const fetchConfig = require("../config/fetchConfig.json");
+import DynamicTable from "../components/DynamicTable";
 
-const {host, port} = fetchConfig;
-const fetchAddress = `http://${host}:${port}`;
+
+const fetchService = require("../service/fetchService");
+const {FetchStatus} = require("../service/fetchService");
+
+
 
 // ... (rest of the image imports)
 
 export default function Users() {
  
-
   const [tenantRoles, setTenantRoles] = useState({});
   const [tenantNames, setTenantNames] = useState({});
   const [selectedTenantId, setSelectedTenantId] = useState(null);
@@ -44,28 +46,20 @@ export default function Users() {
 
   const userId = localStorage.getItem("userId");
 
+  useEffect(() => {
+    if(! userId) navigate("/signin");
+    fetchTenantRoles();
+  }, [userId, navigate]);
 
   const fetchUsersFromTenant = async (tenantId) => {
     if(!userId) navigate("/signin");
 
-    console.log(`Fetching users from tenant with User ID: ${userId} & Tenant ID: ${tenantId} & Role: ${tenantRoles[tenantId]}`);
+    const response = await fetchService.fetchUsersFromTenant(userId, tenantId, tenantRoles);
 
-    await fetch(`${fetchAddress}/api/fetch-users`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: userId, 
-        tenantId: tenantId,
-        roleName: tenantRoles[tenantId],
-      })
-    }).then((response) => response.json())
-      .then((data) => {
-        if(data.status === "success"){
-          let users = {};
+    if(!response.isError()){
+      const data = response.data;
+      let users = {}; 
           data.users.forEach(userModel => {
-            console.log(userModel);
             users[userModel.userId] = {
               "firstName": userModel.firstName,
               "middleName": userModel.middleName,
@@ -73,86 +67,83 @@ export default function Users() {
               "email": userModel.email,
             };
           });
+
           setUserDict(users);
           setFilteredUsers(users);
           setIsError(false);
           setErrorMessage("");
-
-          console.log("fetched users: ", userDict);
-        } else if(data.status === "roleNotFound" || data.status === 505) {
-          setIsError(true);
-          setErrorMessage("You do not have a role defined for this tenant. Please contact your administrator.");
-          setUserDict({});
-          setFilteredUsers({});
-        }else if(data.status === "accessDenied"){
-          setIsError(true);
-          setErrorMessage("You do not have the necessary access permissions for this request in this tenant. Please contact your administrator.");
-          setUserDict({});
-          setFilteredUsers({});
-        }
-        else if(data.status === 503){
-          setIsError(true);
-          setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
-          setUserDict({});
-          setFilteredUsers({});
-        }
-
-      })
-      .catch(error => {
-        console.log("Error fetching users from tenant, ", error);
-        navigate("/error/503");
-      });
+    } 
+    else{
+      handleErrorResponse(response);
+    }
   }
 
   const fetchTenantRoles = async () => {
-     await fetch(`${fetchAddress}/api/fetch-tenant-roles`, {
-        method: "post",
-        body: JSON.stringify({
-          "userId": userId
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        }
-    }).then((response) => response.json())
-        .then((data) => {
-            if(data.status === "success"){
-              setIsError(false);
-              setErrorMessage("");
-              let tenantRoles = {};
-              let tenantNames= {};
+    const response = await fetchService.fetchTenantRoles(userId);
+    if(!response.isError()){
+      setIsError(false);
+      setErrorMessage("");
+      
+      const data = response.data;
+      const tenantRoles = {};
+      const tenantNames= {};
 
-              data.tenantRoles.forEach(tenantRole => {
-                tenantRoles[tenantRole.tenantId] = tenantRole.roleName;
-              });
+      data.tenantRoles.forEach(tenantRole => {
+          tenantRoles[tenantRole.tenantId] = tenantRole.roleName;
+      });
 
 
-              Object.keys(data.tenantNames).forEach(tenantId => {
-                tenantNames[tenantId] = data.tenantNames[tenantId];
-              }); 
+      Object.keys(data.tenantNames).forEach(tenantId => {
+          tenantNames[tenantId] = data.tenantNames[tenantId];
+      }); 
 
-              setTenantNames(tenantNames);
-              setTenantRoles(tenantRoles);
+      setTenantNames(tenantNames);
+      setTenantRoles(tenantRoles);
 
-              console.log("tenant names: ", data.tenantNames);
-              console.log("Tenant roles: ", tenantRoles);
-            }
-            if(data.status === 404){
-              setIsError(true);
-              setErrorMessage("You are not registered to any tenants. Please contact your administrator.");
-          }
-            if(data.status === 500){
-              navigate("/error/500");
-            }
-        })
-        .catch(error => { 
-          console.error("Error fetching Tenant Roles from the server: ", error);
-          navigate("/error/503");
-        });
+      console.log("tenant names: ", data.tenantNames);
+      console.log("Tenant roles: ", tenantRoles);
+    }
+    else{
+      handleErrorResponse(response);
+    }
+   
+  }
+
+  const handleErrorResponse = (response) => {
+
+    if(response.status === FetchStatus.RoleNotFound){
+      setIsError(true);
+      setErrorMessage("You do not have a role defined for this tenant. Please contact your administrator.");
+      setUserDict({});
+      setFilteredUsers({});
+    }
+
+    else if(response.status === FetchStatus.AccessDenied){
+      setIsError(true);
+      setErrorMessage("You do not have the necessary access permissions for this request in this tenant. Please contact your administrator.");
+      setUserDict({});
+      setFilteredUsers({});
+    }
+
+    else if(response.status === FetchStatus.ServerException){
+      setIsError(true);
+      setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
+      setUserDict({});
+      setFilteredUsers({});
+      navigate("error/503");
+    }
+
+    else if(response.status === FetchStatus.FetchError){
+      console.log("Error fetching users from tenant, ", response.message);
+    }
+
+    else if(response.status === FetchStatus.ResourceNotFound){
+      navigate("error/404");
+    }
   }
 
   const handleSkinModeChange = (skin) => {
     setSkinMode(skin);
-    // You can add any other logic you need here for handling skin mode changes
   };
 
   const handleTenantSelect = (tenantId) => {
@@ -201,38 +192,12 @@ export default function Users() {
 
 
   const goToUserProfile = async (targetUserId) => {
-    const senderUserId = localStorage.getItem("userId"); 
-    const tenantId = selectedTenantId; 
-  
-    const requestData = {
-      senderUserId: senderUserId,
-      targetUserId: targetUserId,
-      tenantId: tenantId,
-    };
-  
-    await fetch(`${fetchAddress}/api/go-to-user-profile`, {
-      method: "post",
-      body: JSON.stringify(requestData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === "success") {
-          navigate(`/profile?userId=${targetUserId}`);
-        } else {
-        }
-      })
-      .catch((error) => {
-        console.log("Error:", error);
-      });
+    
   };
 
-  useEffect(() => {
-    if(! userId) navigate("/signin");
-    fetchTenantRoles();
-  }, [userId, navigate]);
+  const handleRowClick = (user) => {
+    console.log("clicked user: ", user);
+  }
 
   const users = [
     { "img": img6, "name": "Allan Rey Palban", "position": "Senior Business Analyst" },
@@ -275,7 +240,7 @@ export default function Users() {
           </Col>
 
           {/* Sort Dropdown */}
-          <Col md={6}>
+          {/* <Col md={6}>
             <DropdownButton
               id="sort-dropdown"
               title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
@@ -291,7 +256,7 @@ export default function Users() {
                 Updated At
               </Dropdown.Item>
             </DropdownButton>
-          </Col>
+          </Col> */}
 
         </Row>
 
@@ -332,7 +297,9 @@ export default function Users() {
             </InputGroup>  
           </Col>
         </Row>
-        <Row className="g-2 g-xxl-3 mt-3 mb-5">
+
+
+        {/* <Row className="g-2 g-xxl-3 mt-3 mb-5">
           {Object.keys(filteredUsers).map((userId) => {
             const user = filteredUsers[userId];
             return (
@@ -349,7 +316,9 @@ export default function Users() {
               </Col>
             );
           })}
-        </Row>
+        </Row> */}
+        <DynamicTable dataDict={userDict} onRowClick={handleRowClick}/>
+
       </div>
       <Footer />
     </React.Fragment>
