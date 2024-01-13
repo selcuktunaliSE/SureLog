@@ -53,7 +53,30 @@ module.exports = {
                 }
             }
         },*/
-
+        
+        "/api/delete-tenant-user": async (req, res) => {
+          const { tenantId, userId } = req.body;
+          try {
+            console.log(`Deleting user with ID:${userId} from tenant with ID:${tenantId}`);
+              await TenantUserModel.destroy({
+                  where: { 
+                      tenantId: tenantId,
+                      userId: userId
+                  }
+              });
+      
+              res.status(200).json({
+                  status: "success",
+                  message: "User successfully removed from tenant"
+              });
+          } catch (error) {
+              console.error("Error deleting tenant user: ", error);
+              res.status(500).json({
+                  status: "error",
+                  message: "Internal server error"
+              });
+          }
+        },
         "/api/register-user": async (req, res) => {
             const { email, password, firstName, middleName, lastName, tenantId, roleName } = req.body;
             try {
@@ -66,7 +89,6 @@ module.exports = {
                   middleName,
                   lastName
                 });
-          
                 // Associate new user with tenant
                 await TenantUserModel.create({
                   tenantId: tenantId,
@@ -252,7 +274,7 @@ module.exports = {
                     include: [{
                         model: UserModel,
                         as : 'user',
-                        attributes: ['firstName','lastName','email'] // Add other attributes as needed
+                        attributes: ['firstName','lastName','email','userId'] // Add other attributes as needed
                     }]
                 });
         

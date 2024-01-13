@@ -1,10 +1,7 @@
 const express = require('express');
-const Sequelize = require('sequelize');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
 const session = require('express-session');
-const crypto = require('crypto');
 const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
 
@@ -12,11 +9,6 @@ const sessionConfig = require('./config/sessionConfig.json');
 const envConfig = require('./config/envConfig.json');
 const corsConfig = require("./config/corsConfig.json");
 
-
-const getDynamicSecretKeyForUser = (user) => {
-    const secretKeyLength = 6; 
-    return crypto.randomInt(0, Math.pow(10, secretKeyLength)).toString();
-};
 
 console.log("ENV: ", process.env.NODE_ENV);
 

@@ -55,7 +55,7 @@ export default function TenantProfile() {
   };
 
   useEffect(() => {
-    console.log(`User ID:${userId}, Tenant ID:${tenantId}`);
+    console.log(tenantUsers);
     if (!userId) {
       navigate("/signin");
       return;
@@ -85,7 +85,7 @@ export default function TenantProfile() {
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     const offset = date.getTimezoneOffset() * 60000; 
-    const localTime = new Date(date.getTime() - offset - 6 * 3600000); // Minus 6 hours for UTC+3
+    const localTime = new Date(date.getTime() - offset - 3* 3600000); // Minus 6 hours for UTC+3
   
     const day = localTime.getDate().toString().padStart(2, '0');
     const month = (localTime.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
@@ -98,7 +98,7 @@ export default function TenantProfile() {
    
     const date = new Date(dateStr);
     const offset = date.getTimezoneOffset() * 60000; 
-    const localTime = new Date(date.getTime() - offset - 6 * 3600000); 
+    const localTime = new Date(date.getTime() - offset - 3 * 3600000); 
   
     const day = localTime.getDate().toString().padStart(2, '0');
     const month = (localTime.getMonth() + 1).toString().padStart(2, '0'); 
@@ -116,21 +116,21 @@ export default function TenantProfile() {
       ...user,
       Edit: (
         <>
-        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.userId)} className="me-2">
+        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.Id)} className="me-2">
           <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i> {/* Adjust the color as needed */}
         </Button>
-        <Button variant="outline-secondary" size="sm" onClick={() => handleDeleteUser(user.userId)}>
-          <i className="ri-delete-bin-line" style={{color: '#dc3545' }}></i> {/* Adjust the color as needed */}
-        </Button>
+        <Button variant="outline-secondary" size="sm" onClick={() => {
+        console.log("Delete Button Clicked for User ID:", user.Id);
+        handleDeleteUser(user.Id);
+      }} className="me-2">
+        <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
+      </Button>
       </>
     )
   };
     return acc;
   }, {});
-  const handleDeleteUser = (userId) => {
-    console.log("Delete user:", userId);
-    // Implement delete user logic here
-  };
+
   const handleEditUser = (userId) => {
     console.log("Edit user:", userId);
     // Here you can implement the logic to edit the user
@@ -139,7 +139,6 @@ export default function TenantProfile() {
   
   const handleRowClick = (rowData) => {
     console.log("Row clicked:", rowData);
-    // Handle the row click event
   };
 
   const handleInputChange = (event) => {
@@ -150,7 +149,18 @@ export default function TenantProfile() {
 
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
-
+  const handleDeleteUser = async (userId) => {
+    console.log("Deleting user with ID:", userId);
+    const response = await fetchService.deleteUserFromTenant(tenantId, userId);
+    if (response.status === "success") {
+        // User successfully deleted
+        console.log(response.message);
+        window.location.reload();
+    } else {
+        console.error("Deleting from Tenants: ",response.message);
+    }
+  };
+  
   const handleSubmitNewUser = async (event) => {
     event.preventDefault();
     if (newUserData.password !== newUserData.confirmPassword) {
@@ -229,9 +239,9 @@ export default function TenantProfile() {
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h3>Users</h3>
               <Button 
-  variant="primary" 
-  onClick={handleShowAddUserModal} 
-  style={buttonStyle}
+              variant="primary" 
+              onClick={handleShowAddUserModal} 
+              style={buttonStyle}
 >
   <i className="ri-user-add-fill" style={iconStyle}></i>
   <span>Add User</span>

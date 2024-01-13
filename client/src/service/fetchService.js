@@ -27,7 +27,22 @@ const FetchStatus = {
     ResourceNotFound: "ResourceNotFound",
 }
 
+const deleteUserFromTenant = async (tenantId, userId) => {
+  try {
+      const response = await fetch(`${fetchAddress}/api/delete-tenant-user`, {
+          method: 'post',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tenantId, userId })
+      });
 
+      return await response.json();
+  } catch (error) {
+      console.error("Error in deleteUserFromTenant service: ", error);
+      return { status: "error", message: "Error deleting user from tenant" };
+  }
+};
 const fetchUsersFromTenant = async (tenantId) => {
   let fetchResponse;
   try {
@@ -44,8 +59,9 @@ const fetchUsersFromTenant = async (tenantId) => {
     if (data.status === "success") {
       // Map users data and combine firstName and lastName into Name
       const remappedUsers = data.users.map(user => ({
+        Id:`${user.userId}`,
         Name: `${user.firstName} ${user.lastName}`,
-        Email:`${user.email}`,
+        Email:`${user.email}`
       }));
 
       // Update the fetchResponse with the remapped users
@@ -284,5 +300,6 @@ export {
     fetchTenantProfile,
     fetchTenantUsers,
     checkMasterUser,
-    registerUser
+    registerUser,
+    deleteUserFromTenant
 }
