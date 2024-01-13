@@ -54,40 +54,43 @@ module.exports = {
             }
         },*/
 
-        "/api/register-user": async (req,res) => {
-            const {email, password, firstName, middleName, lastName} = req.body;
-            try{
-                const userModel = await UserModel.findOne({where: {email}});
-                if(! userModel){
-                    const newUser = await UserModel.create({
-                        email,
-                        password, 
-                        firstName,
-                        middleName,
-                        lastName
-                    });
-        
-                    res.json({
-                        status: "success",
-                        message: "User registered successfully",
-                        userId: newUser.userId,
-                    }).send();
-                }
-                else{
-                    res.json({
-                        status: "userExists",
-                        message: "User already exists"
-                    }).send();
-                }
+        "/api/register-user": async (req, res) => {
+            const { email, password, firstName, middleName, lastName, tenantId, roleName } = req.body;
+            try {
+              const userModel = await UserModel.findOne({ where: { email } });
+              if (!userModel) {
+                const newUser = await UserModel.create({
+                  email,
+                  password, 
+                  firstName,
+                  middleName,
+                  lastName
+                });
+          
+                // Associate new user with tenant
+                await TenantUserModel.create({
+                  tenantId: tenantId,
+                  userId: newUser.userId,
+                  roleName: roleName
+                });
+          
+                res.json({
+                  status: "success",
+                  message: "User registered successfully",
+                  userId: newUser.userId,
+                }).send();
+              } else {
+                res.json({
+                  status: "userExists",
+                  message: "User already exists"
+                }).send();
+              }
+            } catch (error) {
+              console.error("Error in user registration: ", error);
+              res.status(500).json({ message: "Registration Error" }).send();
             }
-            catch(error)
-            {
-                console.error("Error checking user existence in database upon registration: ", error);
-                res.json({status: 500, message: "Registration Error"}).send();
-            }
-        
-            
-        },
+          },
+          
 
         "/api/authenticate-client": async(req, res) => {
             console.log("Authentication request received...");
@@ -233,6 +236,47 @@ module.exports = {
             }
 
         },
+        "/api/fetch-tenant-users": async(req, res) => {
+            const { tenantId } = req.body;
+            if(!tenantId) {
+                res.status(400).json({
+                    status: "error",
+                    message: "Tenant ID is required"
+                }).send();
+                return;
+            }
+        
+            try {
+                const tenantUsers = await TenantUserModel.findAll({
+                    where: { tenantId: tenantId },
+                    include: [{
+                        model: UserModel,
+                        as : 'user',
+                        attributes: ['firstName','lastName','email'] // Add other attributes as needed
+                    }]
+                });
+        
+                if(tenantUsers) {
+                    const users = tenantUsers.map(tu => tu.user);
+                    res.json({
+                        status: "success",
+                        users: users
+                    }).send();
+                } else {
+                    res.status(404).json({
+                        status: "usersNotFound",
+                        message: "No users found for this tenant"
+                    }).send();
+                }
+            } catch(error) {
+                console.error("Error fetching users from tenant: ", error);
+                res.status(500).json({
+                    status: "error",
+                    message: "Internal server error"
+                }).send();
+            }
+        },
+        
 
         "/api/check-master-user": async(req, res) => {
             console.log("Checking master user...");
@@ -265,72 +309,103 @@ module.exports = {
 
         },
 
-        "/api/fetch-tenants": async(req, res) => {
+        "/api/fetch-tenants": async (req, res) => {
             console.log("Fetching tenants...");
-            const {userId} = req.body;
-            if(! userId) {
-                res.json({
-                    status: "userIdNotFound"
-                }).send();
-                return;
+            const { userId } = req.body;
+          
+            if (!userId) {
+              res.json({
+                status: "userIdNotFound"
+              }).send();
+              return;
             }
-
-            try {
-                const master = await MasterModel.findOne({
-                  where: { userId },
-                  include: [
-                    {
-                      model: MasterRolePermissionModel,
-                      attributes: ['masterId'],
-                      include: [
-                        {
-                          model: TenantModel,
-                          attributes: ['tenantId', 'name'],
-                        },
-                      ],
-                    },
-                  ],
-                });
-              
-                if (!master) {
-                  console.log(`Master user with User ID:${userId} was not found.`);
+          
+          try {
+             
+              const master = await MasterModel.findOne({
+                where: { userId },
+                include: [
+                  {
+                    model: MasterRolePermissionModel,
+                    attributes: ['masterId'],
+                    include: [
+                      {
+                        model: TenantModel,
+                        attributes: ['tenantId', 'name'],
+                      },
+                    ],
+                  },
+                ],
+              });
+          
+              if (master) {
+                if (!master.MasterRolePermissionModels) {
+                  console.log("Master does not have any permission models");
                   res.json({
-                    status: "masterNotFound"
+                    status: "roleNotFound"
                   }).send();
                   return;
                 }
-
-                console.log("Master: ", master);
-
-                if(! master.MasterRolePermissionModels){
-                    console.log("Master does not have any permission models");
-                    res.json({
-                        status: "roleNotFound"
-                    }).send();
-                    return;
-                }
-              
                 const tenants = master.MasterRolePermissionModels.reduce((acc, rolePermission) => {
-                    const { tenantId, name } = rolePermission.TenantModel;
-                    acc[tenantId] = { 
-                        tenantId: tenantId, 
-                        name: name };
-                    return acc;
-                  }, {});
-              
-                console.log("Sending tenants:", tenants);
-              
+                  const { tenantId, name } = rolePermission.TenantModel;
+                  acc[tenantId] = {
+                    tenantId: tenantId,
+                    name: name
+                  };
+                  return acc;
+                }, {});
+          
+                console.log("Sending tenants for master:", tenants);
+          
                 res.json({
                   status: "success",
                   tenants: JSON.stringify(tenants)
                 }).send();
-              } catch (error) {
-                console.log("Error:", error);
-                res.status(500).json({
-                  status: "error"
-                }).send();
               }
-        },
+               else {
+                // If not a master, check if it's a tenant user
+                console.log("User is not a master. Checking if it's a tenant user...");
+                const tenantUser = await TenantUserModel.findOne({ where: { userId } });
+          
+                if (tenantUser) {
+                  if (!tenantUser.TenantRolePermissionModel) {
+                    console.log("Tenant user does not have any permission models");
+                    res.json({
+                      status: "roleNotFound"
+                    }).send();
+                    return;
+                  }
+          
+                  const tenants = tenantUser.TenantRolePermissionModel.reduce((acc, rolePermission) => {
+                    const { tenantId, name } = rolePermission.TenantModel;
+                    acc[tenantId] = {
+                      tenantId: tenantId,
+                      name: name
+                    };
+                    return acc;
+                  }, {});
+          
+                  console.log("Sending tenants for tenant user:", tenants);
+          
+                  res.json({
+                    status: "success",
+                    tenants: JSON.stringify(tenants)
+                  }).send();
+                } else {
+                  console.log(`User with User ID:${userId} was not found.`);
+                  res.json({
+                    status: "userNotFound"
+                  }).send();
+                }
+              }
+              } catch (error) {
+              console.log("Error:", error);
+              res.status(500).json({
+                status: "error"
+              }).send();
+            }
+          },
+          
 
         "/api/fetch-user-profile": async (req, res) => {
             const {sourceUserId, targetUserId} = req.body;

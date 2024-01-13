@@ -195,6 +195,10 @@ module.exports = (sequelize, DataTypes) => {
       // Create a direct association between TenantModel and TenantUserModel
       TenantModel.hasMany(TenantUserModel, { foreignKey: 'tenantId' });
       TenantUserModel.belongsTo(TenantModel, { foreignKey: 'tenantId' });
+      TenantUserModel.belongsTo(UserModel, {
+        foreignKey: 'userId', // The foreign key in TenantUserModel that references UserModel
+        as: 'user', // Alias for the association (you can choose any name you prefer)
+      });
 
       // Create a many-to-many association between Masters and TenantModel
       MasterModel.belongsToMany(TenantModel, {

@@ -42,7 +42,7 @@ const DynamicTable = ({ dataDict, onRowClick }) => {
   return (
     <Table responsive="md" className="dynamic-table" striped bordered hover>
       <thead>
-        <tr>
+        <tr className='text-center'>
           {columns.map(({ label, accessor }) => (
             <th key={accessor} onClick={() => requestSort(accessor)}>
               {label}
@@ -52,7 +52,7 @@ const DynamicTable = ({ dataDict, onRowClick }) => {
       </thead>
       <tbody>
         {sortedData.map((item, index) => (
-          <tr key={index} onClick={() => handleRowClick(item)}>
+          <tr className='text-center' key={index} onClick={() => handleRowClick(item)}>
             {columns.map(({ accessor }) => (
               <td key={accessor}>{item[accessor]}</td>
             ))}

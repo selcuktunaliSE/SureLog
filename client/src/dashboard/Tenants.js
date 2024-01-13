@@ -43,6 +43,7 @@ export default function Tenants() {
         console.log("User ID not found");
         navigate("/signin");
     }
+    if(! isMaster) fetchTenants();
 
     if(checkMasterUser()){
       setIsMaster(true);
@@ -68,6 +69,9 @@ export default function Tenants() {
 
   const checkMasterUser = async () => {
     const response = await fetchService.checkMasterUser(userId);
+    if(response){
+      console.log("Response: ", response);
+    }
     if(response.isError()) handleErrorResponse(response);
     return ! response.isError();
   }

@@ -28,38 +28,41 @@ const FetchStatus = {
 }
 
 
-const fetchUsersFromTenant = async (userId, tenantId, tenantRoles) => {
+const fetchUsersFromTenant = async (tenantId) => {
   let fetchResponse;
-  await fetch(`${fetchAddress}/api/fetch-users`, {
-    method: "post",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      userId: userId, 
-      tenantId: tenantId,
-      roleName: tenantRoles[tenantId],
-    })
-  }).then((response) => response.json())
-    .then((data) => {
-      if(data.status === "success" && data.users){
-          fetchResponse = new FetchResponse(FetchStatus.Success, {users: data.users});
-      } else if(data.status === "roleNotFound" || data.status === 505) {
-          fetchResponse = new FetchResponse(FetchStatus.RoleNotFound);
-      }else if(data.status === "accessDenied"){
-          fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
-        
-      }
-      else if(data.status === 503){
-          fetchResponse = new FetchResponse(FetchStatus.ServerException) ;
-      } 
-
-    })
-    .catch(error => {
-      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+  try {
+    const response = await fetch(`${fetchAddress}/api/fetch-tenant-users`, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ tenantId: tenantId })
     });
+
+    const data = await response.json();
+
+    if (data.status === "success") {
+      // Map users data and combine firstName and lastName into Name
+      const remappedUsers = data.users.map(user => ({
+        Name: `${user.firstName} ${user.lastName}`,
+        Email:`${user.email}`,
+      }));
+
+      // Update the fetchResponse with the remapped users
+      fetchResponse = new FetchResponse(FetchStatus.Success, { users: remappedUsers });
+    } else {
+      // Handle different error statuses accordingly
+      fetchResponse = new FetchResponse(FetchStatus.Error, null, data.message);
+    }
+  } catch (error) {
+    console.error("Error fetching users from tenant:", error);
+    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
   return fetchResponse;
-}
+};
+
+
 
 const fetchTenantRoles = async (userId) => {
   let fetchResponse;
@@ -90,6 +93,16 @@ const fetchTenantRoles = async (userId) => {
       });
     return fetchResponse;
 }
+const registerUser = async (userData) => {
+  const response = await fetch(`${fetchAddress}/api/register-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(userData)
+  });
+  return response.json();
+};
 
 const fetchTenants = async (userId) => {
   let fetchResponse;
@@ -156,6 +169,38 @@ const checkMasterUser = async (userId) => {
   return fetchResponse;
 }
 
+const fetchTenantUsers = async (userId, tenantId,roleName) => {
+  let fetchResponse;
+  await fetch(`${fetchAddress}/api/fetch-users`, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      userId: userId,
+      tenantId: tenantId,
+      roleName: roleName
+    })
+  }).then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        fetchResponse = new FetchResponse(FetchStatus.Success, {users: data.users});
+      } else if (data.status === "accessDenied") {
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      } else if (data.status === 503) {
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      } else if (data.status === "roleNotFound") {
+        fetchResponse = new FetchResponse(FetchStatus.RoleNotFound);
+      }
+    })
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
+
+  return fetchResponse;
+}
+
+
 const fetchUserProfile = async (sourceUserId, targetUserId) => {
   let fetchResponse;
   const requestData = {
@@ -191,7 +236,7 @@ const fetchUserProfile = async (sourceUserId, targetUserId) => {
 
     return fetchResponse;
 }
-
+  
 const fetchTenantProfile = async(userId, tenantId) => {
   let fetchResponse;
   const requestData = {
@@ -237,5 +282,7 @@ export {
     fetchTenants,
     fetchUserProfile,
     fetchTenantProfile,
+    fetchTenantUsers,
     checkMasterUser,
+    registerUser
 }
