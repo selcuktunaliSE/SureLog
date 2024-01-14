@@ -353,7 +353,7 @@ module.exports = {
                     include: [
                       {
                         model: TenantModel,
-                        attributes: ['tenantId', 'name'],
+                        attributes: ['tenantId', 'name','userCount'],
                       },
                     ],
                   },
@@ -369,10 +369,11 @@ module.exports = {
                   return;
                 }
                 const tenants = master.MasterRolePermissionModels.reduce((acc, rolePermission) => {
-                  const { tenantId, name } = rolePermission.TenantModel;
+                  const { tenantId, name,userCount } = rolePermission.TenantModel;
                   acc[tenantId] = {
                     tenantId: tenantId,
-                    name: name
+                    name: name,
+                    userCount:userCount
                   };
                   return acc;
                 }, {});
@@ -399,10 +400,11 @@ module.exports = {
                   }
           
                   const tenants = tenantUser.TenantRolePermissionModel.reduce((acc, rolePermission) => {
-                    const { tenantId, name } = rolePermission.TenantModel;
+                    const { tenantId, name,userCount } = rolePermission.TenantModel;
                     acc[tenantId] = {
                       tenantId: tenantId,
-                      name: name
+                      name: name,
+                      userCount:userCount
                     };
                     return acc;
                   }, {});

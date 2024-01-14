@@ -128,7 +128,7 @@ export default function Users() {
       setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
       setUserDict({});
       setFilteredUsers({});
-      navigate("error/503");
+      navigate("/error/503");
     }
 
     else if(response.status === FetchStatus.FetchError){
@@ -136,7 +136,7 @@ export default function Users() {
     }
 
     else if(response.status === FetchStatus.ResourceNotFound){
-      navigate("error/404");
+      navigate("/error/404");
     }
   }
 

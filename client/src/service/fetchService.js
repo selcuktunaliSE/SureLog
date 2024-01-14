@@ -51,7 +51,7 @@ const fetchUsersFromTenant = async (tenantId) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ tenantId: tenantId })
+      body: JSON.stringify({ tenantId: tenantId } )
     });
 
     const data = await response.json();

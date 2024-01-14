@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
-
+import Header from "./Header";
 export default function Main() {
 
   const offsets = ["/apps/file-manager", "/apps/email", "/apps/calendar"];
@@ -18,6 +18,7 @@ export default function Main() {
   return (
     <React.Fragment>
       <Sidebar />
+      <Header />
       <Outlet />
     </React.Fragment>
   )

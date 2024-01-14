@@ -141,7 +141,7 @@ export default function Header({ onSkin }) {
 
         <nav className="nav">
           <Link to=""><i className="ri-edit-2-line"></i> Edit Profile</Link>
-          <Link to="/pages/profile"><i className="ri-profile-line"></i> View Profile</Link>
+          <Link to="/profile"><i className="ri-profile-line"></i> View Profile</Link>
         </nav>
         <hr />
         <nav className="nav">
