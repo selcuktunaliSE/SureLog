@@ -6,11 +6,15 @@ import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import "../scss/customStyle.scss";
 import DynamicTable from "../components/DynamicTable";
+
+
 const { FetchStatus } = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
+
 export default function TenantProfile() {
   const [tenantData, setTenantData] = useState({});
   const [tenantUsers, setTenantUsers] = useState([]);
+  const [tenantUsersDict, setTenantUsersDict] = useState({});
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [newUserData,setNewUserData] = useState({
     fullName:"",
@@ -33,7 +37,7 @@ export default function TenantProfile() {
   
 
   const fetchTenantUsers = async () => {
-    const response = await fetchService.fetchUsersFromTenant(tenantId);
+    const response = await fetchService.fetchTenantUsers(userId, tenantId);
     console.log("API RESPONSE FOR TENANT USERS: ", response);
 
     if (!response.isError()) {
@@ -41,21 +45,22 @@ export default function TenantProfile() {
       setTenantUsers(response.data.users);
     } else {
       handleErrorResponse(response);
-    }
+    } 
   };
 
   const fetchTenantProfile = async () => {
     const response = await fetchService.fetchTenantProfile(userId, tenantId);
 
     if (!response.isError()) {
+      console.log("response data: ", response.data.tenant);
       setTenantData(response.data.tenant);
+      console.log("tenant data: ", tenantData);
     } else {
       handleErrorResponse(response);
     }
   };
 
   useEffect(() => {
-    console.log(tenantUsers);
     if (!userId) {
       navigate("/signin");
       return;
@@ -64,10 +69,67 @@ export default function TenantProfile() {
       navigate("/dashboard/tenants");
       return;
     }
+    if (!tenantData) {
+      navigate("/error/404");
+    }
 
     fetchTenantProfile();
     fetchTenantUsers();
+    
   }, [location.state, navigate, tenantId, userId]);
+
+  useEffect(() => {
+    console.log("tenant users: ", tenantUsers);
+  
+    setTenantUsersDict(
+      addExtraInformationToTenantUsers(
+        transformTenantUsersData(tenantUsers))
+      );
+
+  }, [tenantUsers]);
+  
+  const addExtraInformationToTenantUsers = (tenantUsersDict) => {
+    const modifiedTenantUsersDict = Object.values(tenantData).map((user, index) => ({
+      ...tenantUsersDict[index], 
+      Edit: (
+        <>
+          <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.userId)} className="me-2">
+            <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
+          </Button>
+          <Button variant="outline-secondary" size="sm" onClick={() => {
+            console.log("Delete Button Clicked for User ID:", user.userId);
+            handleDeleteUser(user.userId);
+          }} className="me-2">
+            <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
+          </Button>
+        </>
+      )
+    }));
+    console.log("modified tenant users dict: ", modifiedTenantUsersDict);
+    return modifiedTenantUsersDict;
+  }
+  
+
+  const updatedTenantUsersDict  = tenantUsers.reduce((acc, user, index) => {
+    acc[index] = {
+      ...user,
+      Edit: (
+        <>
+        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.Id)} className="me-2">
+          <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i> {/* Adjust the color as needed */}
+        </Button>
+        <Button variant="outline-secondary" size="sm" onClick={() => {
+        console.log("Delete Button Clicked for User ID:", user.Id);
+        handleDeleteUser(user.Id);
+      }} className="me-2">
+        <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
+      </Button>
+      </>
+    )
+  };
+    return acc;
+  }, {});
+ 
 
   const handleErrorResponse = (response) => {
     if (response.status === FetchStatus.AccessDenied) {
@@ -111,25 +173,7 @@ export default function TenantProfile() {
   
 
 
-  const tenantUsersDict = tenantUsers.reduce((acc, user, index) => {
-    acc[index] = {
-      ...user,
-      Edit: (
-        <>
-        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.Id)} className="me-2">
-          <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i> {/* Adjust the color as needed */}
-        </Button>
-        <Button variant="outline-secondary" size="sm" onClick={() => {
-        console.log("Delete Button Clicked for User ID:", user.Id);
-        handleDeleteUser(user.Id);
-      }} className="me-2">
-        <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
-      </Button>
-      </>
-    )
-  };
-    return acc;
-  }, {});
+  
 
   const handleEditUser = (userId) => {
     console.log("Edit user:", userId);
@@ -197,6 +241,25 @@ export default function TenantProfile() {
     handleCloseAddUserModal();
   };
 
+  const transformTenantUsersData = (data) => {
+    const transformedData = {};
+  
+    if (Array.isArray(data)) {
+      data.forEach((item, index) => {
+        transformedData[index] = {
+          firstName: item.firstName,
+          lastName: item.lastName,
+          email: item.email,
+          userId: item.userId, // Add any additional fields you need
+        };
+      });
+    }
+
+    console.log("transformed tenant data: ", transformedData);
+  
+    return transformedData;
+  };
+
   return (
     <React.Fragment>
       <HeaderMobile />
@@ -207,6 +270,7 @@ export default function TenantProfile() {
             <Card className="mb-5 text-center">
               <Card.Body style={{ color: "#e2e5ec" }}>
                 {tenantData ? (
+                  
                   <>
                     <h5>{tenantData.name}</h5>
                     <ListGroup className="list-group-flush mt-3">
@@ -242,12 +306,14 @@ export default function TenantProfile() {
               variant="primary" 
               onClick={handleShowAddUserModal} 
               style={buttonStyle}
->
-  <i className="ri-user-add-fill" style={iconStyle}></i>
-  <span>Add User</span>
-</Button>
+              >
+              <i className="ri-user-add-fill" style={iconStyle}></i>
+              <span>Add User</span>
+            </Button>
             </div>
+
             <DynamicTable dataDict={tenantUsersDict} onRowClick={handleRowClick} />
+          
           </Col>
         </Row>
 

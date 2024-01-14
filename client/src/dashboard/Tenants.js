@@ -16,8 +16,6 @@ const fetchService = require("../service/FetchService");
 
 export default function Tenants() {
   
-  const [isMaster, setIsMaster] = useState(false);
-  const [tenants, setTenants] = useState([]); 
   const [filteredTenants, setFilteredTenants] = useState({});
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [isError, setIsError] = useState(false);
@@ -38,27 +36,24 @@ export default function Tenants() {
 
 
   useEffect(() => {
-    // Check if the user is a master user and get their ID
     if(! userId) {
         console.log("User ID not found");
         navigate("/signin");
+        return;
     }
-    if(! isMaster) fetchTenants();
 
     if(checkMasterUser()){
-      setIsMaster(true);
       fetchTenants();
     }
     
-  }, [navigate, isMaster]);
+  }, [navigate]);
 
   const fetchTenants = async () => {
-    const response = await fetchService.fetchTenants(userId);
-    const data = response.data;
-
+    const response = await fetchService.fetchTenantsOfMaster(userId);
+    
     if(! response.isError()){
-      setTenants(JSON.parse(data.tenants));
-      setTenantDict(JSON.parse(data.tenants));
+      const data = response.data;
+      setTenantDict(data.tenants);
       setIsError(false);
       setErrorMessage("");
     }
@@ -72,6 +67,7 @@ export default function Tenants() {
     if(response){
       console.log("Response: ", response);
     }
+
     if(response.isError()) handleErrorResponse(response);
     return ! response.isError();
   }

@@ -17,12 +17,10 @@ import DynamicTable from "../components/DynamicTable";
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
 
-// ... (rest of the image imports)
-
 export default function Users() {
  
-  const [tenantRoles, setTenantRoles] = useState({});
-  const [tenantNames, setTenantNames] = useState({});
+  const [tenants, setTenants] = useState([]);
+  const [isUserMaster, setIsUserMaster] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState(null);
   const [userDict, setUserDict] = useState({});
   const [isError, setIsError] = useState(false);
@@ -43,15 +41,41 @@ export default function Users() {
 
   const userId = localStorage.getItem("userId");
 
+  
+  
+  
+
   useEffect(() => {
-    if(! userId) navigate("/signin");
-    fetchTenantRoles();
-  }, [userId, navigate]);
+    let isMounted = true; // to handle component unmount
+  
+    const initializeData = async () => {
+      if(! userId) {
+        navigate("/signin");
+        return;
+      }
+  
+      await checkIsUserMaster();
+      if (isMounted) {
+        fetchTenants();
+      }
+    };
+  
+    if (isMounted) {
+      initializeData();
+    }
+  
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, navigate, isUserMaster]);
+  
 
   const fetchUsersFromTenant = async (tenantId) => {
     if(!userId) navigate("/signin");
 
-    const response = await fetchService.fetchUsersFromTenant(userId, tenantId, tenantRoles);
+    const response = await fetchService.fetchTenantUsers(userId, tenantId);
+
+    console.log("Fetch Users From Tenant Response: ", response);
 
     if(!response.isError()){
       const data = response.data;
@@ -76,36 +100,62 @@ export default function Users() {
     }
   }
 
-  const fetchTenantRoles = async () => {
-    const response = await fetchService.fetchTenantRoles(userId);
+  const checkIsUserMaster = async () => {
+    const response = await fetchService.checkMasterUser(userId);
     if(!response.isError()){
       setIsError(false);
       setErrorMessage("");
-      
-      const data = response.data;
-      const tenantRoles = {};
-      const tenantNames= {};
 
-      data.tenantRoles.forEach(tenantRole => {
-          tenantRoles[tenantRole.tenantId] = tenantRole.roleName;
-      });
-
-
-      Object.keys(data.tenantNames).forEach(tenantId => {
-          tenantNames[tenantId] = data.tenantNames[tenantId];
-      }); 
-
-      setTenantNames(tenantNames);
-      setTenantRoles(tenantRoles);
-
-      console.log("tenant names: ", data.tenantNames);
-      console.log("Tenant roles: ", tenantRoles);
+      const isUserMaster = response.data.isUserMaster;
+      console.log("response for check is user master: ", response.data.isUserMaster);
+      setIsUserMaster(isUserMaster);
+      console.log("is user master?", isUserMaster);
     }
     else{
       handleErrorResponse(response);
     }
+  }
+
+
+  const fetchTenants = async () => {
+
+    let response;
+    if(isUserMaster){
+      response = await fetchService.fetchTenantsOfMaster(userId);
+      console.log("user is master");
+    }
+    else{
+      response = await fetchService.fetchTenantOfUser(userId, userId);
+      console.log("user is NOT master");
+    }
+
+
+    console.log("is user master?:", isUserMaster, " response: ", response);
+
+    if(!response.isError()){
+      setIsError(false);
+      setErrorMessage("");
+      
+      let tenantsData = [];
+      if(isUserMaster){
+        tenantsData = response.data.tenants;
+      }
+      else{
+        let tenantId = response.data.tenant.tenantId;
+        tenantsData.push(response.data.tenant);
+      }
+      
+      console.log("tenants data:" , tenantsData);
+
+      setTenants(tenantsData);
+      console.log("type of tenants object: ", Object.prototype.toString(tenants));
+    }
+    else{
+      handleErrorResponse(response);
+    }    
    
   }
+
 
   const handleErrorResponse = (response) => {
 
@@ -128,7 +178,7 @@ export default function Users() {
       setErrorMessage("A server exception has occured while processing your request. Please try again later or contact your administrator.");
       setUserDict({});
       setFilteredUsers({});
-      navigate("error/503");
+      navigate("/error/503");
     }
 
     else if(response.status === FetchStatus.FetchError){
@@ -136,7 +186,7 @@ export default function Users() {
     }
 
     else if(response.status === FetchStatus.ResourceNotFound){
-      navigate("error/404");
+      navigate("/error/404");
     }
   }
 
@@ -145,8 +195,9 @@ export default function Users() {
   };
 
   const handleTenantSelect = (tenantId) => {
+    console.log("selected tenant id: ", tenantId);
     setSelectedTenantId(tenantId);
-    setSelectedTenantName(tenantNames[tenantId]);
+    setSelectedTenantName(tenants.filter(tenant => tenant.tenantId === tenantId)[0].name);
     fetchUsersFromTenant(tenantId);
   };
 
@@ -227,15 +278,20 @@ export default function Users() {
         <Row className="mb-3">
           {/* Tenant Selector Dropdown */}
           <Col md={2}>
+            {console.log("tenants on display: ", tenants)}
             <DropdownButton
               id="tenant-dropdown"
-              title={ selectedTenantName || `Select Tenant`}
+              title={selectedTenantName || `Select Tenant`}
             >
-              {Object.entries(tenantRoles).map(([tenantId, role]) => (
-                <Dropdown.Item key={tenantId} onClick={() => handleTenantSelect(tenantId)}>
-                  {tenantNames[tenantId]}
-                </Dropdown.Item>
-              ))}
+              {tenants && tenants.length > 0 ? (
+                tenants.map(tenant => {
+                  return <Dropdown.Item key={tenant.tenantId} onClick={() => handleTenantSelect(tenant.tenantId)}>
+                    {tenant.name}
+                  </Dropdown.Item>
+                })
+              ) : (
+                <Dropdown.Item>No tenants available</Dropdown.Item>
+              )}
             </DropdownButton>
           </Col>
 

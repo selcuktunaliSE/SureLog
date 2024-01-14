@@ -9,6 +9,8 @@ const sessionConfig = require('./config/sessionConfig.json');
 const envConfig = require('./config/envConfig.json');
 const corsConfig = require("./config/corsConfig.json");
 
+const databaseService = require("./service/databaseService");
+
 
 console.log("ENV: ", process.env.NODE_ENV);
 
@@ -55,6 +57,8 @@ Object.keys(api.get).forEach(apiFunctionName => app.get(apiFunctionName, api.get
 
 
 db.sequelize.sync().then((req) => {
+    databaseService.initialize();
+
     var httpPort = process.env.NODE_ENV == "development" ?
         envConfig.environments.development.httpPort :
         envConfig.environments.production.httpPort;

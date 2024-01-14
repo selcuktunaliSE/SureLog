@@ -1,6 +1,8 @@
 import React from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import Header from "./Header";
+import HeaderMobile from "./HeaderMobile";
 
 export default function Main() {
 
@@ -17,6 +19,8 @@ export default function Main() {
 
   return (
     <React.Fragment>
+      <HeaderMobile />
+      <Header /> 
       <Sidebar />
       <Outlet />
     </React.Fragment>
