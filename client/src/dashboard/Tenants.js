@@ -49,10 +49,10 @@ export default function Tenants() {
     if(checkMasterUser()){
       fetchTenants();
     }
-  }, [navigate, isMaster]);
+  }, [navigate]);
 
   const fetchTenants = async () => {
-    const response = await fetchService.fetchTenants(userId);
+    const response = await fetchService.fetchTenantsOfMaster(userId);
     const data = response.data;
     console.log("Response : ",response)
     console.log("Data for tenants : ", data)
@@ -232,7 +232,9 @@ export default function Tenants() {
 
             <Row className="mt-3">
               <Col md={12}>
-                <DynamicTable dataDict={tenantDict} onRowClick={handleRowClick}/>
+                <div className="cursor-pointer">
+                  <DynamicTable dataDict={tenantDict} onRowClick={handleRowClick}/>
+                </div>
               </Col>
             </Row>
             
@@ -240,7 +242,7 @@ export default function Tenants() {
             <Row style={{ height: '30vh' }} className="flex-grow-1">
               <Col md={6} className="d-flex">
                 <div className="w-100 d-flex flex-column">
-                  <BarChartCard tenants={tenants}theme = {currentSkin} />
+                  <BarChartCard tenants={tenantDict}theme = {currentSkin} />
                 </div>
               </Col>
               <Col md ={6} className="d-flex">

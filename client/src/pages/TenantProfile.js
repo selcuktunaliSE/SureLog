@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Col, Row, Nav,ListGroup,Modal,Button,Form } from "react-bootstrap";
+import { Card, Col, Row, Nav,ListGroup,Modal,Button,Form, CardHeader } from "react-bootstrap";
 import { useNavigate,Link ,useLocation } from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
@@ -188,7 +188,7 @@ export default function TenantProfile() {
   };
 
 
-  const tenantUsersDict = tenantUsers.reduce((acc, user, index) => {
+  const tenantUsersDict2 = tenantUsers.reduce((acc, user, index) => {
     acc[index] = {
       ...user,
       Edit: (
@@ -319,11 +319,11 @@ export default function TenantProfile() {
       <div className="d-md-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link to="#">Dashboard</Link></li>
+              <li className="breadcrumb-item active">Dashboard</li>
               <li className="breadcrumb-item active" aria-current="page">Tenants</li>
-              <li className="breadcrumb-item active" aria-current="page">Tenant Profile</li>
+              <li className="breadcrumb-item active" aria-current="page"><Link to = "#"> Tenant Profile </Link> </li>
             </ol>
-            <h4 className="main-title mb-0">Welcome to Dashboard</h4>
+            <h4 className="main-title mb-0">Welcome to Tenant Profile</h4>
           </div>
           <div className="d-flex gap-2 mt-3 mt-md-0">
             <Button variant="" className="btn-white d-flex align-items-center gap-2">
@@ -339,87 +339,114 @@ export default function TenantProfile() {
         </div>
         
         
-        <Row >
-        <Col md={6} lg={6}>
-    <Card className="card-one">
-        <Card.Header>
-            <Card.Title as="h6" >Tenant Information</Card.Title>
-            <Nav className="nav-icon nav-icon-sm ms-auto">
-                {/* Icons or links can be added here if needed */}
-            </Nav>
-        </Card.Header>
-        <Card.Body className="p-3">
-            {tenantData ? (
-                <div> {/* Apply text-center here */}
-                    <h5 className="card-value mb-1 ls--1">Name: {tenantData.name}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">ID: {tenantData.tenantId}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">User Count: {tenantData.userCount}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">Created: {formatDate(tenantData.createdAt)}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">Last Update: {formatDateWithTime(tenantData.updatedAt)}</h5>
-                </div>
-            ) : (
-                <p>Loading tenant data...</p>
-            )}
-        </Card.Body>
-     </Card>
-          </Col>
-          <Col md={6} lg={6}>
-          <Card className="card-one">
-        <Card.Header>
-            <Card.Title as="h6" >Tenant Information</Card.Title>
-            <Nav className="nav-icon nav-icon-sm ms-auto">
-                {/* Icons or links can be added here if needed */}
-            </Nav>
-        </Card.Header>
-        <Card.Body className="p-3">
-            {tenantData ? (
-                <div> {/* Apply text-center here */}
-                    <h5 className="card-value mb-1 ls--1">Name: {tenantData.name}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">ID: {tenantData.tenantId}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">User Count: {tenantData.userCount}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">Created: {formatDate(tenantData.createdAt)}</h5>
-                    <hr />
-                    <h5 className="card-value mb-1 ls--1">Last Update: {formatDateWithTime(tenantData.updatedAt)}</h5>
-                </div>
-            ) : (
-                <p>Loading tenant data...</p>
-            )}
-        </Card.Body>
-     </Card>
-          </Col>
-            
-</Row>
-<br></br>
-        
-        
-        
+        <Row className="mb-3">
+    <Col md={12} lg={12}>
+        <Card className="card-one">
+            <Card.Header>
+                <Card.Title as="h6" className="centered-card-value">
+                    {tenantData.name}
+                </Card.Title>
+                <Nav className="nav-icon nav-icon-sm ms-auto">
+                    {/* Icons or links can be added here if needed */}
+                </Nav>
+            </Card.Header>
+            <Card.Body className="p-3"> 
+                {tenantData ? (
+                    <Row className="tenant-info">
+                        <Col md={3} sm={3}>
+                          <Card>
+                            <Card.Header>
+                              <Card.Title as="h6" className="card-value centered-card-value">
+                                ID
+                              </Card.Title>
+                            </Card.Header>
+                            <Card.Body className="card-value centered-card-value">
+                                <i class="ri-hashtag"></i> {tenantData.tenantId}
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                        <Col md={3} sm={3}>
+                          <Card>
+                            <Card.Header>
+                              <Card.Title as="h6" className="card-value centered-card-value">
+                              User Count
+                              </Card.Title>
+                              </Card.Header>
+                              <Card.Body className="card-value centered-card-value">
+                              <i class="ri-group-line"></i> {tenantData.userCount}
+                              </Card.Body>
+                              </Card>
+                              </Col>
+                              <Col md={3} sm={3}>
+                              <Card>
+                              <Card.Header>
+                              <Card.Title as="h6" className="card-value centered-card-value">
+                              Created Date
+                              </Card.Title>
+                              </Card.Header>
+                              <Card.Body className="card-value centered-card-value">
+                              <i class="ri-calendar-check-line"></i> {formatDate(tenantData.createdAt)}
+                              </Card.Body>
+                              </Card>
+                              </Col>
+                              <Col md={3} sm={3}>
+                              <Card>
+                              <Card.Header>
+                              <Card.Title as="h6" className="card-value centered-card-value">
+                              Last Update
+                              </Card.Title>
+                              </Card.Header>
+                              <Card.Body className="card-value centered-card-value">
+                              <i class="ri-refresh-line"></i> {formatDateWithTime(tenantData.updatedAt)}
+                              </Card.Body>
+                              </Card>
+                              </Col>
+                              </Row>
+                              ) : (
+                              <p>Loading tenant data...</p>
+                              )}
+                              </Card.Body>
+                              </Card>
+                              </Col>
+                              </Row>
         
        
         {/* DynamicTable for tenantUsers */}
        
-        <Row className="justify-content-center">
-          <Col md={8}>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h3>Users</h3>
-              <Button 
-              variant="primary" 
-              onClick={handleShowAddUserModal} 
-              style={buttonStyle}
-              >
-              <i className="ri-user-add-fill" style={iconStyle}></i>
-              <span>Add User</span>
+        <Row>
+  <Col md={10}>
+    <DynamicTable dataDict={tenantUsersDict} onRowClick={handleRowClick} />
+          </Col>
+          <Col md={2}>
+          <Card className="mb-3" style={{ marginTop: '18px' }}>
+            <Card.Body className="">
+            <div className="d-flex justify-content-center align-items-center mb-3">
+            <Button
+            variant="primary"
+            onClick={handleShowAddUserModal}
+            style={buttonStyle}
+            >
+            <i className="ri-user-add-fill" style={iconStyle}></i>
+            <span>Add User</span>
             </Button>
             </div>
-
-            <DynamicTable dataDict={tenantUsersDict} onRowClick={handleRowClick} />
-          
+            </Card.Body>
+            </Card>
+            <Card className="mb-3" >
+            <Card.Body className="">
+            <div className="d-flex justify-content-center align-items-center mb-3">
+            <Button
+            variant="info"
+            onClick={handleShowAddUserModal}
+            style={buttonStyle}
+            >
+            <i className="ri-pencil-fill" style={iconStyle}></i>
+            <span>Edit Tenant</span>
+            </Button>
+            </div>
+            </Card.Body>
+            </Card>
+           
           </Col>
         </Row>
         <Modal show={showAddUserModal} onHide={handleCloseAddUserModal}>
@@ -570,7 +597,7 @@ export default function TenantProfile() {
     )}
   </Modal.Body>
 </Modal>
-        <Footer />
+     
       </div>
     </React.Fragment>
   );
