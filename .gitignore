@@ -46,3 +46,5 @@ coverage/
 server/config/databaseConfig.json
 server/config/envConfig.json
 server/config/sessionConfig.json
+server/config/corsConfig.json
+client/src/config/fetchConfig.json

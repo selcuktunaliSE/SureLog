@@ -68,9 +68,7 @@ export default function Profile() {
     fetchUserData();
   }, [location.state]);
 
-  if (!userData) {
-    return <div>Loading user data...</div>;
-  }
+  
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -79,6 +77,10 @@ export default function Profile() {
     const year = date.getFullYear();
     return `${day}.${month}.${year}`;
   };
+
+  if (!userData) {
+    return <div>Loading user data...</div>;
+  }
 
   return (
     <React.Fragment>

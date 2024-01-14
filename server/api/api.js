@@ -1,20 +1,7 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { Sequelize, DataTypes } = require('sequelize');
-const env = process.env.NODE_ENV || 'development';
-const databaseConfig = require(__dirname + '/../config/databaseConfig.json')[env];
 
-let sequelize;
-if (databaseConfig.use_env_variable) {
-  sequelize = new Sequelize(process.env[databaseConfig.use_env_variable], databaseConfig);
-} else {
-  sequelize = new Sequelize(databaseConfig.database, databaseConfig.username, databaseConfig.password, databaseConfig);
-}
-
-const models = require('../models/models')(sequelize, DataTypes);
-const { UserModel, TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterRolePermissionModel, associate} = models;
-
-associate();
+const databaseService = require("../service/databaseService");
 
 const getDynamicSecretKeyForUser = (user) => {
     const secretKeyLength = 6; // You can adjust the length as needed
@@ -55,31 +42,57 @@ module.exports = {
         },*/
         
         "/api/delete-tenant-user": async (req, res) => {
-          const { tenantId, userId } = req.body;
+          const {sourceUserID, tenantId, targetUserId } = req.body;
           try {
-            console.log(`Deleting user with ID:${userId} from tenant with ID:${tenantId}`);
-              await TenantUserModel.destroy({
-                  where: { 
-                      tenantId: tenantId,
-                      userId: userId
-                  }
-              });
-      
+            console.log(`Deleting user with ID:${targetUserId} from tenant with ID:${tenantId}`);
+            const databaseResponse = await databaseService.removeUserFromTenant(sourceUserId, tenantId, targetUserId);
+
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
               res.status(200).json({
-                  status: "success",
-                  message: "User successfully removed from tenant"
-              });
-          } catch (error) {
-              console.error("Error deleting tenant user: ", error);
-              res.status(500).json({
-                  status: "error",
-                  message: "Internal server error"
-              });
+                status: "success"});
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+          } 
+          catch (error) {
+            console.error("Error deleting tenant user: ", error);
+            res.status(500).json({
+                status: "error",
+                message: "Internal server error"
+            });
           }
         },
         "/api/register-user": async (req, res) => {
-            const { email, password, firstName, middleName, lastName, tenantId, roleName } = req.body;
-            try {
+            const {sourceUserId, email, password, firstName, middleName, lastName, tenantId, roleName } = req.body;
+
+            try{
+              const databaseResponse = await databaseService.addUser(sourceUserId, {email, password, firstName, middleName, lastName, tenantId, roleName});
+              if(databaseResponse.responseType === databaseService.ResponseType.Success){
+                res.json({
+                  status: "success",
+                  userId: databaseResponse.data.newUser.userId,
+                }).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.AlreadyExists){
+                res.json({
+                  status: "userExists",
+                  message: "User already exists"
+                }).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+                res.status(505).send();
+              }
+            }
+            catch (error) {
+              console.error("Error in user registration: ", error);
+              res.status(500).json({ message: "Registration Error" }).send();
+            }
+            
+            /* try {
               const userModel = await UserModel.findOne({ where: { email } });
               if (!userModel) {
                 const newUser = await UserModel.create({
@@ -96,29 +109,43 @@ module.exports = {
                   roleName: roleName
                 });
           
-                res.json({
-                  status: "success",
-                  message: "User registered successfully",
-                  userId: newUser.userId,
-                }).send();
+
               } else {
-                res.json({
-                  status: "userExists",
-                  message: "User already exists"
-                }).send();
+                
               }
-            } catch (error) {
+            }catch (error) {
               console.error("Error in user registration: ", error);
               res.status(500).json({ message: "Registration Error" }).send();
-            }
+            } */
           },
           
 
         "/api/authenticate-client": async(req, res) => {
             console.log("Authentication request received...");
             const { email, password } = req.body;
+            try{
+              const databaseResponse = await databaseService.authenticateUser(email, password);
 
-            try {
+              if(databaseResponse.responseType === databaseService.ResponseType.Success){
+                res.json({
+                  "userId": databaseResponse.data.userId,
+                  "status" : "success"
+                }).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+                console.log("Login failed due to invalid credentials.");
+                res.json({ 
+                    status: "invalidCredentials",
+                    message: 'Login failed due to invalid credentials.'})
+                    .send();
+              }
+            }
+            catch(error){
+              console.error("Error logging in: ", error);
+              res.json({ status: 500, message: 'Error logging in'}).send();
+            }
+
+            /* try {
                 const userModel = await UserModel.findOne({ where: { email, password } });
                 if (userModel) {
                     const dynamicSecretKey = getDynamicSecretKeyForUser(userModel);
@@ -141,12 +168,18 @@ module.exports = {
             } catch (error) {
                 console.error("Error logging in: ", error);
                 res.json({ status: 500, message: 'Error logging in'}).send();
-            }
+            } */
         },
 
         "/api/fetch-tenant-roles": async (req, res) => {
-            console.log("Tenant roles fetch request received...");
-            const { userId } = req.body;
+            console.log("Tenant roles fetch request received... (disabled)");
+            /* const { userId } = req.body;
+            let isMaster = false;
+
+            if( masterModel = MasterModel.findOne({where: {userId : userId}})){
+              isMaster = true;
+              
+            } 
           
             try {
               const tenantRoles = await TenantUserModel.findAll({
@@ -177,24 +210,45 @@ module.exports = {
             } catch (error) {
               console.error("Error fetching tenant roles: ", error);
               res.json({ status: 500 }).send();
-            }
-          },
+            } */
+        },
 
-        "/api/fetch-users": async(req, res) => {
-            const {userId, tenantId, roleName} = req.body;
-            if(! userId || ! tenantId || ! roleName){
+        "/api/fetch-tenant-users": async(req, res) => {
+            const {userId, tenantId} = req.body;
+            if(! userId || ! tenantId){
                 res.json({
                     status: 505
                 }).send();
                 return;
             } 
+            console.log(`Fetching users from Tenant: ${tenantId} for User: ${userId}}`);
 
-            console.log(`Fetching users from tenant with TenantID: ${tenantId} and Role: ${roleName}`);
             try{
+              const databaseResponse = await databaseService.fetchUsersOfTenant(userId, tenantId);
+              if(databaseResponse.responseType === databaseService.ResponseType.Success){
+                res.json({
+                  status: "success",
+                  users: databaseResponse.data.users,
+                }).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+                res.status(505).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+                res.status(404).send();
+              }
+              console.log(databaseResponse);
+            }
+            catch(error){
+              console.log("Error fetching users from tenant: ", error);
+              res.json({status:503}).send();
+            }
+
+            /* try{
 
 
                 const masterUserModel = await MasterModel.findOne({where: {userId: userId}});
-                const tenantUserModel = await TenantUserModel.findOne( {where: {userId, tenantId, roleName}});
+                const tenantUserModel = await TenantUserModel.findOne( {where: {userId, tenantId}});
 
                 const tenantUsers = await TenantModel.findOne({
                     where: { tenantId: tenantId },
@@ -212,13 +266,11 @@ module.exports = {
                 }
                 
                 if(tenantUserModel){
-                    const tenantRolePermissionModel = await TenantRolePermissionModel.findOne( {where: {tenantId, roleName}});
+                    const tenantRolePermissionModel = await tenantRolePermissionModel.findOne( {where: {tenantId, roleName}});
 
                     if(! tenantRolePermissionModel){
                         console.log("Tenant Role Permission Model not found");
-                        res.json({
-                            status: 505
-                        }).send();
+                        res.json({status: 505}).send();
                         return;
                     }
 
@@ -245,105 +297,61 @@ module.exports = {
                     }
 
                 } else{
-                    res.json({
-                        status: "roleNotFound"
-                    }).send();
+                    res.json({status: "roleNotFound"}).send();
                 }
             }
             catch(error){
                 console.log("Error fetching users from tenant: ", error);
-                res.json({
-                    status:503
-                }).send();
-            }
+                res.json({status:503}).send();
+            } */
 
         },
-        "/api/fetch-tenant-users": async(req, res) => {
-            const { tenantId } = req.body;
-            if(!tenantId) {
-                res.status(400).json({
-                    status: "error",
-                    message: "Tenant ID is required"
-                }).send();
-                return;
-            }
         
-            try {
-                const tenantUsers = await TenantUserModel.findAll({
-                    where: { tenantId: tenantId },
-                    include: [{
-                        model: UserModel,
-                        as : 'user',
-                        attributes: ['firstName','lastName','email','userId'] // Add other attributes as needed
-                    }]
-                });
-        
-                if(tenantUsers) {
-                    const users = tenantUsers.map(tu => tu.user);
-                    res.json({
-                        status: "success",
-                        users: users
-                    }).send();
-                } else {
-                    res.status(404).json({
-                        status: "usersNotFound",
-                        message: "No users found for this tenant"
-                    }).send();
-                }
-            } catch(error) {
-                console.error("Error fetching users from tenant: ", error);
-                res.status(500).json({
-                    status: "error",
-                    message: "Internal server error"
-                }).send();
-            }
-        },
-        
-
         "/api/check-master-user": async(req, res) => {
             console.log("Checking master user...");
             const {userId} = req.body;
-            if(! userId) {
-                res.json({
-                    status: "userIdNotFound"
-                }).send();
-                return;
-            }
+
             try{
-                const master = await MasterModel.findOne({where: { userId: userId}});
-                if(! master){
-                    console.log(`Master user for User ID:${userId} was not found.`);
-                    res.json({
-                        status: "masterNotFound"
-                    }).send();
-                    return;
-                }
-                res.json({
-                    status: "success"
-                }).send();
-
-            }catch(error){
-                console.log("Error checking master user status: ", error);
-                res.json({
-                    status: 500
-                }).send();
+              const isUserMaster = databaseService.isUserMaster(userId);
+              res.json({status: "success", data: {isUserMaster: isUserMaster}});
             }
-
+            catch(error){
+              console.log("Error checking master user status: ", error);
+              res.json({
+                  status: 500
+              }).send();
+            }
         },
 
-        "/api/fetch-tenants": async (req, res) => {
-            console.log("Fetching tenants...");
-            const { userId } = req.body;
+        "/api/fetch-tenants-of-master": async (req, res) => {
+          console.log("Fetching tenants...");
+          const { userId } = req.body;
+
+          if (!userId) {
+            res.json({
+              status: "userIdNotFound"
+            }).send();
+            return;
+          }
           
-            if (!userId) {
+          try{
+            const databaseResponse = await databaseService.fetchTenantsOfMaster(userId);
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
               res.json({
-                status: "userIdNotFound"
+                status: "success",
+                tenants: databaseResponse.data.tenants
               }).send();
-              return;
             }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.log("Error:", error);
+            res.status(500).send();
+          }
           
-          try {
-             
+          /* try {
               const master = await MasterModel.findOne({
                 where: { userId },
                 include: [
@@ -361,7 +369,7 @@ module.exports = {
               });
           
               if (master) {
-                if (!master.MasterRolePermissionModels) {
+                if (!master.MasterRolePermissionModel) {
                   console.log("Master does not have any permission models");
                   res.json({
                     status: "roleNotFound"
@@ -391,7 +399,7 @@ module.exports = {
                 const tenantUser = await TenantUserModel.findOne({ where: { userId } });
           
                 if (tenantUser) {
-                  if (!tenantUser.TenantRolePermissionModel) {
+                  if (!tenantUser.tenantRolePermissionModel) {
                     console.log("Tenant user does not have any permission models");
                     res.json({
                       status: "roleNotFound"
@@ -427,8 +435,44 @@ module.exports = {
               res.status(500).json({
                 status: "error"
               }).send();
-            }
+            } */
+            
           },
+
+        "/api/fetch-tenant-of-user": async(req, res) => {
+          const{sourceUserId, targetUserId} = req.body;
+          if(! sourceUserId || ! targetUserId){
+            res.json({
+                status: "accessDenied"
+            }).send();
+            console.log("missing id for fetch tenant of user request");
+            return;
+          }
+
+          try{
+            const databaseResponse = await databaseService.getTenantOfUser(sourceUserId, targetUserId);
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              const tenantId = databaseResponse.data.tenant.tenantId;
+              res.json({
+                status: "success",
+                tenant: databaseResponse.data.tenant
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              console.log("tenant not found");
+              res.status(404).send();
+            }
+          }
+          catch(error){
+            console.error("Error while fetching tenant of user  : ", error);
+              if (!res.headersSent) { 
+                  res.status(500).send();
+            }
+          }
+        },
           
 
         "/api/fetch-user-profile": async (req, res) => {
@@ -440,8 +484,31 @@ module.exports = {
                 console.log("test 1");
                 return;
             }
-            
             console.log(`Processing fetch user details request from User:${sourceUserId} targetted at User:${targetUserId}`);
+
+            try{
+              const databaseResponse = await databaseService.fetchUserProfile(sourceUserId, targetUserId);
+              if(databaseResponse.responseType === databaseService.ResponseType.Success){
+                res.json({
+                  status: "success",
+                  message: "User details retrieved successfully",
+                  user: databaseResponse.data.user
+                }).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+                res.status(505).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+                res.status(404).send();
+              }
+            }
+            catch(error){
+              console.error("Error retrieving user details from database: ", error);
+                if (!res.headersSent) { 
+                    res.status(500).send();
+              }
+            }
+            /* 
             let hasPermission = false;
 
             // check if requesting self details
@@ -459,12 +526,12 @@ module.exports = {
                     const targetTenantUser = await TenantUserModel.findOne({where: {userId: targetUserId}});
                     const sourceTenantUser = await TenantUserModel.findOne({where: {userId: sourceUserId}});
                     if(sourceTenantUser.tenantId === targetTenantUser.tenantId ){
-                        const sourceTenantRolePermissions = TenantRolePermissionModel.findOne({
+                        const sourceTenantRoles = TenantRolePermissionModel.findOne({
                             where: {
                                 tenantId: sourceTenantUser.tenantId,
                                 roleName: sourceTenantUser.roleName}});
                         
-                        if(sourceTenantRolePermissions.canViewUsers) hasPermission = true;
+                        if(sourceTenantRoles.canViewUsers) hasPermission = true;
                     }
                 }
 
@@ -503,7 +570,7 @@ module.exports = {
                 if (!res.headersSent) { 
                     res.status(500).send();
                 }
-            }
+            } */
         },
 
         "/api/fetch-tenant-profile": async(req, res) => {
@@ -513,7 +580,30 @@ module.exports = {
                 return;
             }
 
-            let hasPermission = false;
+            try{
+              const databaseResponse = await databaseService.fetchTenantProfile(userId, tenantId);
+              console.log("FETCH TENANT PROFILE DATABASE RESPONSE: ", databaseResponse);
+              if(databaseResponse.responseType === databaseService.ResponseType.Success){
+                res.json({
+                  status: "success",
+                  tenant: databaseResponse.data.tenant
+                }).send();
+
+                
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+                res.status(505).send();
+              }
+              else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+                res.status(404).send();
+              }
+            }
+            catch(error){
+              console.error(`Error while fetching tenant profile for source user ID:${userId} targeted at tenant ${tenantId}: ${error}`);
+              res.status(500).send();
+            }
+
+            /* let hasPermission = false;
 
             try{
                 // check if user is master
@@ -542,7 +632,7 @@ module.exports = {
                 if(!res.headersSent){
                     res.status(500).send();
                 }
-            }
+            } */
             
         }
 
