@@ -386,6 +386,23 @@ module.exports = (sequelize, DataTypes) => {
         await UserModel.update({ updatedAt: new Date() }, { where: { userId: address.userId } });
       });
 
+      TenantUserModel.beforeDestroy(async (tenantUser, options) => {
+        console.log("TENANT USER MODEL BEFORE DESTROY");
+        try {
+          await TenantModel.decrement('userCount', { where: { tenantId: tenantUser.tenantId } });
+        } catch (error) {
+          console.error('Error in beforeDestroy hook of TenantUserModel:', error);
+        }
+      });
+      
+      TenantUserModel.afterCreate(async (tenantUser, options) => {
+        try {
+          await TenantModel.increment('userCount', { where: { tenantId: tenantUser.tenantId } });
+        } catch (error) {
+          console.error('Error in afterCreate hook of TenantUserModel:', error);
+        }
+      });
+
       // Create a direct association between Masters and MasterRolePermissionModel
       MasterModel.hasMany(MasterRolePermissionModel, { 
         foreignKey: 'masterId',

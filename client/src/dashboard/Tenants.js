@@ -12,6 +12,7 @@ import ReactApexChart from "react-apexcharts";
 import DynamicTable from "../components/DynamicTable";
 import BarChartCard from "../components/BarChartCard";
 import ApexCharts from "../docs/ApexCharts";
+import SingleStatisticCard from "../components/SingleStatisticCard";
 
 
 const {FetchStatus} = require("../service/FetchService");
@@ -30,6 +31,10 @@ export default function Tenants() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [skinMode, setSkinMode] = useState("");
   const [tenantDict, setTenantDict] = useState({});
+  const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
+  const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
+  const [totalNumberOfUsers, setTotalNumberOfUsers] = useState(0);
+
   const currentSkin = (localStorage.getItem('skin-mode')) ? 'dark' : '';
   
 
@@ -48,14 +53,47 @@ export default function Tenants() {
 
     if(checkMasterUser()){
       fetchTenants();
+      fetchTotalNumberOfUsers();
     }
   }, [navigate]);
 
+  useEffect(() => {
+
+    const numTenants = Object.keys(tenantDict).length;
+
+    setNumTenantsStatisticDataDict({
+      "icon": "ri-building-line",
+      "percent": {
+      "color": "success",
+      "amount": "+28.5%"
+      },
+      "value": numTenants,
+      "label": "Total Tenant Count",
+      "last": {
+      "color": "success",
+      "amount": "2.3%"
+      }
+    });
+  }, [tenantDict]);
+
+  useEffect(() => {
+    setNumUsersStatisticDataDict({
+      "icon": "ri-group-line",
+      "percent": {
+      "color": "success",
+      "amount": "+13.8%"
+      },
+      "value": totalNumberOfUsers,
+      "label": "Total User Count",
+      "last": {
+      "color": "success",
+      "amount": "7.1%"
+      }
+    })
+  }, [totalNumberOfUsers]);
+
   const fetchTenants = async () => {
     const response = await fetchService.fetchTenantsOfMaster(userId);
-    const data = response.data;
-    console.log("Response : ",response)
-    console.log("Data for tenants : ", data)
 
     if(! response.isError()){
       const data = response.data;
@@ -67,6 +105,19 @@ export default function Tenants() {
       handleErrorResponse(response);
     }
   };
+
+  const fetchTotalNumberOfUsers = async () => {
+    const response = await fetchService.fetchTotalNumberOfUsers(userId);
+    
+    if(! response.isError()){
+      setTotalNumberOfUsers(response.data.totalNumberOfUsers);
+      setIsError(false);
+      setErrorMessage("");
+    }
+    else{
+      handleErrorResponse(response);
+    }
+  }
 
   const checkMasterUser = async () => {
     const response = await fetchService.checkMasterUser(userId);
@@ -239,7 +290,7 @@ export default function Tenants() {
             </Row>
             
 
-            <Row style={{ height: '30vh' }} className="flex-grow-1">
+            <Row style={{ height: '50vh', marginBottom: "10rem" }} className="flex-grow-1 mt-3">
               <Col md={6} className="d-flex">
                 <div className="w-100 d-flex flex-column">
                   <BarChartCard tenants={tenantDict}theme = {currentSkin} />
@@ -247,77 +298,9 @@ export default function Tenants() {
               </Col>
               <Col md ={6} className="d-flex">
               <div className="w-100 d-flex flex-column">
-              <Row className="g-3">
-                {[
-                {
-                "icon": "ri-shopping-bag-fill",
-                "percent": {
-                "color": "success",
-                "amount": "+28.5%"
-                },
-                "value": "$14,803.80",
-                "label": "Total User Count",
-                "last": {
-                "color": "success",
-                "amount": "2.3%"
-                }
-                }, {
-                "icon": "ri-wallet-3-fill",
-                "percent": {
-                "color": "danger",
-                "amount": "-3.8%"
-                },
-                "value": "$8,100.63",
-                "label": "Total Expenses",
-                "last": {
-                "color": "danger",
-                "amount": "0.5%"
-                }
-                }, {
-                "icon": "ri-shopping-basket-fill",
-                "percent": {
-                "color": "danger",
-                "amount": "-8.4%"
-                },
-                "value": "23,480",
-                "label": "Total Tenant Count",
-                "last": {
-                "color": "danger",
-                "amount": "0.2%"
-                }
-                }, {
-                "icon": "ri-shopping-basket-fill",
-                "percent": {
-                "color": "success",
-                "amount": "+20.9%"
-                },
-                "value": "18,060",
-                "label": "Products Sold",
-                "last": {
-                "color": "success",
-                "amount": "5.8%"
-                }
-                }
-                ].map((item, index) => (
-                <Col xs="6" md="3" xl="6" key={index}>
-                <Card className="card-one card-product">
-                <Card.Body className="p-3">
-                <div className="d-flex align-items-center justify-content-between mb-5">
-                <div className="card-icon"><i className={item.icon}></i></div>
-                <h6 className={"fw-normal ff-numerals mb-0 text-" + item.percent.color}>{item.percent.amount}</h6>
-                </div>
-                <h2 className="card-value ls--1">{item.value}</h2>
-                <label className="card-label fw-medium text-dark">{item.label}</label>
-                <span className="d-flex gap-1 fs-xs">
-                <span className={"d-flex align-items-center text-" + item.last.color}>
-                <span className="ff-numerals">{item.last.amount}</span><i className={(item.last.color === 'success') ? "ri-arrow-up-line" : "ri-arrow-down-line"}></i>
-                </span>
-                <span className="text-secondary">than last week</span>
-                </span>
-                </Card.Body>
-                </Card>
-                </Col>
-                ))}
+              <Row style={{height: "50%"}} className="g-3">
+                  <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
+                  <SingleStatisticCard dataDict={numUsersStatisticDataDict}/>
                 </Row>
 
                 </div>

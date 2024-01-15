@@ -14,8 +14,8 @@ module.exports = {
             res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});
         },
         
-        "/api/delete-tenant-user": async (req, res) => {
-          const {sourceUserID, tenantId, targetUserId } = req.body;
+        "/api/remove-user-from-tenant": async (req, res) => {
+          const {sourceUserId, tenantId, targetUserId } = req.body;
           try {
             console.log(`Deleting user with ID:${targetUserId} from tenant with ID:${tenantId}`);
             const databaseResponse = await databaseService.removeUserFromTenant(sourceUserId, tenantId, targetUserId);
@@ -40,14 +40,16 @@ module.exports = {
           }
         },
         "/api/register-user": async (req, res) => {
-            const {sourceUserId, email, password, firstName, middleName, lastName, tenantId, roleName } = req.body;
+            const {sourceUserId, email, password, firstName, middleName, lastName, tenantId, tenantRoleId } = req.body;
+
+            console.log(`registering user with data: email:${email}, password:${password}, name:${firstName} ${middleName} ${lastName} to tenant:${tenantId} with tenant role ID:${tenantRoleId}`);
 
             try{
-              const databaseResponse = await databaseService.addUser(sourceUserId, {email, password, firstName, middleName, lastName, tenantId, roleName});
+              const databaseResponse = await databaseService.registerUserToTenant(sourceUserId, {email, password, firstName, middleName, lastName, tenantId, tenantRoleId});
               if(databaseResponse.responseType === databaseService.ResponseType.Success){
                 res.json({
                   status: "success",
-                  userId: databaseResponse.data.newUser.userId,
+                  userId: databaseResponse.data.userId,
                 }).send();
               }
               else if(databaseResponse.responseType === databaseService.ResponseType.AlreadyExists){
@@ -299,7 +301,73 @@ module.exports = {
               console.error(`Error while fetching tenant profile for source user ID:${userId} targeted at tenant ${tenantId}: ${error}`);
               res.status(500).send();
             }
-        }
+        },
+
+        "/api/fetch-tenant-roles-of-tenant" : async(req, res) => {
+          
+          const {sourceUserId, tenantId} = req.body;
+          if(! sourceUserId || ! tenantId){
+            res.status(505).send();
+            return;
+          }
+
+          console.log(`Processing fetch tenant roles of tenant request for tenant: ${tenantId} for source user:${sourceUserId}`);
+
+          try{
+            const databaseResponse = await databaseService.fetchTenantRolesOfTenant(sourceUserId, tenantId);
+
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.json({
+                status: "success",
+                tenantRoles: databaseResponse.data.tenantRoles
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.error(`ERROR While fetchin tenant roles of tenant ID:${tenantId} for source user ID:${sourceUserId}`);
+            res.status(500).send();
+          }
+        },
+
+        "/api/fetch-total-number-of-users" : async (req, res) => {
+          const {sourceUserId} = req.body;
+          console.log("TESTESTESTSET: ", sourceUserId);
+          if(! sourceUserId){
+            res.status(505).send();
+            return;
+          }
+
+          console.log(`Processing fetch total number of users request for source user ID:${sourceUserId}`);
+
+          try{
+            const databaseResponse = await databaseService.fetchTotalNumberOfUsers(sourceUserId);
+            
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.json({
+                status: "success",
+                totalNumberOfUsers: databaseResponse.data.totalNumberOfUsers
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.error(`ERROR While fetchin total number of users for source user ID:${sourceUserId}`);
+            res.status(500).send();
+          }
+        },
+
+
 
 
     },

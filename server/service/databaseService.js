@@ -253,21 +253,26 @@ const fetchTenantProfile = async(sourceUserId, tenantId) => {
 }
 
 const removeUserFromTenant = async(sourceUserId, tenantId, targetUserId) => {
-    
+
     if(!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId, 
         accessType: AccessType.RemoveUserFromTenant,
         target: tenantId}))
             return new DatabaseResponse(ResponseType.AccessDenied);
 
-    await TenantUserModel.destroy({
+    const tenantUser = await TenantUserModel.findOne({
         where: { 
-            tenantId: tenantId,
-            userId: targetUserId
-        }
-    });
+        tenantId: tenantId,
+        userId: targetUserId
+    }});
 
-    return new DatabaseResponse(ResponseType.Success);
+    if(tenantUser){
+        await tenantUser.destroy();
+        return new DatabaseResponse(ResponseType.Success);
+    }
+    else{
+        return new DatabaseResponse(ResponseType.NotFound);
+    }
 }
 
 const addUser = async(sourceUserId, userData) => {
@@ -282,10 +287,33 @@ const addUser = async(sourceUserId, userData) => {
     const newUser = await UserModel.create(userData);
     
     if(newUser) return new DatabaseResponse(ResponseType.Success, {newUser: newUser});    
+}
+
+const registerUserToTenant = async(sourceUserId, userData) => {
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.AddUser}))
+            return new DatabaseResponse(ResponseType.AccessDenied);
     
+    const user = await UserModel.findOne({where: {email: userData.email}});
+    if(user) return new DatabaseResponse(ResponseType.AlreadyExists);
+
+    const newUser = await UserModel.create(userData);
+
+    const newTenantUser = await TenantUserModel.create({
+        tenantId: userData.tenantId,
+        userId: newUser.userId,
+        tenantRoleId: userData.tenantRoleId,
+    });
+
+    console.log("new tenant user id: ", newTenantUser.userId);
+    
+    if(newTenantUser) return new DatabaseResponse(ResponseType.Success, {userId: newTenantUser.userId});
+    return new DatabaseResponse(ResponseType.AlreadyExists);
 }
 
 const addUserToTenant = async(sourceUserId, targetUserId, tenantId) => {
+    console.log(`[DATABASE SERVICE] Connecting user with ID:${targetUserId} to tenant with ID:${tenantId}`);
     if(!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
         accessType: AccessType.AddUserToTenant,
@@ -343,9 +371,36 @@ const fetchUsersOfTenant = async(sourceUserId, tenantId) => {
         }]
     });
 
-    if(! tenantUsers) return new DatabaseResponse(ResponseType.NotFound);
-    else return new DatabaseResponse(ResponseType.Success, {users: tenantUsers.UserModels});
+    if(! tenantUsers) return new DatabaseResponse(ResponseType.NotFound)
+    else return new DatabaseResponse(ResponseType.Success, {users: tenantUsers.UserModels})
     
+}
+
+const fetchTenantRolesOfTenant = async(sourceUserId, tenantId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch tenant roles of tenant request for source user ID:${sourceUserId} targeted at tenant ID:${tenantId}`);
+    if(! await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.ViewTenantUsers /* TODO !!! Change this AccessType to ViewTenantRoles and add new permission types accordingly */,
+        target: tenantId})) 
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    const tenantRolePermissions = await TenantRolePermissionModel.findAll({where: {tenantId: tenantId}});
+
+    if(tenantRolePermissions) return new DatabaseResponse(ResponseType.Success, {tenantRoles: tenantRolePermissions})
+    else return new DatabaseResponse(ResponseType.NotFound);
+}
+
+const fetchTotalNumberOfUsers = async(sourceUserId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch total number of users request for source user ID:${sourceUserId}`);
+
+    if(! await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.ViewAllUsers})) 
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    const totalNumberOfUsers = await UserModel.count();
+
+    return new DatabaseResponse(ResponseType.Success, {totalNumberOfUsers: totalNumberOfUsers})
 }
 
 
@@ -364,4 +419,7 @@ module.exports = {
     deleteUser,
     addUser,
     addUserToTenant,
+    registerUserToTenant,
+    fetchTenantRolesOfTenant,
+    fetchTotalNumberOfUsers,
 }

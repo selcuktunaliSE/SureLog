@@ -13,6 +13,7 @@ const fetchService = require("../service/FetchService");
 
 export default function TenantProfile() {
   const [userData, setUserData] = useState(null);
+  const [tenantRoles, setTenantRoles] = useState([]);
   const [tenantData, setTenantData] = useState({});
   const [tenantUsers, setTenantUsers] = useState([]);
   const [tenantUsersDict, setTenantUsersDict] = useState({});
@@ -20,12 +21,12 @@ export default function TenantProfile() {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showEditModal,setShowEditModal] = useState(false);
   const [userIdToDelete, setUserIdToDelete] = useState(null);
-  const [editingUser, setEditingUser] = useState(null); 
+  const [editingUser, setEditingUser] = useState(null);
+  const [selectedTenantRoleName, setSelectedTenantRoleName] = useState("");
   const [newUserData,setNewUserData] = useState({
     fullName:"",
     email:"",
     password:"",
-    roleName:""
   });
   const navigate = useNavigate();
   const location = useLocation();
@@ -38,6 +39,7 @@ export default function TenantProfile() {
   const iconStyle = {
     marginRight: '8px', // Adjust the spacing as needed
   };
+
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     setShowEditModal(false);
@@ -46,23 +48,36 @@ export default function TenantProfile() {
   
   const fetchTenantUsers = async () => {
     const response = await fetchService.fetchTenantUsers(userId, tenantId);
-    console.log("API RESPONSE FOR TENANT USERS: ", response);
 
     if (!response.isError()) {
-      console.log("response tenant users: ", response.data.users);
       setTenantUsers(response.data.users);
     } else {
       handleErrorResponse(response);
     } 
   };
 
+  const fetchTenantRoles = async() => {
+    console.log("tenant data to fetch tenant roles: ", tenantData, " with user Id: ", userId);
+    if(!userId || ! tenantData || ! tenantData.tenantId){
+      console.log("failed to fetch tenant roles due to missing information");
+      return;
+    } 
+    const response = await fetchService.fetchTenantRolesOfTenant(userId, tenantData.tenantId);
+
+    console.log("API RESPONSE FOR TENANT ROLES: ", response);    
+    if(!response.isError()){
+      setTenantRoles(response.data.tenantRoles);
+    }
+    else{
+      handleErrorResponse(response);
+    }
+  }
+
   const fetchTenantProfile = async () => {
     const response = await fetchService.fetchTenantProfile(userId, tenantId);
 
     if (!response.isError()) {
-      console.log("response data: ", response.data.tenant);
       setTenantData(response.data.tenant);
-      console.log("tenant data: ", tenantData);
     } else {
       handleErrorResponse(response);
     }
@@ -86,34 +101,37 @@ export default function TenantProfile() {
     
   }, [location.state, navigate, tenantId, userId]);
 
-  useEffect(() => {
-    console.log("tenant users: ", tenantUsers);
-  
+  useEffect(() => {  
     setTenantUsersDict(
       addExtraInformationToTenantUsers(
         transformTenantUsersData(tenantUsers))
       );
 
   }, [tenantUsers]);
+
+  useEffect(() => {
+    fetchTenantRoles();
+  }, [tenantData]);
   
   const addExtraInformationToTenantUsers = (tenantUsersDict) => {
-    const modifiedTenantUsersDict = Object.values(tenantData).map((user, index) => ({
+    const modifiedTenantUsersDict = Object.values(tenantUsersDict).map((user, index) => ({
       ...tenantUsersDict[index], 
-      Edit: (
+      Edit: ( 
         <>
           <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.userId)} className="me-2">
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
           </Button>
           <Button variant="outline-secondary" size="sm" onClick={() => {
             console.log("Delete Button Clicked for User ID:", user.userId);
-            handleDeleteUser(user.userId);
+            setUserIdToDelete(user.userId);
+            setShowConfirmationModal(true);
+            
           }} className="me-2">
             <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
           </Button>
         </>
       )
     }));
-    console.log("modified tenant users dict: ", modifiedTenantUsersDict);
     return modifiedTenantUsersDict;
   }
   
@@ -185,6 +203,7 @@ export default function TenantProfile() {
       ...prevState,
       [name]: value
     }));
+    
   };
 
 
@@ -213,7 +232,7 @@ export default function TenantProfile() {
       console.log("Editing UserId : ",userId);
       const response = await fetchService.fetchUserProfile(userId,userId);
       if(response){
-        console.log("Responsexxxx : ",response.data.user)
+        console.log("Response for editing user : ",response.data.user)
         setEditingUser(response.data.user);
         setShowEditModal(true);
       }
@@ -232,28 +251,33 @@ export default function TenantProfile() {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setNewUserData({ ...newUserData, [name]: value });
+    console.log("new user data: ", { ...newUserData, [name]: value });
+    if(name === "tenantRoleId") setSelectedTenantRoleName(event.target.value);
   };
 
   const handleCloseConfirmationModal = () => setShowConfirmationModal(false);
   const handleCloseShowEditModal = () => setShowEditModal(false);
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
+
   const handleDeleteUser = async () => {
     if(userIdToDelete){
       console.log("Deleting user with ID : ",userIdToDelete);
     
-    const response = await fetchService.deleteUserFromTenant(tenantId, userIdToDelete);
-    if (response.status === "success") {
-        console.log(response.message);
-        window.location.reload();
-    } else {
-        console.error("Deleting from Tenants: ",response.message);
+    const response = await fetchService.removeUserFromTenant(userId, tenantId, userIdToDelete);
+
+    if(!response.isError()){
+      window.location.reload();
     }
+    else{
+      console.error("ERROR Deleting from Tenants: ",response.message);
+      handleErrorResponse(response);
+    }
+
     setShowConfirmationModal(false);
     setUserIdToDelete(null);
   }
   };
-
   
   const handleSubmitNewUser = async (event) => {
     event.preventDefault();
@@ -261,18 +285,26 @@ export default function TenantProfile() {
       alert('Passwords do not match!');
       return;
     }
+
+    if(!newUserData.tenantRoleId || newUserData.tenantRoleId === 0 ){
+      alert('Select a Tenant Role');
+      return;
+    }
     const names = newUserData.fullName.split(" ");
     const firstName = names[0];
-    const lastName = names.slice(1).join(" ");
+    const middleName = names.length > 2 ? names.slice(1, -1).join(' ') : "";
+    const lastName = names[names.length - 1];
+
+    console.log("SENDING TENANT ROLE ID: ", newUserData.tenantRoleId );
     try {
       const response = await fetchService.registerUser({
         email: newUserData.email,
         password: newUserData.password,
         firstName: firstName,
-        middleName: '', // Assuming you don't have a middleName input
+        middleName: middleName,
         lastName: lastName,
         tenantId: tenantId,
-        roleName: newUserData.roleName
+        tenantRoleId: newUserData.tenantRoleId
       });
   
       if (response.status === "success") {
@@ -300,12 +332,10 @@ export default function TenantProfile() {
           firstName: item.firstName,
           lastName: item.lastName,
           email: item.email,
-          userId: item.userId, // Add any additional fields you need
+          userId: item.userId, 
         };
       });
     }
-
-    console.log("transformed tenant data: ", transformedData);
   
     return transformedData;
   };
@@ -316,27 +346,27 @@ export default function TenantProfile() {
       <Header /* ...props */ />
       
       <div className="main p-4 p-lg-5 mt-5">
-      <div className="d-md-flex align-items-center justify-content-between mb-4">
-          <div>
-            <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item active">Dashboard</li>
-              <li className="breadcrumb-item active" aria-current="page">Tenants</li>
-              <li className="breadcrumb-item active" aria-current="page"><Link to = "#"> Tenant Profile </Link> </li>
-            </ol>
-            <h4 className="main-title mb-0">Welcome to Tenant Profile</h4>
+        <div className="d-md-flex align-items-center justify-content-between mb-3">
+            <div>
+              <ol className="breadcrumb fs-sm mb-1">
+                <li className="breadcrumb-item active">Dashboard</li>
+                <li className="breadcrumb-item active" aria-current="page">Tenants</li>
+                <li className="breadcrumb-item active" aria-current="page"><Link to = "#"> Tenant Profile </Link> </li>
+              </ol>
+              <h4 className="main-title mb-0">Welcome to Tenant Profile</h4>
+            </div>
+            <div className="d-flex gap-2 mt-3 mt-md-0">
+              <Button variant="" className="btn-white d-flex align-items-center gap-2">
+                <i className="ri-share-line fs-18 lh-1"></i>Share
+              </Button>
+              <Button variant="" className="btn-white d-flex align-items-center gap-2">
+                <i className="ri-printer-line fs-18 lh-1"></i>Print
+              </Button>
+              <Button variant="primary" className="d-flex align-items-center gap-2">
+                <i className="ri-bar-chart-2-line fs-18 lh-1"></i>Generate<span className="d-none d-sm-inline"> Report</span>
+              </Button>
+            </div>
           </div>
-          <div className="d-flex gap-2 mt-3 mt-md-0">
-            <Button variant="" className="btn-white d-flex align-items-center gap-2">
-              <i className="ri-share-line fs-18 lh-1"></i>Share
-            </Button>
-            <Button variant="" className="btn-white d-flex align-items-center gap-2">
-              <i className="ri-printer-line fs-18 lh-1"></i>Print
-            </Button>
-            <Button variant="primary" className="d-flex align-items-center gap-2">
-              <i className="ri-bar-chart-2-line fs-18 lh-1"></i>Generate<span className="d-none d-sm-inline"> Report</span>
-            </Button>
-          </div>
-        </div>
         
         
         <Row className="mb-3">
@@ -500,18 +530,24 @@ export default function TenantProfile() {
               />
              </Form.Group>
          
-              <Form.Group className="mb-3">
+             <Form.Group className="mb-3">
               <Form.Label>Role</Form.Label>
-                <Form.Select 
-                  type="text"
-                  name="roleName" 
-                  value={newUserData.roleName} 
-                  onChange={handleInputChange}
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="User">User</option>
-                </Form.Select>
-              </Form.Group>
+              <Form.Select
+                type="text"
+                name="tenantRoleId"
+                value={selectedTenantRoleName}
+                onChange={handleInputChange}
+              >
+                <option value="" disabled>
+                  Select
+                </option>
+                {tenantRoles.map((tenantRole) => (
+                  <option key={tenantRole.tenantRoleId} value={tenantRole.tenantRoleId}>
+                    {tenantRole.roleName}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
               <div className="text-end">
               <Button variant="primary" type="submit">
                 Save 
@@ -589,16 +625,18 @@ export default function TenantProfile() {
               </Form.Group>
 
         <div className="text-end">
-              <Button variant="primary" type="submit">
-                Save 
-              </Button>
-              </div>
+          <Button variant="primary" type="submit">
+            Save 
+          </Button>
+        </div>
       </Form>
     )}
   </Modal.Body>
 </Modal>
      
       </div>
+      
+      
     </React.Fragment>
   );
 }

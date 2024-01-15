@@ -28,65 +28,43 @@ const FetchStatus = {
     ResourceNotFound: "ResourceNotFound",
 }
 
-const deleteUserFromTenant = async (tenantId, userId) => {
-  try {
-      const response = await fetch(`${fetchAddress}/api/delete-tenant-user`, {
-          method: 'post',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ tenantId, userId })
-      });
-
-      return await response.json();
-  } catch (error) {
-      console.error("Error in deleteUserFromTenant service: ", error);
-      return { status: "error", message: "Error deleting user from tenant" };
-  }
-};
-const fetchUsersFromTenant = async (tenantId) => {
-  let fetchResponse;
-  try {
-    const response = await fetch(`${fetchAddress}/api/fetch-tenant-users`, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ tenantId: tenantId } )
-    });
-
-    const data = await response.json();
-
-    if (data.status === "success") {
-      // Map users data and combine firstName and lastName into Name
-      const remappedUsers = data.users.map(user => ({
-        Id:`${user.userId}`,
-        Name: `${user.firstName} ${user.lastName}`,
-        Email:`${user.email}`
-      }));
-
-      // Update the fetchResponse with the remapped users
-      fetchResponse = new FetchResponse(FetchStatus.Success, { users: remappedUsers });
-    } else {
-      // Handle different error statuses accordingly
-      fetchResponse = new FetchResponse(FetchStatus.Error, null, data.message);
-    }
-  } catch (error) {
-    console.error("Error fetching users from tenant:", error);
-    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
-  }
-
-  return fetchResponse;
-};
-
-
-
-const fetchTenantRoles = async (userId) => {
+const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
   let fetchResponse = new FetchResponse();
-  await fetch(`${fetchAddress}/api/fetch-tenant-roles`, {
+  await fetch(`${fetchAddress}/api/remove-user-from-tenant`, {
+    method: 'post',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({sourceUserId, tenantId, targetUserId })
+  }).then((response) => response.json())
+    .then((data) => {
+      console.log("REMOVE USER FROM TENANT SERVER RESPONSE: ", data);
+      if(data.status === "success"){
+        fetchResponse = new FetchResponse(FetchStatus.Success);
+      }
+      else if(data.status === 505){
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+      else if(data.status === 404){
+        fetchResponse = new FetchResponse(FetchStatus.UserNotFound);
+      }
+      else if(data.status === 500){
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+    })
+    console.log("REMOVE USER FROM TENANT FETCH RESPONSE: ", fetchResponse);
+    return fetchResponse;
+
+};
+
+const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
+  let fetchResponse = new FetchResponse();
+  console.log(`Sending fetch tenant roles request of tenant: ${tenantId} for source user:${sourceUserId}`);
+  await fetch(`${fetchAddress}/api/fetch-tenant-roles-of-tenant`, {
       method: "post",
       body: JSON.stringify({
-        "userId": userId
+        sourceUserId: sourceUserId,
+        tenantId: tenantId,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -94,15 +72,16 @@ const fetchTenantRoles = async (userId) => {
   }).then((response) => response.json())
       .then((data) => {
           if(data.status === "success"){
-              fetchResponse = new FetchResponse(FetchStatus.Success, {
-                  tenantRoles: data.tenantRoles,
-                  tenantNames: data.tenantNames});
+              fetchResponse = new FetchResponse(FetchStatus.Success, {tenantRoles: data.tenantRoles});
           }
           if(data.status === 404){
               fetchResponse = new FetchResponse(FetchStatus.ResourceNotFound);
       }
           if(data.status === 500){
               fetchResponse = new FetchResponse(FetchStatus.ServerException);
+          }
+          if(data.status === 505){
+              fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
           }
       })
       .catch(error => { 
@@ -307,32 +286,68 @@ const fetchTenantProfile = async(userId, tenantId) => {
       "Content-Type": "application/json"
     },
   }).then((response) => response.json())
-  .then((data) => {
-    if(data.status === "success"){
-      fetchResponse = new FetchResponse(FetchStatus.Success, {tenant: data.tenant});
-    }
-    else if(data.status === 404){
-      fetchResponse = new FetchResponse(FetchStatus.TenantNotFound);
-    }
-    else if(data.status === 500){
-      fetchResponse = new FetchResponse(FetchStatus.ServerException);
-    }
-    else if(data.status === 505){
-      fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
-    }
-  })
-  .catch((error) => {
-    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
-  });
+    .then((data) => {
+      if(data.status === "success"){
+        fetchResponse = new FetchResponse(FetchStatus.Success, {tenant: data.tenant});
+      }
+      else if(data.status === 404){
+        fetchResponse = new FetchResponse(FetchStatus.TenantNotFound);
+      }
+      else if(data.status === 500){
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+      else if(data.status === 505){
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+    })
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
   
   return fetchResponse;
+}
+
+const fetchTotalNumberOfUsers = async(sourceUserId) => {
+  let fetchResponse = new FetchResponse();
+  const requestData = {
+    sourceUserId: sourceUserId
+  };
+
+  console.log(`Fetching total number of user count for Source User ID:${sourceUserId}`);
+
+  await fetch(`${fetchAddress}/api/fetch-total-number-of-users`, {
+    method: "post",
+    body: JSON.stringify(requestData),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }).then((response) => response.json())
+    .then((data) => {
+      if(data.status === "success"){
+        fetchResponse = new FetchResponse(FetchStatus.Success, {totalNumberOfUsers: data.totalNumberOfUsers});
+      }
+      else if(data.status === 404){
+        fetchResponse = new FetchResponse(FetchStatus.UserNotFound);
+      }
+      else if(data.status === 500){
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+      else if(data.status === 505){
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+    })
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
+
+    return fetchResponse;
 }
 
 
 
 export {
     FetchStatus,
-    fetchTenantRoles,
+    fetchTenantRolesOfTenant,
     fetchTenantsOfMaster,
     fetchTenantOfUser,
     fetchUserProfile,
@@ -340,5 +355,6 @@ export {
     fetchTenantUsers,
     checkMasterUser,
     registerUser,
-    deleteUserFromTenant
+    removeUserFromTenant,
+    fetchTotalNumberOfUsers,
 }
