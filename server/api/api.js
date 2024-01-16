@@ -207,7 +207,6 @@ module.exports = {
             res.json({
                 status: "accessDenied"
             }).send();
-            console.log("missing id for fetch tenant of user request");
             return;
           }
 
@@ -224,7 +223,6 @@ module.exports = {
               res.status(505).send();
             }
             else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
-              console.log("tenant not found");
               res.status(404).send();
             }
           }
@@ -243,7 +241,6 @@ module.exports = {
                 res.json({
                     status: "accessDenied"
                 }).send();
-                console.log("test 1");
                 return;
             }
             console.log(`Processing fetch user details request from User:${sourceUserId} targetted at User:${targetUserId}`);
@@ -337,7 +334,6 @@ module.exports = {
 
         "/api/fetch-total-number-of-users" : async (req, res) => {
           const {sourceUserId} = req.body;
-          console.log("TESTESTESTSET: ", sourceUserId);
           if(! sourceUserId){
             res.status(505).send();
             return;
@@ -362,12 +358,106 @@ module.exports = {
             }
           }
           catch(error){
-            console.error(`ERROR While fetchin total number of users for source user ID:${sourceUserId}`);
+            console.error(`ERROR While fetchin total number of users for source user ID:${sourceUserId}\nERROR${error}`);
             res.status(500).send();
           }
         },
 
 
+        "/api/fetch-total-number-of-tenants": async (req, res) => {
+          const {sourceUserId} = req.body;
+          if(! sourceUserId){
+            res.status(505).send();
+            return;
+          }
+
+          console.log(`Processing fetch total number of tenants request for source user ID:${sourceUserId}`);
+
+          try{
+            const databaseResponse = await databaseService.fetchTotalNumberOfTenants(sourceUserId);
+            
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.json({
+                status: "success",
+                totalNumberOfTenants: databaseResponse.data.totalNumberOfTenants
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.error(`ERROR While fetchin total number of tenants for source user ID:${sourceUserId}\nERROR:${error}`);
+            res.status(500).send();
+          }
+        },
+
+
+
+        "/api/fetch-user-type-distribution-data": async (req, res) => {
+          const {sourceUserId} = req.body;
+          if(! sourceUserId){
+            res.status(505).send();
+            return;
+          }
+
+          console.log(`Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
+
+          try{
+            const databaseResponse = await databaseService.fetchUserTypeDistributionData(sourceUserId);
+            
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.json({
+                status: "success",
+                userTypeDistributionData: databaseResponse.data.userTypeDistributionData
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.error(`ERROR While fetchin user type distribution data for source user ID:${sourceUserId}\nERROR:${error}`);
+            res.status(500).send();
+          }
+        },
+
+        "/api/fetch-total-number-of-masters": async (req, res) => {
+          const {sourceUserId} = req.body;
+          if(! sourceUserId){
+            res.status(505).send();
+            return;
+          }
+
+          console.log(`Processing fetch total number of masters request for source user ID:${sourceUserId}`);
+
+          try{
+            const databaseResponse = await databaseService.fetchTotalNumberOfMasters(sourceUserId);
+            
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.json({
+                status: "success",
+                totalNumberOfMasters: databaseResponse.data.totalNumberOfMasters
+              }).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+          }
+          catch(error){
+            console.error(`ERROR While fetchin total number of masters for source user ID:${sourceUserId}\nERROR:${error}`);
+            res.status(500).send();
+          }
+        },
 
 
     },

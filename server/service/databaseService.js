@@ -18,7 +18,7 @@ class DatabaseResponse {
 const initialize = () => {
     if(initialized) return;
 
-    console.log("initializing database service");
+    console.log("[DATABASE SERVICE] Initializing database service...");
 
     if (databaseConfig.use_env_variable) {
         sequelize = new Sequelize(process.env[databaseConfig.use_env_variable], databaseConfig);
@@ -40,7 +40,7 @@ const initialize = () => {
     associate();
     initialized = true;
 
-    console.log("database service initialization complete.");
+    console.log("[DATABASE SERVICE] Database service initialization complete.");
 }
 
 const ResponseType = {
@@ -57,29 +57,31 @@ const AccessType = {
 
     AddUser: { name: "addUser", requiresTarget: true },
     EditUser: { name: "editUser", requiresTarget: true },
-    RemoveUserFromTenant: { name: "removeUserFromTenant", requiresTarget: true },
     DeleteUser: { name: "deleteUser", requiresTarget: true },
     ViewAllUsers: {name: "viewAllUsers", requiresTarget: false},
+
     ViewTenantUsers: { name: "viewUsers", requiresTarget: true },
     AddUserToTenant: {name: "addUserToTenant", requiresTarget: true},
+    RemoveUserFromTenant: { name: "removeUserFromTenant", requiresTarget: true },
 
     AddTenant: { name: "addTenant", requiresTarget: false },
     EditTenant: { name: "editTenant", requiresTarget: true },
     DeleteTenant: { name: "deleteTenant", requiresTarget: true },
     ViewTenants: { name: "viewTenants", requiresTarget: false },
     
-
     AddTenantRole: { name: "addTenantRole", requiresTarget: true },
     EditTenantRole: { name: "editTenantRole", requiresTarget: true },
     DeleteTenantRole: { name: "deleteTenantRole", requiresTarget: true },
     AssignTenantRole: { name: "assignTenantRole", requiresTarget: true },
     RevokeTenantRole: { name: "revokeTenantRole", requiresTarget: true },
+    ViewTenantRoles: { name: "viewTenantRoles", requiresTarget: true}, // TODO NOT YET IMPLEMENTED IN SEQUELIZE MODELS AND DATABASE TABLES
 
     AddMasterRole: { name: "addMasterRole", requiresTarget: false },
     EditMasterRole: { name: "editMasterRole", requiresTarget: false },
     DeleteMasterRole: { name: "deleteMasterRole", requiresTarget: false },
     AssignMasterRole: { name: "assignMasterRole", requiresTarget: false },
-    RevokeMasterRole: { name: "revokeMasterRole", requiresTarget: false }
+    RevokeMasterRole: { name: "revokeMasterRole", requiresTarget: false },
+    ViewMasterRoles: { name: "viewMasterRoles", requiresTarget: false}, // TODO NOT YET IMPLEMENTED IN SEQUELIZE MODELS AND DATABASE TABLES
 };
 
 const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: accessType, target:target=null}) => {
@@ -199,7 +201,6 @@ const fetchTenantsOfMaster = async (sourceUserId) => {
 const fetchUserProfile = async (sourceUserId, targetUserId) => {
     console.log(`[DATABASE SERVICE] Fetching user profile with source user:${sourceUserId} from target user:${targetUserId}`);
     const tenantOfTargetUser = await getTenantOfUser(sourceUserId, targetUserId);
-    console.log("TEST PASS");
     try{
         if(tenantOfTargetUser.responseType == ResponseType.Success){
             if( !await isUserAuthenticatedFor({
@@ -306,7 +307,6 @@ const registerUserToTenant = async(sourceUserId, userData) => {
         tenantRoleId: userData.tenantRoleId,
     });
 
-    console.log("new tenant user id: ", newTenantUser.userId);
     
     if(newTenantUser) return new DatabaseResponse(ResponseType.Success, {userId: newTenantUser.userId});
     return new DatabaseResponse(ResponseType.AlreadyExists);
@@ -399,10 +399,61 @@ const fetchTotalNumberOfUsers = async(sourceUserId) => {
             return new DatabaseResponse(ResponseType.AccessDenied);
 
     const totalNumberOfUsers = await UserModel.count();
-
-    return new DatabaseResponse(ResponseType.Success, {totalNumberOfUsers: totalNumberOfUsers})
+    if(totalNumberOfUsers && totalNumberOfUsers > 0)
+        return new DatabaseResponse(ResponseType.Success, {totalNumberOfUsers: totalNumberOfUsers});
+    else 
+        return new DatabaseResponse(ResponseType.NotFound);
 }
 
+const fetchTotalNumberOfTenants = async(sourceUserId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch total number of tenants request for source user ID:${sourceUserId}`);
+
+    const totalNumberOfTenants = await TenantModel.count();
+    if(totalNumberOfTenants && totalNumberOfTenants > 0)
+        return new DatabaseResponse(ResponseType.Success, {totalNumberOfTenants: totalNumberOfTenants});
+    else 
+        return new DatabaseResponse(ResponseType.NotFound);
+}
+
+const fetchUserTypeDistributionData = async(sourceUserId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
+
+    const numTotalUsers = await UserModel.count();
+    if(!numTotalUsers || numTotalUsers < 2) return new DatabaseResponse(ResponseType.NotFound);
+
+    const numMasters = await MasterModel.count();
+    let numTenantAdmins = await TenantRolePermissionModel.findAll({where: {roleName: "Admin"}}).length;
+    let numEndUsers;
+
+    if(! numTenantAdmins){
+        numTenantAdmins = 0;
+        numEndUsers = numTotalUsers - numMasters;
+    }
+    else{
+        numEndUsers = numTotalUsers - numMasters - numTenantAdmins;
+    }
+
+    const percentageMasters = numTotalUsers > 0 ? numMasters / numTotalUsers * 100 : 0;
+    const percentageTenantAdmins = numTotalUsers > 0 ? numTenantAdmins / numTotalUsers * 100 : 0;
+    const percentageEndUsers = numTotalUsers > 0 ? numEndUsers / numTotalUsers * 100 : 0;
+
+    const userTypeDistributionData = [percentageEndUsers, percentageTenantAdmins, percentageMasters];
+
+    console.log(`[DATABASE SERVICE] User Type Distribution Data: ${userTypeDistributionData}\n
+                [DATABASE SERVICE] Num Masters: ${numMasters} | Num Tenant Admins: ${numTenantAdmins} | Num End Users:${numEndUsers}`);
+
+    return new DatabaseResponse(ResponseType.Success, {userTypeDistributionData: userTypeDistributionData});
+}
+
+const fetchTotalNumberOfMasters = async(sourceUserId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch total number of masters request for source user ID:${sourceUserId}`);
+
+    const totalNumberOfMasters = await MasterModel.count();
+    if(totalNumberOfMasters && totalNumberOfMasters > 0)
+        return new DatabaseResponse(ResponseType.Success, {totalNumberOfMasters: totalNumberOfMasters});
+    else 
+        return new DatabaseResponse(ResponseType.NotFound);
+}
 
 module.exports = {
     ResponseType,
@@ -410,7 +461,7 @@ module.exports = {
     authenticateUser,
     isUserMaster,
     fetchTenantProfile,
-    fetchUserProfile,
+    fetchUserProfile, 
     fetchTenantsOfMaster,
     isUserAuthenticatedFor,
     getTenantOfUser,
@@ -422,4 +473,7 @@ module.exports = {
     registerUserToTenant,
     fetchTenantRolesOfTenant,
     fetchTotalNumberOfUsers,
+    fetchTotalNumberOfTenants,
+    fetchUserTypeDistributionData,
+    fetchTotalNumberOfMasters,
 }

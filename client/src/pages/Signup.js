@@ -49,7 +49,6 @@ export default function Signup() {
           formData[valueKey] = values[valueKey];
         });
 
-        console.log("Form Data: ", formData);
 
         const response = await fetch(`${fetchAddress}/api/register-user`, {
           method: 'POST',
@@ -59,7 +58,6 @@ export default function Signup() {
           body: JSON.stringify(formData),
         }).then((response) => response.json())
         .then((data) => {
-          console.log("Registration response data: ", data);
           if(data.status === "success"){
           localStorage.setItem("userId", data.userId);
             setIsError(false);

@@ -387,7 +387,6 @@ module.exports = (sequelize, DataTypes) => {
       });
 
       TenantUserModel.beforeDestroy(async (tenantUser, options) => {
-        console.log("TENANT USER MODEL BEFORE DESTROY");
         try {
           await TenantModel.decrement('userCount', { where: { tenantId: tenantUser.tenantId } });
         } catch (error) {

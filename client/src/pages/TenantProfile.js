@@ -57,14 +57,12 @@ export default function TenantProfile() {
   };
 
   const fetchTenantRoles = async() => {
-    console.log("tenant data to fetch tenant roles: ", tenantData, " with user Id: ", userId);
     if(!userId || ! tenantData || ! tenantData.tenantId){
       console.log("failed to fetch tenant roles due to missing information");
       return;
     } 
     const response = await fetchService.fetchTenantRolesOfTenant(userId, tenantData.tenantId);
 
-    console.log("API RESPONSE FOR TENANT ROLES: ", response);    
     if(!response.isError()){
       setTenantRoles(response.data.tenantRoles);
     }
@@ -122,7 +120,6 @@ export default function TenantProfile() {
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
           </Button>
           <Button variant="outline-secondary" size="sm" onClick={() => {
-            console.log("Delete Button Clicked for User ID:", user.userId);
             setUserIdToDelete(user.userId);
             setShowConfirmationModal(true);
             
@@ -134,27 +131,6 @@ export default function TenantProfile() {
     }));
     return modifiedTenantUsersDict;
   }
-  
-
-  const updatedTenantUsersDict  = tenantUsers.reduce((acc, user, index) => {
-    acc[index] = {
-      ...user,
-      Edit: (
-        <>
-        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.Id)} className="me-2">
-          <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i> {/* Adjust the color as needed */}
-        </Button>
-        <Button variant="outline-secondary" size="sm" onClick={() => {
-        console.log("Delete Button Clicked for User ID:", user.Id);
-        handleDeleteUser(user.Id);
-      }} className="me-2">
-        <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
-      </Button>
-      </>
-    )
-  };
-    return acc;
-  }, {});
  
 
   const handleErrorResponse = (response) => {
@@ -206,26 +182,6 @@ export default function TenantProfile() {
     
   };
 
-
-  const tenantUsersDict2 = tenantUsers.reduce((acc, user, index) => {
-    acc[index] = {
-      ...user,
-      Edit: (
-        <>
-        <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.Id)} className="me-2">
-          <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i> {/* Adjust the color as needed */}
-        </Button>
-        <Button variant="outline-secondary" size="sm" onClick={() => {
-          setUserIdToDelete(user.Id);
-          setShowConfirmationModal(true);
-      }} className="me-2">
-        <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
-        </Button>
-      </>
-    )
-  };
-    return acc;
-  }, {});
 
   const handleEditUser = async(userId)=>  {
     try{
@@ -295,7 +251,6 @@ export default function TenantProfile() {
     const middleName = names.length > 2 ? names.slice(1, -1).join(' ') : "";
     const lastName = names[names.length - 1];
 
-    console.log("SENDING TENANT ROLE ID: ", newUserData.tenantRoleId );
     try {
       const response = await fetchService.registerUser({
         email: newUserData.email,
@@ -347,26 +302,26 @@ export default function TenantProfile() {
       
       <div className="main p-4 p-lg-5 mt-5">
         <div className="d-md-flex align-items-center justify-content-between mb-3">
-            <div>
-              <ol className="breadcrumb fs-sm mb-1">
-                <li className="breadcrumb-item active">Dashboard</li>
-                <li className="breadcrumb-item active" aria-current="page">Tenants</li>
-                <li className="breadcrumb-item active" aria-current="page"><Link to = "#"> Tenant Profile </Link> </li>
-              </ol>
-              <h4 className="main-title mb-0">Welcome to Tenant Profile</h4>
-            </div>
-            <div className="d-flex gap-2 mt-3 mt-md-0">
-              <Button variant="" className="btn-white d-flex align-items-center gap-2">
-                <i className="ri-share-line fs-18 lh-1"></i>Share
-              </Button>
-              <Button variant="" className="btn-white d-flex align-items-center gap-2">
-                <i className="ri-printer-line fs-18 lh-1"></i>Print
-              </Button>
-              <Button variant="primary" className="d-flex align-items-center gap-2">
-                <i className="ri-bar-chart-2-line fs-18 lh-1"></i>Generate<span className="d-none d-sm-inline"> Report</span>
-              </Button>
-            </div>
+          <div>
+            <ol className="breadcrumb fs-sm mb-1">
+              <li className="breadcrumb-item active">Dashboard</li>
+              <li className="breadcrumb-item active" aria-current="page">Tenants</li>
+              <li className="breadcrumb-item active" aria-current="page"><Link to = "#"> Tenant Profile </Link> </li>
+            </ol>
+            <h4 className="main-title mb-0">Welcome to Tenant Profile</h4>
           </div>
+          <div className="d-flex gap-2 mt-3 mt-md-0">
+            <Button variant="" className="btn-white d-flex align-items-center gap-2">
+              <i className="ri-share-line fs-18 lh-1"></i>Share
+            </Button>
+            <Button variant="" className="btn-white d-flex align-items-center gap-2">
+              <i className="ri-printer-line fs-18 lh-1"></i>Print
+            </Button>
+            <Button variant="primary" className="d-flex align-items-center gap-2">
+              <i className="ri-bar-chart-2-line fs-18 lh-1"></i>Generate<span className="d-none d-sm-inline"> Report</span>
+            </Button>
+          </div>
+        </div>
         
         
         <Row className="mb-3">

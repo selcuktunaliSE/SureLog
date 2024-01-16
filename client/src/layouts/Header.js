@@ -76,7 +76,9 @@ export default function Header({ onSkin }) {
       localStorage.removeItem('skin-mode');
     }
 
-    onSkin(newTheme);
+    if(onSkin)
+      onSkin(newTheme);
+    else(console.warn("Set Skin function for this page has not been defined"));
   };
 
   function NotificationList() {

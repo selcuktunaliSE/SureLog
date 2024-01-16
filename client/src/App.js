@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from './layouts/Main';
 import NotFound from "./pages/NotFound";
 
+import Home from "./pages/Home";
+
 import publicRoutes from "./routes/PublicRoutes";
 import protectedRoutes from "./routes/ProtectedRoutes";
 
@@ -28,7 +30,10 @@ export default function App() {
     <React.Fragment>
       <BrowserRouter>
         <Routes>
+          <Route path="/home" element={<Home />}></Route>
           <Route path="/" element={<Main />}>
+            <Route index element={<Home />} />
+
             {protectedRoutes.map((route, index) => {
               return (
                 <Route
@@ -38,7 +43,7 @@ export default function App() {
                 />
               )
             })}
-          </Route>
+            </Route>
           {publicRoutes.map((route, index) => {
             return (
               <Route

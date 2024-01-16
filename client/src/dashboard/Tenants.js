@@ -46,7 +46,6 @@ export default function Tenants() {
 
   useEffect(() => {
     if(! userId) {
-        console.log("User ID not found");
         navigate("/signin");
         return;
     }
@@ -157,8 +156,6 @@ export default function Tenants() {
   }  
 
   const handleSkinModeChange = (skin) => {
-    console.log("Skin is : ",skin)
-    console.log(skinMode);
     setSkinMode(skin);
     
   };
@@ -301,7 +298,7 @@ export default function Tenants() {
               <Row style={{height: "50%"}} className="g-3">
                   <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
                   <SingleStatisticCard dataDict={numUsersStatisticDataDict}/>
-                </Row>
+              </Row>
 
                 </div>
               </Col>

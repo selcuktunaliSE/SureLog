@@ -31,7 +31,6 @@ export default class Sidebar extends Component {
         let response = await fetchService.fetchUserProfile(userId, userId);
 
         if(!response.isError()){
-            console.log("response: ", response);
             this.setState({ userData: response.data.user });
         }
     };

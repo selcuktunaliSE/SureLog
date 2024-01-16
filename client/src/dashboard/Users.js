@@ -75,7 +75,6 @@ export default function Users() {
 
     const response = await fetchService.fetchTenantUsers(userId, tenantId);
 
-    console.log("Fetch Users From Tenant Response: ", response);
 
     if(!response.isError()){
       const data = response.data;
@@ -107,9 +106,7 @@ export default function Users() {
       setErrorMessage("");
 
       const isUserMaster = response.data.isUserMaster;
-      console.log("response for check is user master: ", response.data.isUserMaster);
       setIsUserMaster(isUserMaster);
-      console.log("is user master?", isUserMaster);
     }
     else{
       handleErrorResponse(response);
@@ -122,15 +119,12 @@ export default function Users() {
     let response;
     if(isUserMaster){
       response = await fetchService.fetchTenantsOfMaster(userId);
-      console.log("user is master");
     }
     else{
       response = await fetchService.fetchTenantOfUser(userId, userId);
-      console.log("user is NOT master");
     }
 
 
-    console.log("is user master?:", isUserMaster, " response: ", response);
 
     if(!response.isError()){
       setIsError(false);
@@ -145,10 +139,8 @@ export default function Users() {
         tenantsData.push(response.data.tenant);
       }
       
-      console.log("tenants data:" , tenantsData);
 
       setTenants(tenantsData);
-      console.log("type of tenants object: ", Object.prototype.toString(tenants));
     }
     else{
       handleErrorResponse(response);
@@ -278,7 +270,6 @@ export default function Users() {
         <Row className="mb-3">
           {/* Tenant Selector Dropdown */}
           <Col md={2}>
-            {console.log("tenants on display: ", tenants)}
             <DropdownButton
               id="tenant-dropdown"
               title={selectedTenantName || `Select Tenant`}

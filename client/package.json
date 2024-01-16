@@ -1,7 +1,7 @@
 {
-  "name": "dashbyte-react",
+  "name": "surelog",
   "proxy": "http://127.0.0.1:3000",
-  "homepage": "http://dashbyte-react.themepixels.me",
+  "homepage": "http://localhost:3000/",
   "version": "1.0.2",
   "private": true,
   "dependencies": {

@@ -7,9 +7,8 @@ const BarChartCard = ({tenants,theme}) => {
     const tenantNames = tenantArray.map(tenant => tenant.name);
     const userCounts = tenantArray.map(tenant => tenant.userCount);
     const maxUserCount = Math.max(...userCounts);
-    console.log(theme);
     const labelColor = theme === 'dark' ? '#ffffff' : '#212830';
-    console.log(labelColor);
+
     const chartData = {
         labels: tenantNames,
         datasets: [{

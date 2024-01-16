@@ -172,10 +172,8 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
     })
     .then((response) => response.json())
     .then((data) => {
-        console.log("authentication response data: ", data);    
         if(data.status === "success")
         {   
-            console.log("authentication success");
             localStorage.setItem("userId", data.userId);
             navigate('/');
         }

@@ -28,10 +28,7 @@ export default function Profile() {
       return;
     }
 
-    console.log("source user id: " , userId, " target user id: ", targetUserId);
     let response = await fetchService.fetchUserProfile(userId, targetUserId ? targetUserId : userId);
-
-    console.log("response: ", response);
 
     if(!response.isError()){
       setUserData(response.data.user);

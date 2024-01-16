@@ -11,6 +11,8 @@ import Signup from "../pages/Signup";
 import Signup2 from "../pages/Signup2";
 import VerifyAccount from "../pages/VerifyAccount";
 
+import Home from "../pages/Home";
+
 // TODO Remove this import after the new profile page is completed.
 import OldProfile from "../pages/OldProfile";
 
@@ -26,6 +28,7 @@ const publicRoutes = [
   { path: "error/500", element: <InternalServerError /> },
   { path: "error/503", element: <ServiceUnavailable /> },
   { path: "error/505", element: <Forbidden /> },
+  { path: "/", element: <Home />},
 
   // TODO Remove this path after the new profile page is completed.
   { path: "old-profile", element: <OldProfile />},
