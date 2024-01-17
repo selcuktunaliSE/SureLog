@@ -290,7 +290,7 @@ export default function Home(){
           </Row>
           
           <Row className="mt-3">
-            <Col xs={4} className="grid-item-E-small-vertical">
+            <Col xs={4} className="grid-item-small-vertical">
                 <GeographicMapTable />
             </Col>
           
@@ -301,7 +301,7 @@ export default function Home(){
               </Row>
                 
               <Row>
-                
+
               </Row>
             </Col>
           </Row>
