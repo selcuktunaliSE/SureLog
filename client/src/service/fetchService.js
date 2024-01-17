@@ -52,20 +52,20 @@ const fetchVerifyToken = async (token, secret) => {
 
 const fetchGenerateQRCode = async () => {
   try {
-    let fetchResponse = new FetchResponse();
     const response = await fetch(`${fetchAddress}/api/generate-qrcode`, {
-      method: 'GET',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
     });
-
+    
     if (!response.ok) {
       throw new Error(`Error fetching QR code: ${response.statusText}`);
     }
-
+   
     const data = await response.json();
     console.log('data: ', data);
+    let fetchResponse;
 
     if (data.status === "success") {
       fetchResponse = new FetchResponse(FetchStatus.Success, { qrCode: data.qrCode, secret: data.secret });
@@ -76,8 +76,6 @@ const fetchGenerateQRCode = async () => {
     }
     fetchResponse = data;
     console.log("fetchresponse data: ", fetchResponse);
-    
-
     return fetchResponse;
   } catch (error) {
     console.error('Error fetching QR code:', error);

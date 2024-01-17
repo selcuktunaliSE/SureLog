@@ -105,7 +105,6 @@ module.exports = {
                     window: 1
                 }); 
                 console.log('Token Verification Result:', verified);
-
                 if (verified) {
                     res.sendStatus(200);
                 } else {
@@ -480,30 +479,30 @@ module.exports = {
             res.status(500).send();
           }
         },
-       
-
+        "/api/generate-qrcode": async (req, res) => {
+          try {
+              const secret = speakeasy.generateSecret({ name:"SureLog" });
+              const token = speakeasy.totp({
+                  secret: secret.base32,
+                  encoding: 'base32',
+              });
+              console.log('Generated TOTP Token:', token);
+              qrcode.toDataURL(secret.otpauth_url, (err, data) => {
+                  if (err) {
+                      console.error('Error generating QR code:', err);
+                      return res.status(500).send('Error generating QR code');
+                  }
+                  res.json({ qrCode: data, secret: secret.base32 });
+              });
+          } catch (error) {
+              console.error('Error in /generate-qrcode:', error);
+              res.status(500).send('Internal Server Error');
+          }
+      },
+      
     },
     
     "get": {
-      "/api/generate-qrcode": async (req, res) => {
-        try {
-            const secret = speakeasy.generateSecret({ length: 20 });
-            const token = speakeasy.totp({
-                secret: secret.base32,
-                encoding: 'base32'
-            });
-            console.log('Generated TOTP Token:', token);
-            qrcode.toDataURL(secret.otpauth_url, (err, data) => {
-                if (err) {
-                    console.error('Error generating QR code:', err);
-                    return res.status(500).send('Error generating QR code');
-                }
-                res.json({ qrCode: data, secret: secret.base32 });
-            });
-        } catch (error) {
-            console.error('Error in /generate-qrcode:', error);
-            res.status(500).send('Internal Server Error');
-        }
-    },
+      
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button, Card, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import img1 from "../assets/img/img1.jpg";
@@ -12,8 +12,12 @@ export default function LockScreen() {
   const [secret, setSecret] = useState('');
   const [loading, setLoading] = useState('');
   const navigate = useNavigate();
+  const hasFetchedRef = useRef(false);
   useEffect(() => {
-    handleGenerate();
+    if (!hasFetchedRef.current) {
+      handleGenerate();
+      hasFetchedRef.current = true; // Mark as fetched
+    }
   }, []);
 
   const handleGenerate = async () => {
