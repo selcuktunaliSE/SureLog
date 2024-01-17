@@ -1,6 +1,5 @@
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 const databaseService = require("../service/databaseService");
 
 const getDynamicSecretKeyForUser = (user) => {
@@ -93,7 +92,30 @@ module.exports = {
               res.status(500).json({ message: "Registration Error" }).send();
             } */
           },
-          
+         
+
+        "/api/verify-token": async (req, res) => {
+            try {
+                const { token, secret } = req.body;
+                console.log('Received Token from api:', token);
+                const verified = speakeasy.totp.verify({
+                    secret: secret,
+                    encoding: 'base32',
+                    token: token,
+                    window: 1
+                }); 
+                console.log('Token Verification Result:', verified);
+
+                if (verified) {
+                    res.sendStatus(200);
+                } else {
+                    res.sendStatus(400);
+                }
+            } catch (error) {
+                console.error('Error in /verify-token:', error);
+                res.status(500).send('Internal Server Error');
+            }
+        },
 
         "/api/authenticate-client": async(req, res) => {
             console.log("Authentication request received...");
@@ -458,11 +480,30 @@ module.exports = {
             res.status(500).send();
           }
         },
-
+       
 
     },
     
     "get": {
-        
+      "/api/generate-qrcode": async (req, res) => {
+        try {
+            const secret = speakeasy.generateSecret({ length: 20 });
+            const token = speakeasy.totp({
+                secret: secret.base32,
+                encoding: 'base32'
+            });
+            console.log('Generated TOTP Token:', token);
+            qrcode.toDataURL(secret.otpauth_url, (err, data) => {
+                if (err) {
+                    console.error('Error generating QR code:', err);
+                    return res.status(500).send('Error generating QR code');
+                }
+                res.json({ qrCode: data, secret: secret.base32 });
+            });
+        } catch (error) {
+            console.error('Error in /generate-qrcode:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    },
     }
 }

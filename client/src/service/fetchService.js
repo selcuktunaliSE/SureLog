@@ -1,7 +1,7 @@
 const fetchConfig = require("../config/fetchConfig.json");
-
 const fetchAddress = `http://${fetchConfig.host}:${fetchConfig.port}`;
-
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 class FetchResponse {
   constructor(fetchStatus = null, data = null, message = null) {
     this.status = fetchStatus;
@@ -27,6 +27,66 @@ const FetchStatus = {
   FetchError: "FetchError",
   ResourceNotFound: "ResourceNotFound",
 }
+const fetchVerifyToken = async (token, secret) => {
+  try {
+    let response = await fetch(`${fetchAddress}/api/verify-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, secret }),
+    });
+    
+    if (response.status === 200) {
+      console.log("Token Response is successful : ", response);
+      return true;
+    } else {
+      const errorText = await response.text(); // Get response text to see the error message from the server
+      console.error('Token verification failed: ', errorText);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return false;
+  }
+};
+
+
+const fetchGenerateQRCode = async () => {
+  try {
+    let fetchResponse = new FetchResponse();
+    const response = await fetch(`${fetchAddress}/api/generate-qrcode`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching QR code: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('data: ', data);
+
+    if (data.status === "success") {
+      fetchResponse = new FetchResponse(FetchStatus.Success, { qrCode: data.qrCode, secret: data.secret });
+    } else if (data.status === 404) {
+      fetchResponse = new FetchResponse(FetchStatus.UserNotFound);
+    } else if (data.status === 500) {
+      fetchResponse = new FetchResponse(FetchStatus.ServerException);
+    }
+    fetchResponse = data;
+    console.log("fetchresponse data: ", fetchResponse);
+    
+
+    return fetchResponse;
+  } catch (error) {
+    console.error('Error fetching QR code:', error);
+    throw error; 
+  }
+};
+
+
+
 
 const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
   let fetchResponse = new FetchResponse();
@@ -467,5 +527,7 @@ export {
   fetchTotalNumberOfUsers,
   fetchTotalNumberOfTenants,
   fetchTotalNumberOfMasters,
-  fetchUserTypeDistributionData
+  fetchUserTypeDistributionData,
+  fetchGenerateQRCode,
+  fetchVerifyToken
 }

@@ -175,7 +175,7 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
         if(data.status === "success")
         {   
             localStorage.setItem("userId", data.userId);
-            navigate('/');
+            navigate('/pages/lock');
         }
 
         if(data.status === "invalidCredentials")

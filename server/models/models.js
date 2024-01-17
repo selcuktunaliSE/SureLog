@@ -388,7 +388,8 @@ module.exports = (sequelize, DataTypes) => {
 
       TenantUserModel.beforeDestroy(async (tenantUser, options) => {
         try {
-          await TenantModel.decrement('userCount', { where: { tenantId: tenantUser.tenantId } });
+          await TenantModel.decrement('userCount', { by:1 ,where: { tenantId: tenantUser.tenantId } });
+          await TenantModel.update({ updatedAt: new Date() }, { where: { tenantId: tenantUser.tenantId }});
         } catch (error) {
           console.error('Error in beforeDestroy hook of TenantUserModel:', error);
         }
@@ -396,7 +397,8 @@ module.exports = (sequelize, DataTypes) => {
       
       TenantUserModel.afterCreate(async (tenantUser, options) => {
         try {
-          await TenantModel.increment('userCount', { where: { tenantId: tenantUser.tenantId } });
+          await TenantModel.increment('userCount', { by:1,where: { tenantId: tenantUser.tenantId } });
+          await TenantModel.update({ updatedAt: new Date() }, { where: { tenantId: tenantUser.tenantId }});
         } catch (error) {
           console.error('Error in afterCreate hook of TenantUserModel:', error);
         }

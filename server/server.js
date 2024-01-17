@@ -4,11 +4,11 @@ const cors = require('cors');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
-
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 const sessionConfig = require('./config/sessionConfig.json');
 const envConfig = require('./config/envConfig.json');
 const corsConfig = require("./config/corsConfig.json");
-
 const databaseService = require("./service/databaseService");
 
 
@@ -54,6 +54,9 @@ app.use(session(sessionOptions));
 Object.keys(api.post).forEach(apiFunctionName => app.post(apiFunctionName, api.post[apiFunctionName]));
 Object.keys(api.get).forEach(apiFunctionName => app.get(apiFunctionName, api.get[apiFunctionName]));
 
+
+  
+  
 
 
 db.sequelize.sync().then((req) => {

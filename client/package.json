@@ -21,6 +21,7 @@
     "chart.js": "^4.2.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
+    "crypto-browserify": "^3.12.0",
     "cryptofont": "^0.1.1",
     "dompurify": "^2.4.3",
     "express-session": "^1.17.3",
@@ -36,6 +37,7 @@
     "node-sass": "^8.0.0",
     "perfect-scrollbar": "^1.5.5",
     "prismjs": "^1.29.0",
+    "qrcode": "^1.5.3",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.0",
     "react-bootstrap": "^2.7.0",
@@ -80,7 +82,6 @@
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.0",
-    "babel-plugin-prismjs": "^2.1.0",
     "sass": "^1.57.1"
   }
 }

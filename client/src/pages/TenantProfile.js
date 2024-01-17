@@ -7,7 +7,6 @@ import Header from "../layouts/Header";
 import "../scss/customStyle.scss";
 import DynamicTable from "../components/DynamicTable";
 
-
 const { FetchStatus } = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
 
