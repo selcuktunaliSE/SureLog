@@ -141,7 +141,48 @@ const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: a
     return false;
     
 }
+// File: databaseService.js
+// Add this function to the module.exports at the end of the file
 
+const updateUser = async (sourceUserId, userId, updatedUserData) => {
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.EditUser,
+        target: userId})) 
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    try {
+        const user = await UserModel.findByPk(userId);
+        if (!user) {
+            return new DatabaseResponse(ResponseType.NotFound, "User not found");
+        }
+        await user.update(updatedUserData);
+        return new DatabaseResponse(ResponseType.Success, user);
+    } catch (error) {
+        console.error("Error updating user in database: ", error);
+        return new DatabaseResponse(ResponseType.Error, "Error updating user");
+    }
+}
+
+const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.EditTenant,
+        target: tenantId})) 
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    try {
+        const tenant = await TenantModel.findByPk(tenantId);
+        if (!tenant) {
+            return new DatabaseResponse(ResponseType.NotFound, "Tenant not found");
+        }
+        await tenant.update(updatedTenantData);
+        return new DatabaseResponse(ResponseType.Success, tenant);
+    } catch (error) {
+        console.error("Error updating tenant in database: ", error);
+        return new DatabaseResponse(ResponseType.Error, "Error updating tenant");
+    }
+}
 const isUserMaster = async (userId) => {
     console.log(`[DATABASE SERVICE] Checking if user:${userId} is a master user...`);
     return await MasterModel.findOne({where: {userId : userId}}) !== null;
@@ -476,4 +517,6 @@ module.exports = {
     fetchTotalNumberOfTenants,
     fetchUserTypeDistributionData,
     fetchTotalNumberOfMasters,
+    updateUser,
+    updateTenant
 }

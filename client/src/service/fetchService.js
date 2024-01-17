@@ -1,7 +1,5 @@
 const fetchConfig = require("../config/fetchConfig.json");
 const fetchAddress = `http://${fetchConfig.host}:${fetchConfig.port}`;
-const speakeasy = require('speakeasy');
-const qrcode = require('qrcode');
 class FetchResponse {
   constructor(fetchStatus = null, data = null, message = null) {
     this.status = fetchStatus;
@@ -83,8 +81,9 @@ const fetchGenerateQRCode = async () => {
   }
 };
 
+const updateTenantProfile = async(tenantId,tenantData)  => {
 
-
+}
 
 const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
   let fetchResponse = new FetchResponse();
@@ -470,6 +469,31 @@ const fetchTotalNumberOfMasters = async (sourceUserId) => {
 
   return fetchResponse;
 }
+const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
+  console.log("updatedTenantData: ", updatedTenantData);
+  const response = await fetch(`${fetchAddress}/api/update-tenant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceUserId, tenantId, updatedTenantData }),
+  });
+
+  return response.json();
+};
+
+
+const updateUser = async (sourceUserId, userId, updatedUserData) => {
+  const response = await fetch(`${fetchAddress}/api/update-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceUserId, userId, updatedUserData }),
+  });
+
+  return response.json();
+};
 
 
 const fetchUserTypeDistributionData = async (sourceUserId) => {
@@ -527,5 +551,7 @@ export {
   fetchTotalNumberOfMasters,
   fetchUserTypeDistributionData,
   fetchGenerateQRCode,
-  fetchVerifyToken
+  fetchVerifyToken,
+  updateTenant,
+  updateUser
 }

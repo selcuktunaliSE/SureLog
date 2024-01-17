@@ -20,15 +20,7 @@ export default function Footer() {
 
   return (
     <div className="main-footer">
-      <span>&copy; 2024. <a href="https://clickso.com.tr/tr" target="_blank" rel="noopener noreferrer">Clickso</a>. All Rights Reserved.</span>
-      <span onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} font>
-        {isHovering ? null : (
-          <>
-            Created By : <a href="">Crims & Trojan</a>
-          </>
-        )}
-      </span>
-      {isHovering && <img src={CrimsTrojanLogo} alt="Crims & Trojan Logo" style={imgStyle} onMouseLeave={handleMouseLeave} />}
+    
     </div>
   );
 }

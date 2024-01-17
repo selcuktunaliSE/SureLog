@@ -479,6 +479,16 @@ module.exports = {
             res.status(500).send();
           }
         },
+        "/api/update-user": async (req, res) => {
+          const { sourceUserId, userId, updatedUserData } = req.body;
+          const response = await databaseService.updateUser(sourceUserId, userId, updatedUserData);
+          res.status(response.responseType === databaseService.ResponseType.Success ? 200 : 400).json(response);
+        },
+        "/api/update-tenant": async (req, res) => {
+          const { sourceUserId, tenantId, updatedTenantData } = req.body;
+          const response = await databaseService.updateTenant(sourceUserId, tenantId, updatedTenantData);
+          res.status(response.responseType === databaseService.ResponseType.Success ? 200 : 400).json(response);
+        },
         "/api/generate-qrcode": async (req, res) => {
           try {
               const secret = speakeasy.generateSecret({ name:"SureLog" });

@@ -10,11 +10,7 @@ const dashboardMenu = [
     "link": "/dashboard/users",
     "icon": "ri-contacts-book-line"
   },
-  {
-    "label": "Finance Monitoring",
-    "link": "/dashboard/finance",
-    "icon": "ri-pie-chart-2-line"
-  },
+ 
   {
     "label": "Events Management",
     "link": "/dashboard/events",
