@@ -25,7 +25,7 @@ const GeographicMapTable = ({}) => {
                   <Nav.Link href=""><i className="ri-more-2-fill"></i></Nav.Link>
                 </Nav>
             </Card.Header>
-              <Card.Body className="p-3 p-xl-4">
+            <Card.Body className="p-3 p-xl-4">
                 <VectorMap map={usAea} backgroundColor={(currentSkin === "dark")? "#192030" : "#fff"} regionStyle={regStyle} selectedRegions={["US-CA", "US-TX", "US-MO", "US-CO", "US-NY"]} enableZoom={false} className="ht-200 mb-4" />
             
                 <Table className="table-one">
@@ -75,7 +75,7 @@ const GeographicMapTable = ({}) => {
                     ))}
                   </tbody>
                 </Table>
-              </Card.Body>
+            </Card.Body>
         </Card>
     );
 }

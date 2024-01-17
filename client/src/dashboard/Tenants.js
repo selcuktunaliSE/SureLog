@@ -56,6 +56,7 @@ export default function Tenants() {
     }
   }, [navigate]);
 
+
   useEffect(() => {
 
     const numTenants = Object.keys(tenantDict).length;
@@ -97,6 +98,7 @@ export default function Tenants() {
     if(! response.isError()){
       const data = response.data;
       setTenantDict(data.tenants);
+      setFilteredTenants(data.tenants);
       setIsError(false);
       setErrorMessage("");
     }
@@ -198,7 +200,6 @@ export default function Tenants() {
     const lowerCaseQuery = searchQuery.toLowerCase();
 
     Object.keys(tenantDict).forEach(tenantId => {
-      console.log("tenant: ", tenant);
       const tenant = tenantDict[tenantId];
       const fieldValue = tenant[searchKey] ? tenant[searchKey].toLowerCase() : ""; // Safely handle undefined values
 
@@ -251,6 +252,11 @@ export default function Tenants() {
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={handleSearch}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleProcessSearchQuery();
+                      }
+                    }}
                   />
 
                   {/* Search Button */}
@@ -281,7 +287,7 @@ export default function Tenants() {
             <Row className="mt-3">
               <Col md={12}>
                 <div className="cursor-pointer">
-                  <DynamicTable dataDict={tenantDict} onRowClick={handleRowClick}/>
+                  <DynamicTable dataDict={filteredTenants} onRowClick={handleRowClick}/>
                 </div>
               </Col>
             </Row>
@@ -293,20 +299,26 @@ export default function Tenants() {
                   <BarChartCard tenants={tenantDict}theme = {currentSkin} />
                 </div>
               </Col>
+
               <Col md ={6} className="d-flex">
-              <div className="w-100 d-flex flex-column">
-              <Row style={{height: "50%"}} className="g-3">
-                  <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
-                  <SingleStatisticCard dataDict={numUsersStatisticDataDict}/>
-              </Row>
+                <div className="w-100 d-flex flex-column">
+                  <Row className="mb-3">
+                    <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
+
+                  </Row>
+
+                  <Row className="">
+                    <SingleStatisticCard dataDict={numUsersStatisticDataDict}/>
+                  </Row>
 
                 </div>
               </Col>
               <Col xl="5">
+              
               </Col>
-               </Row>  
+            </Row>  
 
-             </Col>
+          </Col>
         </Row>
       </div>
       <Footer />

@@ -336,104 +336,118 @@ export default function TenantProfile() {
                 </Nav>
             </Card.Header>
             <Card.Body className="p-3"> 
+
                 {tenantData ? (
                     <Row className="tenant-info">
-                        <Col md={3} sm={3}>
-                          <Card>
-                            <Card.Header>
-                              <Card.Title as="h6" className="card-value centered-card-value">
-                                ID
-                              </Card.Title>
-                            </Card.Header>
-                            <Card.Body className="card-value centered-card-value">
-                                <i class="ri-hashtag"></i> {tenantData.tenantId}
-                            </Card.Body>
-                          </Card>
-                        </Col>
-                        <Col md={3} sm={3}>
-                          <Card>
-                            <Card.Header>
-                              <Card.Title as="h6" className="card-value centered-card-value">
-                              User Count
-                              </Card.Title>
-                              </Card.Header>
-                              <Card.Body className="card-value centered-card-value">
-                              <i class="ri-group-line"></i> {tenantData.userCount}
-                              </Card.Body>
-                              </Card>
-                              </Col>
-                              <Col md={3} sm={3}>
-                              <Card>
-                              <Card.Header>
-                              <Card.Title as="h6" className="card-value centered-card-value">
+                      
+                      <Col md={3} sm={3}>
+                        <Card>
+                          <Card.Header>
+                            <Card.Title as="h6" className="card-value centered-card-value">
+                              ID
+                            </Card.Title>
+                          </Card.Header>
+                          <Card.Body className="card-value centered-card-value">
+                              <i class="ri-hashtag"></i> {tenantData.tenantId}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                      
+                      <Col md={3} sm={3}>
+                        <Card>
+                          <Card.Header>
+                            <Card.Title as="h6" className="card-value centered-card-value">
+                            User Count
+                            </Card.Title>
+                          </Card.Header>
+                          <Card.Body className="card-value centered-card-value">
+                            <i class="ri-group-line"></i> {tenantData.userCount}
+                          </Card.Body>
+                        </Card>
+                        
+                      </Col>
+                            
+                      <Col md={3} sm={3}>
+                        <Card>
+                          <Card.Header>
+                            <Card.Title as="h6" className="card-value centered-card-value">
                               Created Date
-                              </Card.Title>
-                              </Card.Header>
-                              <Card.Body className="card-value centered-card-value">
-                              <i class="ri-calendar-check-line"></i> {formatDate(tenantData.createdAt)}
-                              </Card.Body>
-                              </Card>
-                              </Col>
-                              <Col md={3} sm={3}>
-                              <Card>
-                              <Card.Header>
-                              <Card.Title as="h6" className="card-value centered-card-value">
+                            </Card.Title>
+                          </Card.Header>
+                          <Card.Body className="card-value centered-card-value">
+                            <i class="ri-calendar-check-line"></i> {formatDate(tenantData.createdAt)}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                            
+                      <Col md={3} sm={3}>
+                        <Card>
+                          <Card.Header>
+                            <Card.Title as="h6" className="card-value centered-card-value">
                               Last Update
-                              </Card.Title>
-                              </Card.Header>
-                              <Card.Body className="card-value centered-card-value">
-                              <i class="ri-refresh-line"></i> {formatDateWithTime(tenantData.updatedAt)}
-                              </Card.Body>
-                              </Card>
-                              </Col>
-                              </Row>
-                              ) : (
-                              <p>Loading tenant data...</p>
-                              )}
-                              </Card.Body>
-                              </Card>
-                              </Col>
-                              </Row>
+                            </Card.Title>
+                          </Card.Header>
+                          <Card.Body className="card-value centered-card-value">
+                            <i class="ri-refresh-line"></i> {formatDateWithTime(tenantData.updatedAt)}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+
+                    </Row>
+                  ) : (
+                  <p>Loading tenant data...</p>
+                  )}
+                  </Card.Body>
+                  </Card>
+                  </Col>
+                  </Row>
         
        
         {/* DynamicTable for tenantUsers */}
        
         <Row>
-  <Col md={10}>
-    <DynamicTable dataDict={tenantUsersDict} onRowClick={handleRowClick} />
+          <Col md={10}>
+            <DynamicTable dataDict={tenantUsersDict} onRowClick={handleRowClick} />
           </Col>
-          <Col md={2}>
-          <Card className="mb-3" style={{ marginTop: '18px' }}>
-            <Card.Body className="">
-            <div className="d-flex justify-content-center align-items-center mb-3">
-            <Button
-            variant="primary"
-            onClick={handleShowAddUserModal}
-            style={buttonStyle}
-            >
-            <i className="ri-user-add-fill" style={iconStyle}></i>
-            <span>Add User</span>
-            </Button>
-            </div>
-            </Card.Body>
-            </Card>
-            <Card className="mb-3" >
-            <Card.Body className="">
-            <div className="d-flex justify-content-center align-items-center mb-3">
-            <Button
-            variant="info"
-            onClick={handleShowAddUserModal}
-            style={buttonStyle}
-            >
-            <i className="ri-pencil-fill" style={iconStyle}></i>
-            <span>Edit Tenant</span>
-            </Button>
-            </div>
-            </Card.Body>
-            </Card>
-           
+          
+          <Col md={2} className="d-flex flex-column">
+            
+            <Row className="mb-3" style={{height:"50%"}}>
+              <Card className="">
+                <Card.Body className="d-flex justify-content-center align-items-center ">
+                  <div className="d-flex justify-content-center align-items-center ">
+                    <Button
+                    variant="primary"
+                    onClick={handleShowAddUserModal}
+                    style={buttonStyle}
+                    >
+                      <i className="ri-user-add-fill" style={iconStyle}></i>
+                      <span>Add User</span>
+                    </Button>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Row>
+
+            <Row className="mb-3" style={{height:"50%"}}>
+              <Card className="" >
+                  <Card.Body className="d-flex justify-content-center align-items-center ">
+                    <div className="d-flex justify-content-center align-items-center">
+                      <Button
+                      variant="info"
+                      onClick={handleShowAddUserModal}
+                      style={buttonStyle}
+                      >
+                      <i className="ri-pencil-fill" style={iconStyle}></i>
+                      <span>Edit Tenant</span>
+                      </Button>
+                    </div>
+                  </Card.Body>
+              </Card>
+            </Row>   
           </Col>
         </Row>
+
         <Modal show={showAddUserModal} onHide={handleCloseAddUserModal}>
           <Modal.Header closeButton>
             <Modal.Title>Add New User</Modal.Title>
@@ -515,7 +529,9 @@ export default function TenantProfile() {
         <Modal.Header closeButton>
           <Modal.Title>Confirm Deletion</Modal.Title>
         </Modal.Header>
+        
         <Modal.Body>Are you sure you want to delete this user?</Modal.Body>
+        
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseConfirmationModal}>
             Cancel
@@ -525,69 +541,73 @@ export default function TenantProfile() {
           </Button>
         </Modal.Footer>
       </Modal>
-      <Modal show={showEditModal} onHide={handleCloseShowEditModal}>
-  <Modal.Header closeButton>
-    <Modal.Title>Edit User</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {editingUser && (
-      <Form onSubmit={handleFormSubmit}>
-        {/* Name */}
-        <Form.Group className="mb-3">
-          <Form.Label>Name</Form.Label>
-          <Form.Control 
-            type="text"
-            name="name" // Ensure this matches the property in the editingUser object
-           placeholder=  {`${editingUser.firstName || ''} ${editingUser.lastName || ''}`.trim()}
-            value={editingUser.name || ''} // Use || '' to prevent controlled-uncontrolled warning
-            onChange={handleEditInputChange}
-          />
-        </Form.Group>
+      
+  <Modal show={showEditModal} onHide={handleCloseShowEditModal}>
+  
+    <Modal.Header closeButton>
+      <Modal.Title>Edit User</Modal.Title>
+    </Modal.Header>
 
-        {/* Email */}
-        <Form.Group className="mb-3">
-          <Form.Label>Email</Form.Label>
-          <Form.Control 
-            type="email"
-            name="email" // Ensure this matches the property in the editingUser object
-            placeholder={editingUser.Email} 
-            value={editingUser.email || ''}
-            onChange={handleEditInputChange}
-          />
-        </Form.Group>
+      <Modal.Body>
+        {editingUser && (
+          <Form onSubmit={handleFormSubmit}>
+            {/* Name */}
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <Form.Control 
+                type="text"
+                name="name" // Ensure this matches the property in the editingUser object
+              placeholder=  {`${editingUser.firstName || ''} ${editingUser.lastName || ''}`.trim()}
+                value={editingUser.name || ''} // Use || '' to prevent controlled-uncontrolled warning
+                onChange={handleEditInputChange}
+              />
+            </Form.Group>
 
-        {/* Password */}
-        <Form.Group className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control 
-            type="text" 
-            placeholder="Enter new password" 
-            value={ '' || editingUser.password } 
-            onChange={handleEditInputChange}
-          />
-        </Form.Group>
-         {/* RoleName */}
-             <Form.Group className="mb-3">
-              <Form.Label>Role</Form.Label>
-                <Form.Select 
-                  type="text"
-                  name="rolename" 
-                  onChange={handleEditInputChange}
-                >
-                  <option value="Admin">Admin</option>
-                  <option value="User">User</option>
-                </Form.Select>
-              </Form.Group>
+            {/* Email */}
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <Form.Control 
+                type="email"
+                name="email" // Ensure this matches the property in the editingUser object
+                placeholder={editingUser.Email} 
+                value={editingUser.email || ''}
+                onChange={handleEditInputChange}
+              />
+            </Form.Group>
 
-        <div className="text-end">
-          <Button variant="primary" type="submit">
-            Save 
-          </Button>
-        </div>
-      </Form>
-    )}
-  </Modal.Body>
-</Modal>
+            {/* Password */}
+            <Form.Group className="mb-3">
+              <Form.Label>Password</Form.Label>
+              <Form.Control 
+                type="text" 
+                placeholder="Enter new password" 
+                value={ '' || editingUser.password } 
+                onChange={handleEditInputChange}
+              />
+            </Form.Group>
+            {/* RoleName */}
+                <Form.Group className="mb-3">
+                  <Form.Label>Role</Form.Label>
+                    <Form.Select 
+                      type="text"
+                      name="rolename" 
+                      onChange={handleEditInputChange}
+                    >
+                      <option value="Admin">Admin</option>
+                      <option value="User">User</option>
+                    </Form.Select>
+                </Form.Group>
+
+            <div className="text-end">
+              <Button variant="primary" type="submit">
+                Save 
+              </Button>
+            </div>
+
+          </Form>
+        )}
+      </Modal.Body>
+    </Modal>
      
       </div>
       
