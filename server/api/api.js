@@ -254,7 +254,37 @@ module.exports = {
             }
           }
         },
+        "/api/fetch-user-role": async (req, res) => {
+          const { tenantId, userId } = req.body;
           
+          // Validate input
+          if (!tenantId || !userId) {
+              return res.status(400).json({ message: "Tenant ID and User ID are required." });
+          }
+      
+          console.log(`Fetching role for user ID: ${userId} in tenant ID: ${tenantId}`);
+          
+          try {
+              const databaseResponse = await databaseService.fetchUserRoleName(tenantId, userId);
+              
+              if (databaseResponse.responseType === databaseService.ResponseType.Success) {
+                  res.json({
+                      status: "success",
+                      roleName: databaseResponse.data.roleName
+                  });
+              } else if (databaseResponse.responseType === databaseService.ResponseType.NotFound) {
+                  res.status(404).send("Tenant or user not found");
+              } else if (databaseResponse.responseType === databaseService.ResponseType.AccessDenied) {
+                  res.status(403).send("Access denied");
+              } else {
+                  res.status(500).send("An error occurred while fetching the user role");
+              }
+          } catch (error) {
+              console.error("Error fetching user role: ", error);
+              res.status(500).send("Internal server error");
+          }
+      },
+      
 
         "/api/fetch-user-profile": async (req, res) => {
             const {sourceUserId, targetUserId} = req.body;
@@ -481,9 +511,20 @@ module.exports = {
         },
         "/api/update-user": async (req, res) => {
           const { sourceUserId, userId, updatedUserData } = req.body;
+          
+          // Log the incoming data for debugging
+          console.log("Updating user data:", updatedUserData);
+      
           const response = await databaseService.updateUser(sourceUserId, userId, updatedUserData);
-          res.status(response.responseType === databaseService.ResponseType.Success ? 200 : 400).json(response);
-        },
+          
+          if (response.responseType === databaseService.ResponseType.Success) {
+            console.log("Api side : ",response);
+              res.status(200).json({ status: "success", message: "User updated successfully", data: response.data });
+          } else {
+              res.status(400).json({ status: "error", message: response.data });
+          }
+      },
+      
         "/api/update-tenant": async (req, res) => {
           const { sourceUserId, tenantId, updatedTenantData } = req.body;
           const response = await databaseService.updateTenant(sourceUserId, tenantId, updatedTenantData);

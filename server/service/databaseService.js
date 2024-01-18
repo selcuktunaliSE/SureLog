@@ -145,24 +145,60 @@ const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: a
 // Add this function to the module.exports at the end of the file
 
 const updateUser = async (sourceUserId, userId, updatedUserData) => {
-    if(!await isUserAuthenticatedFor({
+    if (!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
         accessType: AccessType.EditUser,
-        target: userId})) 
-            return new DatabaseResponse(ResponseType.AccessDenied);
+        target: userId
+    })) return new DatabaseResponse(ResponseType.AccessDenied);
 
     try {
+        // Update user details
         const user = await UserModel.findByPk(userId);
         if (!user) {
             return new DatabaseResponse(ResponseType.NotFound, "User not found");
         }
         await user.update(updatedUserData);
-        return new DatabaseResponse(ResponseType.Success, user);
+
+        let roleName = null;
+
+        // Update user role if roleName is provided in updatedUserData
+        if (updatedUserData.roleName) {
+            const tenantUser = await TenantUserModel.findOne({
+                where: { userId: userId },
+                include: [{
+                    model: TenantRolePermissionModel,
+                    as: 'rolePermissions'
+                }]
+            });
+            if (!tenantUser) {
+                return new DatabaseResponse(ResponseType.NotFound, "TenantUser not found");
+            }
+            
+            const tenantRole = await TenantRolePermissionModel.findOne({
+                where: { roleName: updatedUserData.roleName, tenantId: tenantUser.tenantId }
+            });
+            if (!tenantRole) {
+                return new DatabaseResponse(ResponseType.NotFound, "TenantRole not found");
+            }
+            await tenantUser.update({ tenantRoleId: tenantRole.tenantRoleId });
+
+            roleName = tenantRole.roleName; // Update roleName to be returned in the response
+        }
+
+        // Return user data along with roleName (if updated)
+        const userData = {
+            ...user.get({ plain: true }),
+            roleName: roleName
+        };
+
+        return new DatabaseResponse(ResponseType.Success, userData);
     } catch (error) {
         console.error("Error updating user in database: ", error);
         return new DatabaseResponse(ResponseType.Error, "Error updating user");
     }
 }
+
+
 
 const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
     if(!await isUserAuthenticatedFor({
@@ -456,6 +492,32 @@ const fetchTotalNumberOfTenants = async(sourceUserId) => {
         return new DatabaseResponse(ResponseType.NotFound);
 }
 
+const fetchUserRoleName = async (tenantId, userId) => {
+    try {
+        // Initializing the database if not already done
+        if (!initialized) initialize();
+
+        // Find the tenant user instance
+        const tenantUser = await TenantUserModel.findOne({
+            where: { tenantId: tenantId, userId: userId },
+            include: [{
+                model: TenantRolePermissionModel,
+                as: 'rolePermissions',
+                attributes: ['roleName']
+            }]
+        });
+
+        if (!tenantUser) {
+            return new DatabaseResponse(ResponseType.NotFound, "Tenant or user not found");
+        }
+
+        return new DatabaseResponse(ResponseType.Success, { roleName: tenantUser.rolePermissions.roleName });
+    } catch (error) {
+        console.error('Error fetching user role name:', error);
+        return new DatabaseResponse(ResponseType.Error, "Error fetching user role name");
+    }
+}
+
 const fetchUserTypeDistributionData = async(sourceUserId) => {
     console.log(`[DATABASE SERVICE] Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
 
@@ -518,5 +580,6 @@ module.exports = {
     fetchUserTypeDistributionData,
     fetchTotalNumberOfMasters,
     updateUser,
-    updateTenant
+    updateTenant,
+    fetchUserRoleName
 }

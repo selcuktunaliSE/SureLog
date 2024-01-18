@@ -288,6 +288,42 @@ const fetchTenantUsers = async (userId, tenantId) => {
   return fetchResponse;
 }
 
+const fetchUserRole = async (tenantId, userId) => {
+  let fetchResponse = new FetchResponse();
+
+  // Validate input
+  if (!tenantId || !userId) {
+    return new FetchResponse(FetchStatus.Error, null, 'Tenant ID and User ID are required.');
+  }
+
+  try {
+    const response = await fetch(`${fetchAddress}/api/fetch-user-role`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ tenantId, userId }),
+    });
+
+    const data = await response.json();
+    
+    // Handle different response types
+    if (data.status === "success") {
+      fetchResponse = new FetchResponse(FetchStatus.Success, { roleName: data.roleName });
+    } else if (data.status === "userNotFound" || data.status === "tenantNotFound") {
+      fetchResponse = new FetchResponse(FetchStatus.ResourceNotFound);
+    } else if (data.status === "accessDenied") {
+      fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+    } else {
+      fetchResponse = new FetchResponse(FetchStatus.Error, null, data.message || 'An error occurred while fetching the user role.');
+    }
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+}
 
 const fetchUserProfile = async (sourceUserId, targetUserId) => {
   let fetchResponse = new FetchResponse();
@@ -485,15 +521,24 @@ const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
 
 const updateUser = async (sourceUserId, userId, updatedUserData) => {
   const response = await fetch(`${fetchAddress}/api/update-user`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ sourceUserId, userId, updatedUserData }),
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sourceUserId, userId, updatedUserData }),
   });
 
-  return response.json();
+  const data = await response.json();
+  console.log("Response for editing is: ", data);
+  console.log("Updated User data is: ", updatedUserData);
+  
+  return new FetchResponse(
+      data.status === "success" ? FetchStatus.Success : FetchStatus.Error,
+      data,
+      data.message
+  );
 };
+
 
 
 const fetchUserTypeDistributionData = async (sourceUserId) => {
@@ -553,5 +598,6 @@ export {
   fetchGenerateQRCode,
   fetchVerifyToken,
   updateTenant,
-  updateUser
+  updateUser,
+  fetchUserRole
 }

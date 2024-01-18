@@ -21,8 +21,8 @@ export default function TenantProfile() {
   const [editingTenant, setEditingTenant] = useState({ name: '', description: '' });
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
-  const [editTenant, setEditTenant] = useState(null);
   const [selectedTenantRoleName, setSelectedTenantRoleName] = useState("");
+  const [editingUserRole, setEditingUserRole] = useState("");
   const [newUserData, setNewUserData] = useState({
     fullName: "",
     email: "",
@@ -51,12 +51,19 @@ export default function TenantProfile() {
   };
 
   const fetchTenantUsers = async () => {
-    const response = await fetchService.fetchTenantUsers(userId, tenantId);
-
-    if (!response.isError()) {
-      setTenantUsers(response.data.users);
+    const userResponse = await fetchService.fetchTenantUsers(userId, tenantId);
+  
+    if (!userResponse.isError()) {
+      const usersWithRoles = await Promise.all(userResponse.data.users.map(async (user) => {
+        const roleResponse = await fetchService.fetchUserRole(tenantId, user.userId);
+        return {
+          ...user,
+          roleName: roleResponse.isError() ? 'Role not found' : roleResponse.data.roleName
+        };
+      }));
+      setTenantUsers(usersWithRoles);
     } else {
-      handleErrorResponse(response);
+      handleErrorResponse(userResponse);
     }
   };
 
@@ -179,11 +186,14 @@ export default function TenantProfile() {
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    setEditingUser(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-
+    if (name === "roleName") {
+      setEditingUserRole(value);
+    } else {
+      setEditingUser(prevState => ({
+        ...prevState,
+        [name]: value
+      }));
+    }
   };
   const handleEditTenantSubmit = async (event) => {
     event.preventDefault();
@@ -205,11 +215,10 @@ export default function TenantProfile() {
 
   const handleEditUser = async (userId) => {
     try {
-      console.log("Editing UserId : ", userId);
       const response = await fetchService.fetchUserProfile(userId, userId);
       if (response) {
-        console.log("Response for editing user : ", response.data.user)
         setEditingUser(response.data.user);
+        setEditingUserRole(response.data.user.roleName)
         setShowEditModal(true);
       }
 
@@ -221,22 +230,29 @@ export default function TenantProfile() {
   };
 
   const handleRowClick = (rowData) => {
-    console.log("Row clicked:", rowData);
+  
   };
 
   const handleEditUserSubmit = async (event) => {
     event.preventDefault();
-    const response = await fetchService.updateUser(userId, editingUser.userId, editingUser);
+  
+    // Construct updatedUserData with correct property names as expected by backend
+    const updatedUserData = {
+      ...editingUser,
+      roleName: editingUserRole, // change to the correct property name if it's not `roleName`
+    };
+  
+    // Send the update request
+    const response = await fetchService.updateUser(userId, editingUser.userId, updatedUserData);
+    
     if (response.status === FetchStatus.Success) {
-      // Handle success, e.g., hide the modal, fetch updated user data, etc.
+      console.log("Response successfully received: ", response);
       setShowEditModal(false);
       fetchTenantUsers(); // Re-fetch users to reflect changes
     } else {
-      // Handle error
-      console.error('Error updating user:', response.message);
+      console.error('Error updating user:', response.message,'Response:', response);
     }
   };
-  
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -325,6 +341,7 @@ export default function TenantProfile() {
           lastName: item.lastName,
           email: item.email,
           userId: item.userId,
+          roleName:item.roleName
         };
       });
     }
@@ -582,23 +599,10 @@ export default function TenantProfile() {
           <Modal.Header closeButton>
             <Modal.Title>Edit User</Modal.Title>
           </Modal.Header>
-
           <Modal.Body>
             {editingUser && (
               <Form onSubmit={handleFormSubmit}>
-                {/* Name */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="name" // Ensure this matches the property in the editingUser object
-                    placeholder={`${editingUser.firstName || ''} ${editingUser.lastName || ''}`.trim()}
-                    value={editingUser.name || ''} // Use || '' to prevent controlled-uncontrolled warning
-                    onChange={handleEditInputChange}
-                  />
-                </Form.Group>
-
-                {/* Email */}
+               {/* Email */}
                 <Form.Group className="mb-3">
                   <Form.Label>Email</Form.Label>
                   <Form.Control
@@ -615,8 +619,9 @@ export default function TenantProfile() {
                   <Form.Label>Password</Form.Label>
                   <Form.Control
                     type="text"
+                    name="password"
                     placeholder="Enter new password"
-                    value={'' || editingUser.password}
+                    value={editingUser.password}
                     onChange={handleEditInputChange}
                   />
                 </Form.Group>
@@ -625,11 +630,15 @@ export default function TenantProfile() {
                   <Form.Label>Role</Form.Label>
                   <Form.Select
                     type="text"
-                    name="rolename"
+                    name="roleName"
+                    value={editingUserRole}
                     onChange={handleEditInputChange}
                   >
-                    <option value="Admin">Admin</option>
-                    <option value="User">User</option>
+                   {tenantRoles.map((role) => (
+                    <option key={role.tenantRoleId} value={role.roleName}>
+                      {role.roleName}
+                    </option>
+                  ))}
                   </Form.Select>
                 </Form.Group>
 
