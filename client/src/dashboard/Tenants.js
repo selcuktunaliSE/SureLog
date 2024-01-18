@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button } from "react-bootstrap";
+import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button,Modal,Form } from "react-bootstrap";
 import {Search} from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
@@ -34,7 +34,12 @@ export default function Tenants() {
   const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
   const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
   const [totalNumberOfUsers, setTotalNumberOfUsers] = useState(0);
-
+  const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+  const [newTenantData, setNewTenantData] = useState({
+    name: '',
+    // Add other fields if necessary
+  });
+  
   const currentSkin = (localStorage.getItem('skin-mode')) ? 'dark' : '';
   
 
@@ -156,6 +161,27 @@ export default function Tenants() {
         navigate("/");
     }
   }  
+const handleShowAddTenantModal = () => setShowAddTenantModal(true);
+const handleCloseAddTenantModal = () => setShowAddTenantModal(false);
+
+const handleNewTenantInputChange = (event) => {
+  const { name, value } = event.target;
+  setNewTenantData({ ...newTenantData, [name]: value });
+};
+
+const handleSubmitNewTenant = async (event) => {
+  event.preventDefault();
+
+  const response = await fetchService.addTenant(userId, newTenantData);
+  if (!response.error) {
+    console.log("Tenant added successfully: ", response.data);
+    handleCloseAddTenantModal();
+    // TODO: Add the source user as TenantMaster here
+    // TODO: Refresh tenant list or navigate as needed
+  } else {
+    console.error("Failed to add tenant: ", response.message);
+  }
+};
 
   const handleSkinModeChange = (skin) => {
     setSkinMode(skin);
@@ -290,7 +316,7 @@ export default function Tenants() {
                     style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
                     <Search /> {/* Search icon */}
                   </Button>
-
+                    
                   {/* Dropdown for selecting search key */}
                   <DropdownButton
                     as={InputGroup}
@@ -303,11 +329,15 @@ export default function Tenants() {
                       </Dropdown.Item>
                     ))}
                   </DropdownButton>
-                  
+                  <div className="mx-2 text-muted"></div> {/* 'veya' yazısı ekleyin */}
+                      <Button variant="outline-success" onClick={handleShowAddTenantModal}>
+                      Add Tenant
+                      </Button>
+              
                 </InputGroup>  
               </Col>
             </Row>
-
+            
             <Row className="mt-3">
               <Col md={12}>
                 <div className="cursor-pointer">
@@ -344,6 +374,33 @@ export default function Tenants() {
 
           </Col>
         </Row>
+        <Modal show={showAddTenantModal} onHide={handleCloseAddTenantModal}>
+  <Modal.Header closeButton>
+    <Modal.Title>Add New Tenant</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form onSubmit={handleSubmitNewTenant}>
+      <Form.Group className="mb-3">
+        <Form.Label>Tenant Name</Form.Label>
+        <Form.Control
+          type="text"
+          name="name"
+          placeholder="Enter Tenant Name"
+          value={newTenantData.name}
+          onChange={handleNewTenantInputChange}
+          required
+        />
+      </Form.Group>
+      {/* Add more fields if necessary */}
+      <div className="text-end">
+        <Button variant="primary" type="submit">
+          Add Tenant
+        </Button>
+      </div>
+    </Form>
+  </Modal.Body>
+</Modal>
+
       </div>
       <Footer />
     </React.Fragment>

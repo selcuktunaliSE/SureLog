@@ -83,7 +83,9 @@ const AccessType = {
     RevokeMasterRole: { name: "revokeMasterRole", requiresTarget: false },
     ViewMasterRoles: { name: "viewMasterRoles", requiresTarget: false}, // TODO NOT YET IMPLEMENTED IN SEQUELIZE MODELS AND DATABASE TABLES
 };
-
+const generateRandomId = () => {
+    return Math.floor(Math.random() * 1000000); // Adjust range as needed
+};
 const addTenant = async (sourceUserId, tenantData) => {
     // Check if the user is authenticated and has permission to add a tenant
     if (!await isUserAuthenticatedFor({
@@ -92,11 +94,21 @@ const addTenant = async (sourceUserId, tenantData) => {
     })) {
         return new DatabaseResponse(ResponseType.AccessDenied);
     }
-
     try {
-        // Create new tenant
+        let uniqueIdFound = false;
+    let newTenantId;
+
+    while (!uniqueIdFound) {
+        newTenantId = tenantData.tenantId || generateRandomId();
+        const existingTenant = await TenantModel.findOne({ where: { tenantId: newTenantId } });
+
+        if (!existingTenant) {
+            uniqueIdFound = true;
+        }
+    }
         const tenant = await TenantModel.create({
             ...tenantData,
+            tenantId:generateRandomId(),
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -107,6 +119,7 @@ const addTenant = async (sourceUserId, tenantData) => {
         return new DatabaseResponse(ResponseType.Error, "Error adding tenant");
     }
 };
+
 const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: accessType, target:target=null}) => {
     return true;
     console.log("SOURCE USER ID:", sourceUserId);

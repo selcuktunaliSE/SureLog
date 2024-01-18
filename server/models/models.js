@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
-
+const { v4: uuidv4 } = require('uuid');
 module.exports = (sequelize, DataTypes) => {
 
   const UserModel = sequelize.define('UserModel', {
@@ -224,6 +224,7 @@ module.exports = (sequelize, DataTypes) => {
           type: DataTypes.INTEGER.UNSIGNED,
           allowNull: false,
           primaryKey: true,
+          unique:true,
         },
         name: {
           type: DataTypes.STRING,
@@ -232,7 +233,8 @@ module.exports = (sequelize, DataTypes) => {
         },
         userCount: {
           type: DataTypes.INTEGER,
-          allowNull: false,
+          allowNull: true,
+          defaultValue:0
         },
         createdAt: {
           type: DataTypes.DATE,
@@ -246,8 +248,21 @@ module.exports = (sequelize, DataTypes) => {
       {
         tableName: 'tenants',
         timestamps: true,
-      }
-    );
+        hooks: {
+          beforeCreate: async (tenant, options) => {
+            let id;
+            let isUnique = false;
+            while (!isUnique) {
+              id = Math.floor(Math.random() * 1000000); // Adjust range as needed
+              const tenantExists = await TenantModel.count({ where: { tenantId: id } });
+              if (tenantExists === 0) {
+                isUnique = true;
+              }
+            }
+            tenant.tenantId = id;
+          }
+        }
+      });
   
   
   const TenantUserModel = sequelize.define('TenantUserModel', {
@@ -478,6 +493,7 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'userId',
       });
     };
+    sequelize.sync();
 
 
   return {

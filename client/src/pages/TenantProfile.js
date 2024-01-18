@@ -486,7 +486,7 @@ export default function TenantProfile() {
                 <Card.Body className="d-flex justify-content-center align-items-center ">
                   <div className="d-flex justify-content-center align-items-center">
                     <Button
-                      variant="info"
+                      variant="outline-info"
                       onClick={handleShowEditTenantModal}
                       style={buttonStyle}
                     >
