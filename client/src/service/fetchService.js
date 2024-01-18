@@ -538,7 +538,16 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
       data.message
   );
 };
-
+const addTenant = async (sourceUserId, tenantData) => {
+  const response = await fetch(`${fetchAddress}/api/add-tenant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ sourceUserId, tenantData })
+  });
+  return response.json(); // You can further process the response as needed
+};
 
 
 const fetchUserTypeDistributionData = async (sourceUserId) => {
@@ -599,5 +608,6 @@ export {
   fetchVerifyToken,
   updateTenant,
   updateUser,
-  fetchUserRole
+  fetchUserRole,
+  addTenant
 }

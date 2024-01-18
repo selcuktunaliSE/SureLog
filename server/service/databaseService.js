@@ -84,6 +84,29 @@ const AccessType = {
     ViewMasterRoles: { name: "viewMasterRoles", requiresTarget: false}, // TODO NOT YET IMPLEMENTED IN SEQUELIZE MODELS AND DATABASE TABLES
 };
 
+const addTenant = async (sourceUserId, tenantData) => {
+    // Check if the user is authenticated and has permission to add a tenant
+    if (!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.AddTenant,
+    })) {
+        return new DatabaseResponse(ResponseType.AccessDenied);
+    }
+
+    try {
+        // Create new tenant
+        const tenant = await TenantModel.create({
+            ...tenantData,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        return new DatabaseResponse(ResponseType.Success, tenant);
+    } catch (error) {
+        console.error("Error adding tenant in database: ", error);
+        return new DatabaseResponse(ResponseType.Error, "Error adding tenant");
+    }
+};
 const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: accessType, target:target=null}) => {
     return true;
     console.log("SOURCE USER ID:", sourceUserId);
@@ -581,5 +604,6 @@ module.exports = {
     fetchTotalNumberOfMasters,
     updateUser,
     updateTenant,
-    fetchUserRoleName
+    fetchUserRoleName,
+    addTenant
 }

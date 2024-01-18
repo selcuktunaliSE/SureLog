@@ -187,6 +187,30 @@ export default function Tenants() {
   const handleRowClick = (tenant) => {
     goToTenantProfile(tenant.tenantId);
   }
+  const addTenant = async (tenantData) => {
+    try {
+      const response = await fetchService.addTenant(localStorage.getItem("userId"), tenantData);
+      if (!response.isError()) {
+        alert("Tenant added successfully!");
+        // Refresh tenants list or navigate as needed
+      } else {
+        // Handle errors
+        alert("Failed to add tenant: " + response.message);
+      }
+    } catch (error) {
+      console.error("Error adding tenant: ", error);
+    }
+  };
+  
+  // Call this function when the form is submitted
+  const handleAddTenantFormSubmit = (event) => {
+    event.preventDefault();
+    const tenantData = {
+      // gather form data
+    };
+    addTenant(tenantData);
+  };
+  
 
   const goToTenantProfile = (tenantId) => {
     navigate("/tenant-profile", {state: {tenantId: tenantId}});

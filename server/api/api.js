@@ -509,6 +509,39 @@ module.exports = {
             res.status(500).send();
           }
         },
+        // File: api.js (or wherever you define your routes)
+
+"/api/add-tenant": async (req, res) => {
+  const { sourceUserId, tenantData } = req.body;
+  try {
+      const databaseResponse = await databaseService.addTenant(sourceUserId, tenantData);
+      
+      if (databaseResponse.responseType === databaseService.ResponseType.Success) {
+          res.status(200).json({ 
+              status: "success",
+              message: "Tenant added successfully",
+              tenantId: databaseResponse.data.tenantId 
+          });
+      } else if (databaseResponse.responseType === databaseService.ResponseType.AccessDenied) {
+          res.status(403).json({ 
+              status: "accessDenied",
+              message: "You do not have permission to add a tenant." 
+          });
+      } else {
+          res.status(500).json({ 
+              status: "error",
+              message: databaseResponse.data 
+          });
+      }
+  } catch (error) {
+      console.error("Error adding tenant: ", error);
+      res.status(500).json({ 
+          status: "error",
+          message: "Internal server error" 
+      });
+  }
+},
+
         "/api/update-user": async (req, res) => {
           const { sourceUserId, userId, updatedUserData } = req.body;
           
