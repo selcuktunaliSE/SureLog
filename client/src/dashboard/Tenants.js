@@ -34,6 +34,8 @@ export default function Tenants() {
   const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
   const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
   const [totalNumberOfUsers, setTotalNumberOfUsers] = useState(0);
+  const [tenantIdToDelete, setTenantIdToDelete] = useState(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
   const [newTenantData, setNewTenantData] = useState({
     name: '',
@@ -99,11 +101,26 @@ export default function Tenants() {
 
   const fetchTenants = async () => {
     const response = await fetchService.fetchTenantsOfMaster(userId);
-
-    if(! response.isError()){
+  
+    if(!response.isError()){
       const data = response.data;
-      setTenantDict(data.tenants);
-      setFilteredTenants(data.tenants);
+      // Map through the data to add the 'Edit' column with buttons
+      const tenantsWithActions = data.tenants.map(tenant => ({
+        ...tenant,
+        Edit: (
+          <>
+            <Button variant="outline-secondary" size="sm" onClick={() => handleEditTenant(tenant.tenantId)} className="me-2">
+              <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
+            </Button>
+            <Button variant="outline-secondary" size="sm" onClick={() => handleDeleteTenant(tenant.tenantId)} className="me-2">
+              <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
+            </Button>
+          </>
+        )
+      }));
+  
+      setTenantDict(tenantsWithActions);
+      setFilteredTenants(tenantsWithActions);
       setIsError(false);
       setErrorMessage("");
     }
@@ -111,6 +128,21 @@ export default function Tenants() {
       handleErrorResponse(response);
     }
   };
+  
+  const handleEditTenant = (tenantId) => {
+    // Handle edit tenant logic here
+    console.log("Edit tenant with ID: ", tenantId);
+    // Navigate to tenant edit page or show edit modal
+  };
+  
+  const handleDeleteTenant = (tenantId) => {
+    // Handle delete tenant logic here
+    console.log("Delete tenant with ID: ", tenantId);
+    // Show confirmation modal before deleting
+    setTenantIdToDelete(tenantId); // You might want to use a state to keep track of which tenant to delete
+    setShowConfirmationModal(true); // Assuming you have a confirmation modal
+  };
+   
 
   const fetchTotalNumberOfUsers = async () => {
     const response = await fetchService.fetchTotalNumberOfUsers(userId);
