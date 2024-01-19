@@ -513,6 +513,8 @@ module.exports = {
 
 "/api/add-tenant": async (req, res) => {
   const { sourceUserId, tenantData } = req.body;
+  console.log("Adding tenant with data:", tenantData);
+  console.log("Source user ID:", sourceUserId);
   try {
       const databaseResponse = await databaseService.addTenant(sourceUserId, tenantData);
       

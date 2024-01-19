@@ -3,7 +3,7 @@ const env = process.env.NODE_ENV || 'development';
 const databaseConfig = require(__dirname + '/../config/databaseConfig.json')[env];
 
 let models;
-let UserModel, TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterPermissionModel, MasterRolePermissionModel, associate;
+let UserModel,TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterPermissionModel, MasterRolePermissionModel, associate;
 
 let initialized = false;
 let sequelize;
@@ -83,42 +83,136 @@ const AccessType = {
     RevokeMasterRole: { name: "revokeMasterRole", requiresTarget: false },
     ViewMasterRoles: { name: "viewMasterRoles", requiresTarget: false}, // TODO NOT YET IMPLEMENTED IN SEQUELIZE MODELS AND DATABASE TABLES
 };
+const addMasterRolePermission = async ( masterId,tenantId,roleName) => {
+
+    const masterRolePermission = await MasterRolePermissionModel.create({
+        masterId: masterId,
+        tenantId: tenantId,
+        roleName: roleName,
+        createdAt: new Date(),
+    });
+    return masterRolePermission;
+};
+
 const generateRandomId = () => {
     return Math.floor(Math.random() * 1000000); // Adjust range as needed
 };
 const addTenant = async (sourceUserId, tenantData) => {
     // Check if the user is authenticated and has permission to add a tenant
     if (!await isUserAuthenticatedFor({
-        sourceUserId: sourceUserId,
-        accessType: AccessType.AddTenant,
-    })) {
+            sourceUserId: sourceUserId,
+            accessType: AccessType.AddTenant,
+        })) {
+        console.log('Access Denied for User ID:', sourceUserId); // Debug Log
         return new DatabaseResponse(ResponseType.AccessDenied);
     }
     try {
+        // Check and generate a unique tenant ID
         let uniqueIdFound = false;
-    let newTenantId;
-
-    while (!uniqueIdFound) {
-        newTenantId = tenantData.tenantId || generateRandomId();
-        const existingTenant = await TenantModel.findOne({ where: { tenantId: newTenantId } });
-
-        if (!existingTenant) {
-            uniqueIdFound = true;
+        let newTenantId;
+        while (!uniqueIdFound) {
+            newTenantId = tenantData.tenantId || generateRandomId();
+            const existingTenant = await TenantModel.findOne({ where: { tenantId: newTenantId } });
+            if (!existingTenant) {
+                uniqueIdFound = true;
+            }
         }
-    }
         const tenant = await TenantModel.create({
             ...tenantData,
-            tenantId:generateRandomId(),
+            tenantId: newTenantId,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+        console.log('Tenant Created:', tenant); // Debug Log
 
-        return new DatabaseResponse(ResponseType.Success, tenant);
+        if (!tenant) {
+            console.error('Tenant creation failed, tenant is undefined.');
+            return new DatabaseResponse(ResponseType.Error, "Tenant creation failed");
+        }
+
+        // Check if User is a Master, if not, make them one
+        let master = await MasterModel.findOne({ where: { userId: sourceUserId } });
+        if (master) {
+            // Fetch or create a default 'Tenant Master' role for the new tenant
+            let tenantMasterRole = await fetchOrCreateDefaultTenantMasterRole(tenant.tenantId); // Implement this function based on your logic
+            if (!tenantMasterRole) {
+                console.error('Default Tenant Master role could not be determined or created.');
+                return new DatabaseResponse(ResponseType.Error, "Default Tenant Master role could not be determined or created");
+            }
+            console.log('Tenant Master Role:', tenantMasterRole.roleName); // Debug Log
+
+            // Add the user as a TenantUser with the correct tenantRoleId
+            const tenantMasterAssociation = await TenantUserModel.upsert({
+                userId: sourceUserId,
+                tenantId: tenant.tenantId,
+                tenantRoleId: tenantMasterRole.tenantRoleId, // Use the correct Tenant Master role ID
+                createdAt: new Date(),
+            });
+            const user = await UserModel.findOne({where: {userId: sourceUserId}});
+            const email = user.email;
+
+           registerUserToTenant(sourceUserId, {
+                tenantId: tenant.tenantId,
+                userId: sourceUserId,
+                tenantRoleId: tenantMasterRole.tenantRoleId,
+                email: email
+            });
+            
+            console.log('TenantUser Association Created:', tenantMasterAssociation); // Debug Log
+            
+           addMasterRolePermission(master.masterId, tenant.tenantId, tenantMasterRole.roleName);
+            
+            const tenantMasterRolePermission = await MasterPermissionModel.upsert({
+                userId: sourceUserId,
+                tenantId: tenant.tenantId,
+                tenantRoleId: tenantMasterRole.tenantRoleId, // Use the correct Tenant Master role ID
+                createdAt: new Date(),
+            });
+            
+            console.log('TenantMaster Association Created:', tenantMasterRolePermission); // Debug Log
+        }
+
+        return new DatabaseResponse(ResponseType.Success, { /* ... */ });
+
     } catch (error) {
-        console.error("Error adding tenant in database: ", error);
-        return new DatabaseResponse(ResponseType.Error, "Error adding tenant");
+        console.error("Error adding tenant or associating TenantMaster in database: ", error);
+        return new DatabaseResponse(ResponseType.Error, "Error adding tenant or associating TenantMaster");
     }
 };
+const upsertTenantUser = async ({ userId, tenantId, tenantRoleId }) => {
+    // Upsert operation (create or update)
+    const [tenantUser, created] = await TenantUserModel.upsert({
+        userId: userId,
+        tenantId: tenantId,
+        tenantRoleId: tenantRoleId,
+        createdAt: new Date(), // Set createdAt only if creating a new record
+    }, {
+        returning: true, // Return the created/updated record
+    });
+
+    return tenantUser;
+};
+
+const fetchOrCreateDefaultTenantMasterRole = async (tenantId) => {
+    let role = await TenantRolePermissionModel.findOne({ 
+        where: { 
+            tenantId: tenantId,
+            roleName: 'TenantAdmin' // Assuming 'Tenant Master' is your default role name
+        }
+    });
+
+    if (!role) {
+        role = await TenantRolePermissionModel.create({
+            tenantId: tenantId,
+            roleName: 'TenantAdmin',
+        });
+    }
+
+    return role;
+};
+
+
+
 
 const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: accessType, target:target=null}) => {
     return true;

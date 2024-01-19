@@ -390,7 +390,7 @@ module.exports = (sequelize, DataTypes) => {
         tenant.updatedAt = new Date();
       });
 
-      TenantUserModel.beforeCreate((tenantUser, options) => {
+      TenantUserModel.beforeCreate((tenant, options) => {
         tenant.createdAt = new Date();
       })
 

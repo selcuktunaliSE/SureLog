@@ -171,13 +171,11 @@ const handleNewTenantInputChange = (event) => {
 
 const handleSubmitNewTenant = async (event) => {
   event.preventDefault();
-
   const response = await fetchService.addTenant(userId, newTenantData);
   if (!response.error) {
     console.log("Tenant added successfully: ", response.data);
+    fetchTenants();
     handleCloseAddTenantModal();
-    // TODO: Add the source user as TenantMaster here
-    // TODO: Refresh tenant list or navigate as needed
   } else {
     console.error("Failed to add tenant: ", response.message);
   }
