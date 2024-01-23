@@ -81,9 +81,7 @@ const fetchGenerateQRCode = async () => {
   }
 };
 
-const updateTenantProfile = async(tenantId,tenantData)  => {
 
-}
 
 const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
   let fetchResponse = new FetchResponse();
@@ -124,11 +122,13 @@ const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
     headers: {
       "Content-Type": "application/json",
     }
+    
   }).then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
         fetchResponse = new FetchResponse(FetchStatus.Success, { tenantRoles: data.tenantRoles });
       }
+      
       if (data.status === 404) {
         fetchResponse = new FetchResponse(FetchStatus.ResourceNotFound);
       }
@@ -142,6 +142,7 @@ const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
     .catch(error => {
       fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
     });
+  
   return fetchResponse;
 }
 
@@ -548,6 +549,28 @@ const addTenant = async (sourceUserId, tenantData) => {
   });
   return response.json(); // You can further process the response as needed
 };
+const deleteTenant = async (sourceUserId, tenantId) => {
+  const response = await fetch(`${fetchAddress}/api/delete-tenant`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ sourceUserId, tenantId })
+  });
+
+  const data = await response.json();
+  
+  // Handle different response types
+  if (data.status === "success") {
+      return new FetchResponse(FetchStatus.Success);
+  } else if (data.status === "tenantNotFound") {
+      return new FetchResponse(FetchStatus.TenantNotFound);
+  } else if (data.status === "accessDenied") {
+      return new FetchResponse(FetchStatus.AccessDenied);
+  } else {
+      return new FetchResponse(FetchStatus.Error, null, data.message || 'An error occurred while deleting the tenant.');
+  }
+};
 
 
 const fetchUserTypeDistributionData = async (sourceUserId) => {
@@ -609,5 +632,6 @@ export {
   updateTenant,
   updateUser,
   fetchUserRole,
-  addTenant
+  addTenant,
+  deleteTenant
 }

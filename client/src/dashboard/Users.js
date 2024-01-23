@@ -1,13 +1,11 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
+import { Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
 import { Search } from "react-bootstrap-icons";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
-import Avatar from "../components/Avatar";
 import "../scss/customStyle.scss";
 import img6 from "../assets/img/img6.jpg";
 import img7 from "../assets/img/img7.jpg";
@@ -135,7 +133,6 @@ export default function Users() {
         tenantsData = response.data.tenants;
       }
       else{
-        let tenantId = response.data.tenant.tenantId;
         tenantsData.push(response.data.tenant);
       }
       
@@ -193,10 +190,7 @@ export default function Users() {
     fetchUsersFromTenant(tenantId);
   };
 
-  const handleSortChange = (event) => {
-    setSortBy(event.target.value);
-  };
-  
+ 
   const handleSortOrderChange = () => {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };

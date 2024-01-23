@@ -140,7 +140,7 @@ const addTenant = async (sourceUserId, tenantData) => {
                 return new DatabaseResponse(ResponseType.Error, "Default Tenant Master role could not be determined or created");
             }
             console.log('Tenant Master Role:', tenantMasterRole.roleName); // Debug Log
-
+            await TenantModel.increment('userCount', { by: 1, where: { tenantId: tenant.tenantId }});
             // Add the user as a TenantUser with the correct tenantRoleId
             const tenantMasterAssociation = await TenantUserModel.upsert({
                 userId: sourceUserId,
@@ -179,19 +179,58 @@ const addTenant = async (sourceUserId, tenantData) => {
         return new DatabaseResponse(ResponseType.Error, "Error adding tenant or associating TenantMaster");
     }
 };
-const upsertTenantUser = async ({ userId, tenantId, tenantRoleId }) => {
-    // Upsert operation (create or update)
-    const [tenantUser, created] = await TenantUserModel.upsert({
-        userId: userId,
-        tenantId: tenantId,
-        tenantRoleId: tenantRoleId,
-        createdAt: new Date(), // Set createdAt only if creating a new record
-    }, {
-        returning: true, // Return the created/updated record
-    });
+const deleteTenant = async (sourceUserId, tenantId) => {
+    // Check if the user has permission to delete a tenant
+    if (!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.DeleteTenant,
+        target: tenantId
+    })) return new DatabaseResponse(ResponseType.AccessDenied);
 
-    return tenantUser;
+    // Start a transaction
+    const transaction = await sequelize.transaction();
+
+    try {
+        // Find the tenant
+        const tenant = await TenantModel.findByPk(tenantId, { transaction });
+        if (!tenant) {
+            await transaction.rollback();
+            return new DatabaseResponse(ResponseType.NotFound, "Tenant not found");
+        }
+
+        await TenantUserModel.destroy({
+            where: { tenantId: tenantId },
+            transaction: transaction
+          });
+      
+          // Step 2: Delete TenantRolePermissionModel records
+          await TenantRolePermissionModel.destroy({
+            where: { tenantId: tenantId },
+            transaction: transaction
+          });
+      
+          // Step 3: Handle MasterRolePermissionModel records if necessary
+          await MasterRolePermissionModel.destroy({
+            where: { tenantId: tenantId },
+            transaction: transaction
+          });
+          // Step 4: Delete the TenantModel record
+          await TenantModel.destroy({
+            where: { tenantId: tenantId },
+            transaction: transaction
+          });
+      
+          // Commit transaction
+          await transaction.commit();
+          return new DatabaseResponse(ResponseType.Success);
+        } catch (error) {
+          // Rollback transaction in case of error
+          console.error("Error deleting tenant: ", error);
+          return new DatabaseResponse(ResponseType.Error, "Error deleting tenant");
+
+        }
 };
+
 
 const fetchOrCreateDefaultTenantMasterRole = async (tenantId) => {
     let role = await TenantRolePermissionModel.findOne({ 
@@ -273,7 +312,45 @@ const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: a
 }
 // File: databaseService.js
 // Add this function to the module.exports at the end of the file
-
+const updateUserCount = async (tenantId) => {
+    try {
+      // Start a transaction for database operations
+      const transaction = await sequelize.transaction();
+  
+      // Count the number of regular users in the tenant
+      const userCount = await TenantUserModel.count({
+        where: { tenantId: tenantId },
+        transaction: transaction
+      });
+      
+      // Count the number of masters (admins) in the tenant
+      // Assuming that each master is also considered a user of the tenant
+      const masterCount = await MasterModel.count({
+        where: { tenantId: tenantId },
+        transaction: transaction
+      });
+  
+      // Update the user count in the tenant model
+      // The total count is the sum of regular users and masters
+      await TenantModel.update(
+        { userCount: userCount + masterCount },
+        {
+          where: { tenantId: tenantId },
+          transaction: transaction
+        }
+      );
+      console.log("Master Countx:", masterCount);
+        console.log("User Countzs:", userCount);
+      // Commit the transaction
+      await transaction.commit();
+    } catch (error) {
+      // Rollback the transaction in case of an error
+      if (transaction) await transaction.rollback();
+      console.error('Error updating tenant user count:', error);
+      throw error; // Rethrow the error after rollback
+    }
+  };
+  
 const updateUser = async (sourceUserId, userId, updatedUserData) => {
     if (!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
@@ -589,10 +666,10 @@ const fetchTenantRolesOfTenant = async(sourceUserId, tenantId) => {
         sourceUserId: sourceUserId,
         accessType: AccessType.ViewTenantUsers /* TODO !!! Change this AccessType to ViewTenantRoles and add new permission types accordingly */,
         target: tenantId})) 
-            return new DatabaseResponse(ResponseType.AccessDenied);
-
+        return new DatabaseResponse(ResponseType.AccessDenied);
+    
     const tenantRolePermissions = await TenantRolePermissionModel.findAll({where: {tenantId: tenantId}});
-
+    console.log(`[DATABASE SERVICE] Found tenant roles: ${tenantRolePermissions}`)
     if(tenantRolePermissions) return new DatabaseResponse(ResponseType.Success, {tenantRoles: tenantRolePermissions})
     else return new DatabaseResponse(ResponseType.NotFound);
 }
@@ -712,5 +789,7 @@ module.exports = {
     updateUser,
     updateTenant,
     fetchUserRoleName,
-    addTenant
+    addTenant,
+    deleteTenant,
+    updateUserCount
 }

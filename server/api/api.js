@@ -2,15 +2,34 @@ const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const databaseService = require("../service/databaseService");
 
-const getDynamicSecretKeyForUser = (user) => {
-    const secretKeyLength = 6; // You can adjust the length as needed
-    return crypto.randomInt(0, Math.pow(10, secretKeyLength)).toString();
-};
-
 module.exports = {
     "post": {
         "/api/check-logged-in-status": async(req, res) => {
             res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});
+        },
+        "/api/delete-tenant": async (req, res) => {
+          const { sourceUserId, tenantId } = req.body;
+          console.log(`Deleting tenant with ID:${tenantId}`);
+          try {
+            const databaseResponse = await databaseService.deleteTenant(sourceUserId, tenantId);
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.status(200).json({
+                status: "success"});
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+          } 
+          catch (error) {
+            console.error("Error deleting tenant: ", error);
+            res.status(500).json({
+                status: "error",
+                message: "Internal server error"
+            });
+          }
         },
         
         "/api/remove-user-from-tenant": async (req, res) => {
@@ -377,6 +396,7 @@ module.exports = {
               res.status(505).send();
             }
           }
+         
           catch(error){
             console.error(`ERROR While fetchin tenant roles of tenant ID:${tenantId} for source user ID:${sourceUserId}`);
             res.status(500).send();
@@ -543,7 +563,6 @@ module.exports = {
       });
   }
 },
-
         "/api/update-user": async (req, res) => {
           const { sourceUserId, userId, updatedUserData } = req.body;
           

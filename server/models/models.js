@@ -1,7 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
-const { v4: uuidv4 } = require('uuid');
 module.exports = (sequelize, DataTypes) => {
-
+  
   const UserModel = sequelize.define('UserModel', {
     userId: {
       type: DataTypes.INTEGER.UNSIGNED,
@@ -403,18 +402,60 @@ module.exports = (sequelize, DataTypes) => {
 
       TenantUserModel.beforeDestroy(async (tenantUser, options) => {
         try {
-          await TenantModel.decrement('userCount', { by:1 ,where: { tenantId: tenantUser.tenantId } });
           await TenantModel.update({ updatedAt: new Date() }, { where: { tenantId: tenantUser.tenantId }});
         } catch (error) {
           console.error('Error in beforeDestroy hook of TenantUserModel:', error);
         }
       });
-      
-      TenantUserModel.afterCreate(async (tenantUser, options) => {
+      TenantUserModel.afterDestroy(async (tenantUser, options) => {
+        const transaction = await sequelize.transaction();
         try {
-          await TenantModel.increment('userCount', { by:1,where: { tenantId: tenantUser.tenantId } });
+          await TenantModel.decrement('userCount', { by:1 ,where: { tenantId: tenantUser.tenantId } });
           await TenantModel.update({ updatedAt: new Date() }, { where: { tenantId: tenantUser.tenantId }});
+          await transaction.commit();
         } catch (error) {
+          await transaction.rollback();
+          console.error('Error in afterDestroy hook of TenantUserModel:', error);
+        }
+      }
+      );
+      
+      const updateTenantUserCounts = async () => {
+        const updateQuery = `
+          UPDATE tenants
+          SET userCount = (
+            SELECT COUNT(*)
+            FROM tenant_users
+            WHERE tenant_users.tenantId = tenants.tenantId
+          )
+        `;
+      
+        try {
+          await sequelize.query(updateQuery, { type: sequelize.QueryTypes.UPDATE });
+          console.log('User counts updated successfully.');
+        } catch (error) {
+          console.error('Error updating user counts:', error);
+        }
+      };
+      
+      updateTenantUserCounts();
+
+      TenantUserModel.afterCreate(async (tenantUser, options) => {
+        const transaction = options.transaction || await sequelize.transaction();
+        try {
+          const userCount = await TenantUserModel.count({
+            where: { tenantId: tenantUser.tenantId },
+            transaction: transaction
+          });
+      
+          await TenantModel.update({ userCount: userCount }, {
+            where: { tenantId: tenantUser.tenantId },
+            transaction: transaction
+          });
+      
+          if (!options.transaction) await transaction.commit();
+        } catch (error) {
+          if (!options.transaction) await transaction.rollback();
           console.error('Error in afterCreate hook of TenantUserModel:', error);
         }
       });
@@ -464,7 +505,14 @@ module.exports = (sequelize, DataTypes) => {
         as: 'users'
       });
 
-
+      MasterModel.belongsTo(UserModel, {
+        foreignKey: 'userId',
+        as: 'user'
+      });
+      UserModel.hasOne(MasterModel, {
+        foreignKey: 'userId',
+        as: 'master'
+      });
       // Create a many-to-many association between Masters and TenantModel
       MasterModel.belongsToMany(TenantModel, {
         through: MasterRolePermissionModel,

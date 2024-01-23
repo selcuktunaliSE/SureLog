@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button,Modal,Form } from "react-bootstrap";
+import { Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button,Modal,Form } from "react-bootstrap";
 import {Search} from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import Footer from "../layouts/Footer";
 import "../scss/customStyle.scss";
-import ReactApexChart from "react-apexcharts";
 
 import DynamicTable from "../components/DynamicTable";
 import BarChartCard from "../components/BarChartCard";
-import ApexCharts from "../docs/ApexCharts";
 import SingleStatisticCard from "../components/SingleStatisticCard";
 
 
@@ -37,6 +35,7 @@ export default function Tenants() {
   const [tenantIdToDelete, setTenantIdToDelete] = useState(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+  const handleCloseConfirmationModal = () => setShowConfirmationModal(false);
   const [newTenantData, setNewTenantData] = useState({
     name: '',
     // Add other fields if necessary
@@ -109,15 +108,15 @@ export default function Tenants() {
         ...tenant,
         Edit: (
           <>
-            <Button variant="outline-secondary" size="sm" onClick={() => handleEditTenant(tenant.tenantId)} className="me-2">
+            <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditTenant(e, tenant.tenantId)} className="me-2">
               <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
             </Button>
-            <Button variant="outline-secondary" size="sm" onClick={() => handleDeleteTenant(tenant.tenantId)} className="me-2">
+            <Button variant="outline-secondary" size="sm" onClick={(e) => handleDeleteTenant(e, tenant.tenantId)} className="me-2">
               <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
             </Button>
           </>
         )
-      }));
+      }));      
   
       setTenantDict(tenantsWithActions);
       setFilteredTenants(tenantsWithActions);
@@ -129,18 +128,18 @@ export default function Tenants() {
     }
   };
   
-  const handleEditTenant = (tenantId) => {
-    // Handle edit tenant logic here
+  const handleEditTenant = (event,tenantId) => {
+    event.stopPropagation();
     console.log("Edit tenant with ID: ", tenantId);
     // Navigate to tenant edit page or show edit modal
   };
   
-  const handleDeleteTenant = (tenantId) => {
-    // Handle delete tenant logic here
-    console.log("Delete tenant with ID: ", tenantId);
-    // Show confirmation modal before deleting
-    setTenantIdToDelete(tenantId); // You might want to use a state to keep track of which tenant to delete
+  const handleDeleteTenant = (event,tenantId) => {
+    event.stopPropagation();
     setShowConfirmationModal(true); // Assuming you have a confirmation modal
+    console.log("Delete tenant with ID: ", tenantId);
+    setTenantIdToDelete(tenantId); // You might want to use a state to keep track of which tenant to delete
+
   };
    
 
@@ -218,18 +217,26 @@ const handleSubmitNewTenant = async (event) => {
     
   };
 
-  const handleTenantSelect = (tenantId) => {
-    setSelectedTenant(tenantId);
-    // You can navigate or perform actions when a tenant is selected
-  };
+  const performDeleteTenant = async () => {
+    try {
+        const response = await fetchService.deleteTenant(userId, tenantIdToDelete);
+        
+        if (response.status === 200) {
+            alert('Tenant deleted successfully!');
+            // Refresh the tenants list after successful deletion
+            fetchTenants();
+        } else {
+           
+        }
+    } catch (error) {
+        console.error('Error deleting tenant: ', error);
+        alert('An error occurred while deleting the tenant.');
+    } finally {
+        setShowConfirmationModal(false);
+        window.location.reload();
+    }
+};
 
-  const handleSortChange = (event) => {
-    setSortBy(event.target.value);
-  };
-  
-  const handleSortOrderChange = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-  };
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
@@ -258,15 +265,7 @@ const handleSubmitNewTenant = async (event) => {
     }
   };
   
-  // Call this function when the form is submitted
-  const handleAddTenantFormSubmit = (event) => {
-    event.preventDefault();
-    const tenantData = {
-      // gather form data
-    };
-    addTenant(tenantData);
-  };
-  
+ 
 
   const goToTenantProfile = (tenantId) => {
     navigate("/tenant-profile", {state: {tenantId: tenantId}});
@@ -430,6 +429,21 @@ const handleSubmitNewTenant = async (event) => {
     </Form>
   </Modal.Body>
 </Modal>
+
+<Modal show={showConfirmationModal} onHide={handleCloseConfirmationModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Deletion</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Are you sure you want to delete this tenant?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleCloseConfirmationModal}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={performDeleteTenant}>
+              Delete
+            </Button>
+          </Modal.Footer>
+        </Modal>
 
       </div>
       <Footer />
