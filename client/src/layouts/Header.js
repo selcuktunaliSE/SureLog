@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Dropdown from 'react-bootstrap/Dropdown';
-import userAvatar from "../assets/img/img1.jpg";
 import notification from "../data/Notification";
-const fetchConfig = require("../config/fetchConfig.json");
-const {host, port} = fetchConfig;
-const fetchAddress = `http://${host}:${port}`;
- 
-const {FetchStatus} = require("../service/FetchService");
+
 const fetchService = require("../service/FetchService");
 
 export default function Header({ onSkin }) {
@@ -66,6 +61,7 @@ export default function Header({ onSkin }) {
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
+    console.log("Theme changed to " + newTheme);
     const HTMLTag = document.querySelector("html");
 
     if (newTheme === "dark") {
@@ -132,12 +128,12 @@ export default function Header({ onSkin }) {
         <Dropdown className="dropdown-profile ms-3 ms-xl-4" align="end">
     <Dropdown.Toggle as={CustomToggle}>
       <div className="avatar online">
-        <img src={userAvatar} alt="" />
+      <i className={`ri-user-line ${theme === 'dark' ? 'icon-dark' : 'icon-light'}`} style={{ fontSize: '1.5rem'}}></i>
       </div>
     </Dropdown.Toggle>
     <Dropdown.Menu className="mt-10-f">
       <div className="dropdown-menu-body">
-        <div className="avatar avatar-xl online mb-3"><img src={userAvatar} alt="" /></div>
+        
         <h5 className="mb-1 text-dark fw-semibold">{userData.firstName} {userData.lastName}</h5>
         <p className="fs-sm text-secondary"></p>
 

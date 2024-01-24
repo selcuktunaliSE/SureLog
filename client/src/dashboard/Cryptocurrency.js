@@ -254,10 +254,10 @@ export default function Cryptocurrency() {
         <div className="d-md-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link to="#">Dashboard</Link></li>
-              <li className="breadcrumb-item active" aria-current="page">Cryptocurrency</li>
+              <li className="breadcrumb-item"><Link to="#">Services</Link></li>
+              <li className="breadcrumb-item active" aria-current="page">Maps</li>
             </ol>
-            <h4 className="main-title mb-0">Welcome to Dashboard</h4>
+            <h4 className="main-title mb-0">Welcome to Maps</h4>
           </div>
           <div className="d-flex gap-2 mt-3 mt-md-0">
             <Button variant="" className="btn-white d-flex align-items-center gap-2">

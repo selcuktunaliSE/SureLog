@@ -362,7 +362,7 @@ export default function ProductManagement() {
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link to="#">Dashboard</Link></li>
+              <li className="breadcrumb-item"><Link to="#">Services</Link></li>
               <li className="breadcrumb-item active" aria-current="page">Product Management</li>
             </ol>
             <h4 className="main-title mb-0">Welcome to Dashboard</h4>
