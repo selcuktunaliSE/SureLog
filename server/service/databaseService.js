@@ -747,12 +747,24 @@ const fetchUserTypeDistributionData = async(sourceUserId) => {
     const percentageTenantAdmins = numTotalUsers > 0 ? numTenantAdmins / numTotalUsers * 100 : 0;
     const percentageEndUsers = numTotalUsers > 0 ? numEndUsers / numTotalUsers * 100 : 0;
 
-    const userTypeDistributionData = [percentageEndUsers, percentageTenantAdmins, percentageMasters];
+    const userTypeCountDistributionData = {
+      percentages: {
+        endUsers: percentageEndUsers,
+        tenantAdmins: percentageTenantAdmins,
+        masters: percentageMasters,
+      },
+      counts: {
+        endUsers: numEndUsers,
+        tenantAdmins: numTenantAdmins,
+        masters: numMasters,
+        totalUsers: numTotalUsers
+      }
+    } 
 
-    console.log(`[DATABASE SERVICE] User Type Distribution Data: ${userTypeDistributionData}\n
+    console.log(`[DATABASE SERVICE] User Type Count Distribution Data: ${userTypeCountDistributionData}\n
                 [DATABASE SERVICE] Num Masters: ${numMasters} | Num Tenant Admins: ${numTenantAdmins} | Num End Users:${numEndUsers}`);
 
-    return new DatabaseResponse(ResponseType.Success, {userTypeDistributionData: userTypeDistributionData});
+    return new DatabaseResponse(ResponseType.Success, {userTypeCountDistributionData: userTypeCountDistributionData});
 }
 
 const fetchTotalNumberOfMasters = async(sourceUserId) => {
@@ -763,6 +775,48 @@ const fetchTotalNumberOfMasters = async(sourceUserId) => {
         return new DatabaseResponse(ResponseType.Success, {totalNumberOfMasters: totalNumberOfMasters});
     else 
         return new DatabaseResponse(ResponseType.NotFound);
+}
+
+const fetchUserTypeCountDistributionData = async(sourceUserId) => {
+    console.log(`[DATABASE SERVICE] Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
+
+    const numTotalUsers = await UserModel.count();
+    if(!numTotalUsers || numTotalUsers < 2) return new DatabaseResponse(ResponseType.NotFound);
+
+    const numMasters = await MasterModel.count();
+    let numTenantAdmins = await TenantRolePermissionModel.findAll({where: {roleName: "Admin"}}).length;
+    let numEndUsers;
+
+    if(! numTenantAdmins){
+        numTenantAdmins = 0;
+        numEndUsers = numTotalUsers - numMasters;
+    }
+    else{
+        numEndUsers = numTotalUsers - numMasters - numTenantAdmins;
+    }
+
+    const percentageMasters = numTotalUsers > 0 ? numMasters / numTotalUsers * 100 : 0;
+    const percentageTenantAdmins = numTotalUsers > 0 ? numTenantAdmins / numTotalUsers * 100 : 0;
+    const percentageEndUsers = numTotalUsers > 0 ? numEndUsers / numTotalUsers * 100 : 0;
+
+    const userTypeCountDistributionData = {
+      percentages: {
+        endUsers: percentageEndUsers,
+        tenantAdmins: percentageTenantAdmins,
+        masters: percentageMasters,
+      },
+      counts: {
+        endUsers: numEndUsers,
+        tenantAdmins: numTenantAdmins,
+        masters: numMasters,
+        totalUsers: numTotalUsers
+      }
+    } 
+
+    console.log(`[DATABASE SERVICE] User Type Count Distribution Data: ${userTypeCountDistributionData}\n
+                [DATABASE SERVICE] Num Masters: ${numMasters} | Num Tenant Admins: ${numTenantAdmins} | Num End Users:${numEndUsers}`);
+
+    return new DatabaseResponse(ResponseType.Success, {userTypeCountDistributionData: userTypeCountDistributionData});
 }
 
 module.exports = {
@@ -784,7 +838,7 @@ module.exports = {
     fetchTenantRolesOfTenant,
     fetchTotalNumberOfUsers,
     fetchTotalNumberOfTenants,
-    fetchUserTypeDistributionData,
+    fetchUserTypeCountDistributionData,
     fetchTotalNumberOfMasters,
     updateUser,
     updateTenant,

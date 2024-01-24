@@ -49,3 +49,5 @@ server/config/sessionConfig.json
 server/config/corsConfig.json
 client/src/config/fetchConfig.json
 server/config/corsConfig.json
+client/src/config/fetchConfig.json
+server/config/corsConfig.json

@@ -109,7 +109,7 @@ const linedata_linear = [[0, 36], [1, 43], [2, 48], [3, 51], [4, 52], [5, 57], [
 export default function Home(){
   const [errorMessage, setErrorMessage] = useState("");
   const [isError, setIsError] = useState(false);
-  const [userTypeDistributionData, setUserTypeDistributionData] = useState([]);
+  const [userTypeCountDistributionData, setUserTypeCountDistributionData] = useState([]);
   const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
   const [numMasterStatisticDataDict, setNumMasterStatisticDataDict] = useState({});
   const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
@@ -123,7 +123,7 @@ export default function Home(){
     const response = await fetchService.fetchUserTypeDistributionData(userId);
     
     if(! response.isError()){
-      setUserTypeDistributionData(response.data.userTypeDistributionData);
+      setUserTypeCountDistributionData(response.data.userTypeCountDistributionData);
       setIsError(false);
       setErrorMessage("");
     }
@@ -133,10 +133,8 @@ export default function Home(){
   }
 
   useEffect(() => {
-    fetchTotalNumberOfUsers();
     fetchTotalNumberOfTenants();
-    fetchTotalNumberOfMasters();
-    fetchUserTypeDistributionData();
+    fetchUserTypeCountDistributionData();
   }, []);
 
 
@@ -183,33 +181,30 @@ export default function Home(){
       }
     })
 
-  }, [totalNumberOfUsers, totalNumberOfTenants, totalNumberOfMasters, userTypeDistributionData]);
+  }, [totalNumberOfUsers, totalNumberOfTenants, totalNumberOfMasters, userTypeCountDistributionData]);
 
-  const fetchTotalNumberOfMasters = async () => {
-    const response = await fetchService.fetchTotalNumberOfMasters(userId);
+  const fetchUserTypeCountDistributionData = async () => {
+    const response = await fetchService.fetchUserTypeCountDistributionData(userId);
     
     if(! response.isError()){
-      setTotalNumberOfMasters(response.data.totalNumberOfMasters);
+      const percentages = response.data.userTypeCountDistributionData.percentages;
+      const counts = response.data.userTypeCountDistributionData.counts;
+
+      setTotalNumberOfUsers(counts.totalUsers);
+      setTotalNumberOfMasters(counts.masters);
+      
+      setUserTypeCountDistributionData([
+        percentages.endUsers,
+        percentages.tenantAdmins, 
+        percentages.masters]);
+
       setIsError(false);
       setErrorMessage("");
     }
     else{
       handleErrorResponse(response);
     }
-  }
-
-  const fetchTotalNumberOfUsers = async () => {
-    const response = await fetchService.fetchTotalNumberOfUsers(userId);
-    
-    if(! response.isError()){
-      setTotalNumberOfUsers(response.data.totalNumberOfUsers);
-      setIsError(false);
-      setErrorMessage("");
-    }
-    else{
-      handleErrorResponse(response);
-    }
-  }
+  };
 
   const fetchTotalNumberOfTenants = async () => {
     const response = await fetchService.fetchTotalNumberOfTenants(userId);
@@ -296,8 +291,8 @@ export default function Home(){
           
             <Col xs={8} className="grid-item-large-horizontal">
               <Row>
-                {console.log("user type distribution data:", userTypeDistributionData)}
-                {userTypeDistributionData && (<PercentageBarCard data={userTypeDistributionData}  texts={userTypeDistributionGraphTexts}/>)}
+                {console.log("user type distribution data:", userTypeCountDistributionData)}
+                {userTypeCountDistributionData && (<PercentageBarCard data={userTypeCountDistributionData}  texts={userTypeDistributionGraphTexts}/>)}
               </Row>
                 
               <Row>

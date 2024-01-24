@@ -12,6 +12,8 @@ import DynamicTable from "../components/DynamicTable";
 import BarChartCard from "../components/BarChartCard";
 import SingleStatisticCard from "../components/SingleStatisticCard";
 
+import {formatDate, formatDateWithTime} from "../utility/DateFormatter";
+
 
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
@@ -19,6 +21,7 @@ const fetchService = require("../service/FetchService");
 export default function Tenants() {
   
   const [filteredTenants, setFilteredTenants] = useState({});
+  const [selectedTenant, setSelectedTenant] = useState(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,14 +30,18 @@ export default function Tenants() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [skinMode, setSkinMode] = useState("");
+  const [tenantDict, setTenantDict] = useState({});
+  const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
+  const [numEndUsersStatisticDataDict, setNumEndUsersStatisticDataDict] = useState({});
+  const [numTenantAdminsStatisticDataDict, setNumTenantAdminsStatisticDataDict] = useState({});
+  const [numMastersStatisticDataDict, setNumMastersStatisticDataDict] = useState({});
+  const [numEndUsers, setNumEndUsers] = useState(0);
+  const [numMasters, setNumMasters] = useState(0);
+  const [numTenantAdmins, setNumTenantAdmins] = useState(0);
   const [editingTenantData, setEditingTenantData] = useState({
     name: '',
     tenantId: '',
   }); 
-  const [tenantDict, setTenantDict] = useState({});
-  const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
-  const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
-  const [totalNumberOfUsers, setTotalNumberOfUsers] = useState(0);
   const [tenantIdToDelete, setTenantIdToDelete] = useState(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showEditTenantModal, setShowEditTenantModal] = useState(false);
@@ -70,21 +77,6 @@ export default function Tenants() {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
 
-  const formatDateWithTime = (dateStr) => {
-
-    const date = new Date(dateStr);
-    const offset = date.getTimezoneOffset() * 60000;
-    const localTime = new Date(date.getTime() - offset - 3 * 3600000);
-
-    const day = localTime.getDate().toString().padStart(2, '0');
-    const month = (localTime.getMonth() + 1).toString().padStart(2, '0');
-    const year = localTime.getFullYear();
-    const hours = localTime.getHours().toString().padStart(2, '0');
-    const minutes = localTime.getMinutes().toString().padStart(2, '0');
-
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
-  };
-
   useEffect(() => {
     if(! userId) {
         navigate("/signin");
@@ -93,7 +85,7 @@ export default function Tenants() {
 
     if(checkMasterUser()){
       fetchTenants();
-      fetchTotalNumberOfUsers();
+      fetchUserTypeCountDistributionData();
     }
   }, [navigate]);
 
@@ -109,29 +101,57 @@ export default function Tenants() {
       "amount": "+28.5%"
       },
       "value": numTenants,
-      "label": "Total Tenant Count",
+      "label": "Tenants",
       "last": {
       "color": "success",
       "amount": "2.3%"
       }
     });
-  }, [tenantDict]);
 
-  useEffect(() => {
-    setNumUsersStatisticDataDict({
+    setNumEndUsersStatisticDataDict({
       "icon": "ri-group-line",
       "percent": {
       "color": "success",
       "amount": "+13.8%"
       },
-      "value": totalNumberOfUsers,
-      "label": "Total User Count",
+      "value": numEndUsers,
+      "label": "End Users",
       "last": {
       "color": "success",
       "amount": "7.1%"
       }
-    })
-  }, [totalNumberOfUsers]);
+    });
+
+    setNumMastersStatisticDataDict({
+      "icon": "ri-group-line",
+      "percent": {
+      "color": "success",
+      "amount": "+13.8%"
+      },
+      "value": numMasters,
+      "label": "Masters",
+      "last": {
+      "color": "success",
+      "amount": "7.1%"
+      }
+    });
+
+    setNumTenantAdminsStatisticDataDict({
+      "icon": "ri-group-line",
+      "percent": {
+      "color": "success",
+      "amount": "+13.8%"
+      },
+      "value": numTenantAdmins,
+      "label": "Tenant Managers",
+      "last": {
+      "color": "success",
+      "amount": "7.1%"
+      }
+    });
+
+  }, [tenantDict, numEndUsers, numTenantAdmins, numMasters]);
+
 
   const fetchTenants = async () => {
     const response = await fetchService.fetchTenantsOfMaster(userId);
@@ -139,6 +159,7 @@ export default function Tenants() {
       const data = response.data;
       const tenantsWithActions = data.tenants.map(tenant => ({
         ...tenant,
+        createdAt: formatDateWithTime(tenant.createdAt),
         updatedAt: formatDateWithTime(tenant.updatedAt),
         Edit: (
           <>
@@ -178,11 +199,17 @@ export default function Tenants() {
   };
    
 
-  const fetchTotalNumberOfUsers = async () => {
-    const response = await fetchService.fetchTotalNumberOfUsers(userId);
+  const fetchUserTypeCountDistributionData = async () => {
+    const response = await fetchService.fetchUserTypeCountDistributionData(userId);
     
     if(! response.isError()){
-      setTotalNumberOfUsers(response.data.totalNumberOfUsers);
+      const percentages = response.data.userTypeCountDistributionData.percentages;
+      const counts = response.data.userTypeCountDistributionData.counts;
+
+      setNumEndUsers(counts.endUsers);
+      setNumMasters(counts.masters);
+      setNumTenantAdmins(counts.tenantAdmins);
+
       setIsError(false);
       setErrorMessage("");
     }
@@ -421,12 +448,24 @@ const handleSubmitNewTenant = async (event) => {
               <Col md ={6} className="d-flex">
                 <div className="w-100 d-flex flex-column">
                   <Row className="mb-3">
-                    <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
+                    <Col md={6}>
+                      <SingleStatisticCard dataDict={numTenantsStatisticDataDict}/>
+                    </Col>
+                    
+                    <Col md={6}>
+                      <SingleStatisticCard dataDict={numEndUsersStatisticDataDict}/>
+                    </Col>
 
                   </Row>
 
                   <Row className="">
-                    <SingleStatisticCard dataDict={numUsersStatisticDataDict}/>
+                    <Col md={6}>
+                      <SingleStatisticCard dataDict={numTenantAdminsStatisticDataDict}/>
+                    </Col>
+                    
+                    <Col md={6}>
+                      <SingleStatisticCard dataDict={numMastersStatisticDataDict}/>
+                    </Col>
                   </Row>
 
                 </div>

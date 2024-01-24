@@ -468,7 +468,7 @@ module.exports = {
 
 
 
-        "/api/fetch-user-type-distribution-data": async (req, res) => {
+        "/api/fetch-user-type-count-distribution-data": async (req, res) => {
           const {sourceUserId} = req.body;
           if(! sourceUserId){
             res.status(505).send();
@@ -478,12 +478,12 @@ module.exports = {
           console.log(`Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
 
           try{
-            const databaseResponse = await databaseService.fetchUserTypeDistributionData(sourceUserId);
+            const databaseResponse = await databaseService.fetchUserTypeCountDistributionData(sourceUserId);
             
             if(databaseResponse.responseType === databaseService.ResponseType.Success){
               res.json({
                 status: "success",
-                userTypeDistributionData: databaseResponse.data.userTypeDistributionData
+                userTypeCountDistributionData: databaseResponse.data.userTypeCountDistributionData
               }).send();
             }
             else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){

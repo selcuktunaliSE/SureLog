@@ -360,7 +360,7 @@ export default function Users() {
         </Row> */}
         <Row className="mt-3">
           <Col md={12}> 
-            <DynamicTable  dataDict={userDict} onRowClick={handleRowClick}/>  
+            <DynamicTable  dataDict={filteredUsers} onRowClick={handleRowClick}/>  
           </Col> 
         </Row>
         

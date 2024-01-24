@@ -602,7 +602,7 @@ const deleteTenant = async (sourceUserId, tenantId) => {
 };
 
 
-const fetchUserTypeDistributionData = async (sourceUserId) => {
+const fetchUserTypeCountDistributionData = async (sourceUserId) => {
   let fetchResponse = new FetchResponse();
   const requestData = {
     sourceUserId: sourceUserId
@@ -610,7 +610,7 @@ const fetchUserTypeDistributionData = async (sourceUserId) => {
 
   console.log(`Fetching user type distribution data for Source User ID:${sourceUserId}`);
 
-  await fetch(`${fetchAddress}/api/fetch-user-type-distribution-data`, {
+  await fetch(`${fetchAddress}/api/fetch-user-type-count-distribution-data`, {
     method: "post",
     body: JSON.stringify(requestData),
     headers: {
@@ -620,7 +620,7 @@ const fetchUserTypeDistributionData = async (sourceUserId) => {
     .then((data) => {
       if (data.status === "success") {
         console.log("data: ", data);
-        fetchResponse = new FetchResponse(FetchStatus.Success, { userTypeDistributionData: data.userTypeDistributionData });
+        fetchResponse = new FetchResponse(FetchStatus.Success, { userTypeCountDistributionData: data.userTypeCountDistributionData });
       }
       else if (data.status === 404) {
         fetchResponse = new FetchResponse(FetchStatus.UserNotFound);
@@ -655,7 +655,7 @@ export {
   fetchTotalNumberOfUsers,
   fetchTotalNumberOfTenants,
   fetchTotalNumberOfMasters,
-  fetchUserTypeDistributionData,
+  fetchUserTypeCountDistributionData,
   fetchGenerateQRCode,
   fetchVerifyToken,
   updateTenant,
