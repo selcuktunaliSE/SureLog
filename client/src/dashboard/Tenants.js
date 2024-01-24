@@ -70,6 +70,20 @@ export default function Tenants() {
   const navigate = useNavigate();
   const userId = localStorage.getItem("userId");
 
+  const formatDateWithTime = (dateStr) => {
+
+    const date = new Date(dateStr);
+    const offset = date.getTimezoneOffset() * 60000;
+    const localTime = new Date(date.getTime() - offset - 3 * 3600000);
+
+    const day = localTime.getDate().toString().padStart(2, '0');
+    const month = (localTime.getMonth() + 1).toString().padStart(2, '0');
+    const year = localTime.getFullYear();
+    const hours = localTime.getHours().toString().padStart(2, '0');
+    const minutes = localTime.getMinutes().toString().padStart(2, '0');
+
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  };
 
   useEffect(() => {
     if(! userId) {
@@ -121,12 +135,11 @@ export default function Tenants() {
 
   const fetchTenants = async () => {
     const response = await fetchService.fetchTenantsOfMaster(userId);
-  
     if(!response.isError()){
       const data = response.data;
-      // Map through the data to add the 'Edit' column with buttons
       const tenantsWithActions = data.tenants.map(tenant => ({
         ...tenant,
+        updatedAt: formatDateWithTime(tenant.updatedAt),
         Edit: (
           <>
             <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditTenant(e, tenant.tenantId)} className="me-2">
