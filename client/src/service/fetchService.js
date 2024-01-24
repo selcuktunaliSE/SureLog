@@ -109,6 +109,35 @@ const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
   return fetchResponse;
 
 };
+const editTenantName = async (sourceUserId, tenantId, newTenantName) => {
+  const updatedTenantData = {
+    name: newTenantName // assuming the tenant's name field is 'name'
+  };
+
+  const response = await fetch(`${fetchAddress}/api/update-tenant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sourceUserId, tenantId, updatedTenantData }),
+  });
+
+  const data = await response.json();
+  
+  // Handle different response types
+  let fetchResponse;
+  if (data.status === "success") {
+    fetchResponse = new FetchResponse(FetchStatus.Success, data, 'Tenant name updated successfully.');
+  } else if (data.status === "tenantNotFound") {
+    fetchResponse = new FetchResponse(FetchStatus.TenantNotFound, null, 'Tenant not found.');
+  } else if (data.status === "accessDenied") {
+    fetchResponse = new FetchResponse(FetchStatus.AccessDenied, null, 'Access denied.');
+  } else {
+    fetchResponse = new FetchResponse(FetchStatus.Error, null, data.message || 'An error occurred while updating the tenant name.');
+  }
+
+  return fetchResponse;
+};
 
 const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
   let fetchResponse = new FetchResponse();
@@ -633,5 +662,6 @@ export {
   updateUser,
   fetchUserRole,
   addTenant,
-  deleteTenant
+  deleteTenant,
+  editTenantName
 }

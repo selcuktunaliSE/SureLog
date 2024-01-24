@@ -19,7 +19,6 @@ const fetchService = require("../service/FetchService");
 export default function Tenants() {
   
   const [filteredTenants, setFilteredTenants] = useState({});
-  const [selectedTenant, setSelectedTenant] = useState(null);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,21 +27,43 @@ export default function Tenants() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [skinMode, setSkinMode] = useState("");
+  const [editingTenantData, setEditingTenantData] = useState({
+    name: '',
+    tenantId: '',
+  }); 
   const [tenantDict, setTenantDict] = useState({});
   const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
   const [numUsersStatisticDataDict, setNumUsersStatisticDataDict] = useState({});
   const [totalNumberOfUsers, setTotalNumberOfUsers] = useState(0);
   const [tenantIdToDelete, setTenantIdToDelete] = useState(null);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showEditTenantModal, setShowEditTenantModal] = useState(false);
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
   const handleCloseConfirmationModal = () => setShowConfirmationModal(false);
+  const handleCloseEditTenantModal = () => setShowEditTenantModal(false);
   const [newTenantData, setNewTenantData] = useState({
     name: '',
     // Add other fields if necessary
   });
   
   const currentSkin = (localStorage.getItem('skin-mode')) ? 'dark' : '';
-  
+  const handleEditingTenantInputChange = (event) => {
+    const { name, value } = event.target;
+    setEditingTenantData({ ...editingTenantData, [name]: value });
+  };
+
+  const handleSubmitEditedTenant = async (event) => {
+    event.preventDefault();
+    const tenantId = editingTenantData.tenantId;
+    const response = await fetchService.updateTenant(userId,tenantId ,editingTenantData);
+    if (!response.error) {
+      console.log("Tenant updated successfully: ", response.data);
+      fetchTenants(); // Refresh tenant list
+      handleCloseEditTenantModal(); // Close modal
+    } else {
+      console.error("Failed to update tenant: ", response.message);
+    }
+  };
 
   const searchKeys = ["name"];
 
@@ -131,14 +152,15 @@ export default function Tenants() {
   const handleEditTenant = (event,tenantId) => {
     event.stopPropagation();
     console.log("Edit tenant with ID: ", tenantId);
-    // Navigate to tenant edit page or show edit modal
+    setEditingTenantData({ tenantId: tenantId });
+    setShowEditTenantModal(true);
   };
   
   const handleDeleteTenant = (event,tenantId) => {
     event.stopPropagation();
-    setShowConfirmationModal(true); // Assuming you have a confirmation modal
+    setShowConfirmationModal(true); 
     console.log("Delete tenant with ID: ", tenantId);
-    setTenantIdToDelete(tenantId); // You might want to use a state to keep track of which tenant to delete
+    setTenantIdToDelete(tenantId); 
 
   };
    
@@ -429,7 +451,32 @@ const handleSubmitNewTenant = async (event) => {
     </Form>
   </Modal.Body>
 </Modal>
-
+<Modal show = {showEditTenantModal} onHide = {handleCloseEditTenantModal}>
+  <Modal.Header closeButton>
+    <Modal.Title>Edit Tenant</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form onSubmit={handleSubmitEditedTenant}>
+      <Form.Group className="mb-3">
+        <Form.Label>Tenant Name</Form.Label>
+        <Form.Control
+          type="text"
+          name="name"
+          placeholder="Enter New Name"
+          value= {editingTenantData.name}
+          onChange={handleEditingTenantInputChange}
+          required
+        />
+      </Form.Group>
+      {/* Add more fields if necessary */}
+      <div className="text-end">
+        <Button variant="primary" type="submit">
+          Edit Tenant
+        </Button>
+      </div>
+    </Form>
+  </Modal.Body>
+</Modal>
 <Modal show={showConfirmationModal} onHide={handleCloseConfirmationModal}>
           <Modal.Header closeButton>
             <Modal.Title>Confirm Deletion</Modal.Title>
