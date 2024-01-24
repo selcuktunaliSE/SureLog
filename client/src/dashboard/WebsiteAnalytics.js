@@ -259,8 +259,8 @@ export default function WebsiteAnalytics() {
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link href="#">Dashboard</Link></li>
-              <li className="breadcrumb-item active" aria-current="page">Website Analytics</li>
+              <li className="breadcrumb-item"><Link href="#">Services</Link></li>
+              <li className="breadcrumb-item active" aria-current="page">Compliance</li>
             </ol>
             <h4 className="main-title mb-0">Welcome to Dashboard</h4>
           </div>

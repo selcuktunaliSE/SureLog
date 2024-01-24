@@ -236,20 +236,19 @@ export default function Users() {
     goToUserProfile(user.userId);
   }
 
-  const users = [
-    { "img": img6, "name": "Allan Rey Palban", "position": "Senior Business Analyst" },
-    { "img": img7, "name": "Adrian Moniño", "position": "UI Developer" },
-    // ... (rest of the users)
-  ];
 
   return (
     <React.Fragment>
       <HeaderMobile />
       <Header onSkin={handleSkinModeChange}/>
       <div className="main p-4 p-lg-5">
+          <ol className="breadcrumb fs-sm mb-1">
+              <li className="breadcrumb-item"><a href="#">Dashboard</a></li>
+              <li className="breadcrumb-item active" aria-current="page">Users</li>
+            </ol>
         <Row>
           <Col>
-            <h2 className="main-title">User List</h2>
+            <h2 className="main-title"></h2>
           </Col>
         </Row>
 

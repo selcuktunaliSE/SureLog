@@ -1,6 +1,11 @@
 
 const dashboardMenu = [
   {
+    "label": "Dashboards",
+    "link": "",
+    "icon": "ri-home-4-fill"
+  },
+  {
     "label": "Tenants",
     "link": "/dashboard/tenants",
     "icon": "ri-pie-chart-2-line"
@@ -8,44 +13,39 @@ const dashboardMenu = [
   {
     "label": "Users",
     "link": "/dashboard/users",
-    "icon": "ri-contacts-book-line"
+    "icon": "ri-group-line"
   },
  
   {
-    "label": "Events Management",
+    "label": "Reports",
     "link": "/dashboard/events",
     "icon": "ri-calendar-todo-line"
   },
   {
-    "label": "Sales Monitoring",
+    "label": "Correlation",
     "link": "/dashboard/sales",
-    "icon": "ri-shopping-bag-3-line"
+    "icon": "ri-links-line"
   },
   {
-    "label": "Website Analytics",
+    "label": "Compliance",
     "link": "/dashboard/analytics",
     "icon": "ri-bar-chart-2-line"
   },
   {
-    "label": "Cryptocurrency",
+    "label": "Maps",
     "link": "/dashboard/crypto",
-    "icon": "ri-coin-line"
+    "icon": "ri-earth-line"
   },
   {
-    "label": "Helpdesk Service",
+    "label": "Threat Intelligence",
     "link": "/dashboard/helpdesk",
-    "icon": "ri-service-line"
+    "icon": "ri-shield-cross-line"
   },
   {
-    "label": "Storage Management",
+    "label": "Incident Manager",
     "link": "/dashboard/storage",
-    "icon": "ri-hard-drive-2-line"
+    "icon": "ri-file-damage-line"
   },
-  {
-    "label": "Product Management",
-    "link": "/dashboard/product",
-    "icon": "ri-suitcase-2-line"
-  }
 ];
 
 const applicationsMenu = [

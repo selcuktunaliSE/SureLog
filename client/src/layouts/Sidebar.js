@@ -145,8 +145,8 @@ class SidebarMenu extends Component {
     render() {
         return (
             <React.Fragment>
-                <div className="nav-group show">
-                    <div className="nav-label" onClick={this.toggleMenu}>Dashboard</div>
+                <div className="nav-group show" style={{ marginTop: '10px' }}>
+                   
                     {this.populateMenu(dashboardMenu)}
                 </div>
                 <div className="nav-group show">

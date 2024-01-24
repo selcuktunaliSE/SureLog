@@ -244,10 +244,10 @@ export default function SalesMonitoring() {
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link to="#">Dashboard</Link></li>
-              <li className="breadcrumb-item active" aria-current="page">Sales Monitoring</li>
+              <li className="breadcrumb-item"><Link to="#">Services</Link></li>
+              <li className="breadcrumb-item active" aria-current="page">Correlation</li>
             </ol>
-            <h4 className="main-title mb-0">Welcome to Dashboard</h4>
+            <h4 className="main-title mb-0">Welcome to Correlation</h4>
           </div>
 
           <Nav as="nav" className="nav-icon nav-icon-lg">

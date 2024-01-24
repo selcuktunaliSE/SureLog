@@ -367,10 +367,10 @@ export default function EventManagement() {
         <div className="d-md-flex align-items-center justify-content-between mb-4">
           <div>
             <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><Link href="#">Dashboard</Link></li>
-              <li className="breadcrumb-item active" aria-current="page">Events Management</li>
+              <li className="breadcrumb-item"><Link href="#">Services</Link></li>
+              <li className="breadcrumb-item active" aria-current="page">Reports</li>
             </ol>
-            <h4 className="main-title mb-0">Welcome to Dashboard</h4>
+            <h4 className="main-title mb-0">Welcome to Reports</h4>
           </div>
           <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
             <Button variant="white" className="btn-icon"><i className="ri-share-line fs-18 lh-1"></i></Button>
