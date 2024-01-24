@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Dropdown from 'react-bootstrap/Dropdown';
 import notification from "../data/Notification";
-
+import { useNavigate } from "react-router-dom";
 const fetchService = require("../service/FetchService");
-
+const {FetchStatus} = require("../service/FetchService");
 export default function Header({ onSkin }) {
   const [userData, setUserData] = useState(null);
+   const [errorMessage, setErrorMessage] = useState("");
+   const [userRole, setUserRole] = useState(""); 
+   const [isError, setIsError] = useState(false);
+   const navigate = useNavigate();
+   const userId = localStorage.getItem("userId");
   const [theme, setTheme] = useState(localStorage.getItem("skin-mode") || "light");
-
   const fetchUserData = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -21,8 +25,19 @@ export default function Header({ onSkin }) {
       setUserData(response.data.user);
     }
   };
+  const fetchUserRole = async () => {
+    const response = await fetchService.fetchUserRoleName(userId); // Adjust this to match the actual function you have for fetching user role
+    if (response && response.status === FetchStatus.Success) {
+      console.log("Response: ", response);
+      console.log("User role: ", response.data)
+        setUserRole(response.data); // Set the fetched role
+    } else {
+        console.error("Error fetching user role: ", response.message);
+    }
+};
 
   useEffect(() => {
+    fetchUserRole();
     fetchUserData();
   }, []);
 
@@ -43,6 +58,41 @@ export default function Header({ onSkin }) {
       {children}
     </Link>
   ));
+  const checkMasterUser = async () => {
+    const response = await fetchService.checkMasterUser(userId);
+    if(response){
+      console.log("Response: ", response);
+    }
+
+    if(response.isError()) handleErrorResponse(response);
+    return ! response.isError();
+  }
+  const handleErrorResponse = (response) => {
+    if (response.status === FetchStatus.UserNotFound){
+      navigate("/signin");
+    } 
+    else if(response.status ===  FetchStatus.MasterNotFound){
+        navigate("/");
+    }
+    else if(response.status === FetchStatus.ServerException){
+        navigate("/error/500");
+    }
+    else if(response.status === FetchStatus.AccessDenied){
+      setIsError(true);
+      setErrorMessage("You do not have any tenants registered to you. Please contact your administrator.");
+    }
+    else if(response.status === FetchStatus.RoleNotFound){
+      setIsError(true);
+      setErrorMessage("You do not have any roles in any tenants. Please contact your administrator.");
+    }
+    else if(response.status === FetchStatus.FetchError){
+      console.error("Error fetching tenants: ", response.message);
+      navigate("/error/503");
+    }
+    else {
+        navigate("/");
+    }
+  }  
 
   const toggleSidebar = (e) => {
     e.preventDefault();
@@ -135,7 +185,7 @@ export default function Header({ onSkin }) {
       <div className="dropdown-menu-body">
         
         <h5 className="mb-1 text-dark fw-semibold">{userData.firstName} {userData.lastName}</h5>
-        <p className="fs-sm text-secondary"></p>
+        <p className="fs-sm text-secondary">{userRole}</p>
 
         <nav className="nav">
           <Link to=""><i className="ri-edit-2-line"></i> Edit Profile</Link>

@@ -236,14 +236,14 @@ const fetchOrCreateDefaultTenantMasterRole = async (tenantId) => {
     let role = await TenantRolePermissionModel.findOne({ 
         where: { 
             tenantId: tenantId,
-            roleName: 'TenantAdmin' // Assuming 'Tenant Master' is your default role name
+            roleName: 'TenantManager' // Assuming 'Tenant Master' is your default role name
         }
     });
 
     if (!role) {
         role = await TenantRolePermissionModel.create({
             tenantId: tenantId,
-            roleName: 'TenantAdmin',
+            roleName: 'TenantManager',
         });
     }
 
@@ -699,12 +699,53 @@ const fetchTotalNumberOfTenants = async(sourceUserId) => {
         return new DatabaseResponse(ResponseType.NotFound);
 }
 
+
+const getUserRole = async (userId) => {
+    try {
+        
+        // Step 1: Check if the user is a master
+        const masterRecord = await MasterModel.findOne({
+            where: { userId: userId }
+        });
+ 
+        if (masterRecord) {
+            if(masterRecord.isSuperMaster == 1){
+                return new DatabaseResponse(ResponseType.Success, { roleName: 'Super Master' });
+            }else{
+                return new DatabaseResponse(ResponseType.Success, { roleName: 'Master' });
+            }
+
+            
+        }
+        
+        // Step 2: If not a master, check tenant role permissions
+        const tenantUserRole = await TenantUserModel.findOne({
+            where: { userId: userId },
+            include: [{
+                model: TenantRolePermissionModel,
+                as: 'rolePermissions',
+                attributes: ['roleName']
+            }]
+        });
+        console.log("Tenant User Role:", tenantUserRole);
+
+        if (tenantUserRole && tenantUserRole.rolePermissions) {
+            return new DatabaseResponse(ResponseType.Success, { roleName: tenantUserRole.rolePermissions.roleName });
+        }
+        // Step 3: If no specific role found, default to 'User'
+        return new DatabaseResponse(ResponseType.Success, { roleName: 'User' });
+
+    } catch (error) {
+        console.error('Error fetching user role:', error);
+        return new DatabaseResponse(ResponseType.Error, 'Error fetching user role');
+    }
+};
+
 const fetchUserRoleName = async (tenantId, userId) => {
     try {
-        // Initializing the database if not already done
+        
         if (!initialized) initialize();
 
-        // Find the tenant user instance
         const tenantUser = await TenantUserModel.findOne({
             where: { tenantId: tenantId, userId: userId },
             include: [{
@@ -845,5 +886,6 @@ module.exports = {
     fetchUserRoleName,
     addTenant,
     deleteTenant,
-    updateUserCount
+    updateUserCount,
+    getUserRole,
 }

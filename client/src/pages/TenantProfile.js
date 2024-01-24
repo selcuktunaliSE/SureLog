@@ -27,6 +27,7 @@ export default function TenantProfile() {
     fullName: "",
     email: "",
     password: "",
+    roleName:"",
   });
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,7 +92,7 @@ export default function TenantProfile() {
       handleErrorResponse(response);
     }
   };
-
+ 
   useEffect(() => {
     if (!userId) {
       navigate("/signin");
@@ -111,6 +112,7 @@ export default function TenantProfile() {
   }, [location.state, navigate, tenantId, userId]);
 
   useEffect(() => {
+    
     setTenantUsersDict(
       addExtraInformationToTenantUsers(
         transformTenantUsersData(tenantUsers))
@@ -120,7 +122,8 @@ export default function TenantProfile() {
 
   useEffect(() => {
     fetchTenantRoles();
-  }, [tenantData]);
+    console.log("editing user role:",editingUserRole)
+  }, [tenantData],[editingUserRole]);
 
   const addExtraInformationToTenantUsers = (tenantUsersDict) => {
     const modifiedTenantUsersDict = Object.values(tenantUsersDict).map((user, index) => ({
@@ -186,6 +189,7 @@ export default function TenantProfile() {
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
+    console.log("name: ", name, "value: ", value);
     if (name === "roleName") {
       setEditingUserRole(value);
     } else {
@@ -629,9 +633,8 @@ export default function TenantProfile() {
                 <Form.Group className="mb-3">
                   <Form.Label>Role</Form.Label>
                   <Form.Select
-                    type="text"
                     name="roleName"
-                    value={editingUserRole}
+                    value={editingUser.roleName}
                     onChange={handleEditInputChange}
                   >
                    {tenantRoles.map((role) => (

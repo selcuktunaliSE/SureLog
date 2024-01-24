@@ -60,7 +60,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER.UNSIGNED,
       unique: true,
       allowNull: false
-    }
+    },
+    isSuperMaster: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: true,
+      defaultValue: 0
+    },
   }, {
     tableName: 'masters'
   });

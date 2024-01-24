@@ -31,7 +31,28 @@ module.exports = {
             });
           }
         },
-        
+        "/api/get-user-role": async (req, res) => {
+          const { userId } = req.body;
+          // Input validation (ensure userId is provided)
+          if (!userId) {
+              return res.status(400).json({ status: "error", message: "User ID is required." });
+          }
+
+          try {
+              const dbResponse = await databaseService.getUserRole(userId);
+
+              // Handle the different types of responses
+              if (dbResponse.responseType === databaseService.ResponseType.Success) {
+                  return res.status(200).json({ status: "success", roleName: dbResponse.data.roleName });
+              } else {
+                  // Handle other types of responses (e.g., NotFound, Error) accordingly
+                  return res.status(500).json({ status: "error", message: dbResponse.data });
+              }
+          } catch (error) {
+              console.error("Error in /get-user-role-name:", error);
+              return res.status(500).json({ status: "error", message: "Internal server error" });
+          }
+      },
         "/api/remove-user-from-tenant": async (req, res) => {
           const {sourceUserId, tenantId, targetUserId } = req.body;
           try {

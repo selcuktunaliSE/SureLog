@@ -138,7 +138,36 @@ const editTenantName = async (sourceUserId, tenantId, newTenantName) => {
 
   return fetchResponse;
 };
+const fetchUserRoleName = async (userId) => {
+  let fetchResponse = new FetchResponse();
+  try {
+    const response = await fetch(`${fetchAddress}/api/get-user-role`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userId })
+    });
 
+    const data = await response.json();
+  
+
+    if (response.ok) {
+      // Handle success
+      fetchResponse = new FetchResponse(FetchStatus.Success, data.roleName);
+    } else {
+      // Handle server-side errors
+      const errorMessage = data.message || "Failed to fetch user role name";
+      fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+    }
+  } catch (error) {
+    // Handle errors in the fetch operation itself
+    console.error('Error fetching user role name:', error);
+    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
 const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
   let fetchResponse = new FetchResponse();
   console.log(`Sending fetch tenant roles request of tenant: ${tenantId} for source user:${sourceUserId}`);
@@ -565,7 +594,7 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
   return new FetchResponse(
       data.status === "success" ? FetchStatus.Success : FetchStatus.Error,
       data,
-      data.message
+      data.message,
   );
 };
 const addTenant = async (sourceUserId, tenantData) => {
@@ -663,5 +692,6 @@ export {
   fetchUserRole,
   addTenant,
   deleteTenant,
-  editTenantName
+  editTenantName,
+  fetchUserRoleName
 }
