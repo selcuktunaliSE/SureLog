@@ -1,7 +1,7 @@
 {
   "name": "surelog",
-  "proxy": "http://127.0.0.1:443",
-  "homepage": "http://localhost:443/",
+  "proxy": "https://127.0.0.1",
+  "homepage": "https://localhost",
   "version": "1.0.2",
   "private": true,
   "dependencies": {
