@@ -11,6 +11,8 @@ const envConfig = require('./config/envConfig.json');
 const corsConfig = require("./config/corsConfig.json");
 const databaseService = require("./service/databaseService");
 
+const cert = fs.readFileSync("./ssl/certs/ikd_net_tr_e4c64_0b723_1737742492_681ef14f7c4aaa9c77662e67ff9c482e.crt");
+const key = fs.readFileSync("./ssl/keys/e4c64_0b723_c336815b48b87347b70af05421ace2b7.key");
 
 console.log("ENV: ", process.env.NODE_ENV);
 
@@ -66,5 +68,12 @@ db.sequelize.sync().then((req) => {
         envConfig.environments.development.httpPort :
         envConfig.environments.production.httpPort;
 
-    app.listen(httpPort, () => console.log('Server running on http://localhost:', httpPort));
-});
+    https.createServer({
+        cert: cert,
+        key: key,
+    }, app).listen(httpPort, () => {
+        console.log('Server running on http://localhost:', httpPort)
+    });
+
+/*     app.listen(httpPort, () => console.log('Server running on http://localhost:', httpPort));
+ */});
