@@ -31,7 +31,7 @@ export default function Users() {
   const [sortBy, setSortBy] = useState("createdAt"); 
   const [filteredUsers, setFilteredUsers] = useState({}); 
   const [skinMode, setSkinMode] = useState(""); // Define the state for skin mode
-
+  const [userRole, setUserRole] = useState(""); 
 
   const searchKeys= ["firstName", "lastName", "email"];
 
@@ -39,18 +39,32 @@ export default function Users() {
 
   const userId = localStorage.getItem("userId");
 
-  
-  
+  const fetchUserRole = async () => {
+    const response = await fetchService.fetchUserRoleName(userId); // Adjust this to match the actual function you have for fetching user role
+    if (response && response.status === FetchStatus.Success) {
+      return response.data; // Set the fetched role
+    } else {
+        console.error("Error fetching user role: ", response.message);
+    }
+};
   
 
   useEffect(() => {
     let isMounted = true; // to handle component unmount
-  
+    fetchUserRole();
     const initializeData = async () => {
       if(! userId) {
         navigate("/signin");
         return;
       }
+      
+    fetchUserRole().then(userRole => {
+      console.log("User role isxusers: ", userRole);
+      setUserRole(userRole); 
+      if(userRole != "User"){
+       
+      }
+  });
   
       await checkIsUserMaster();
       if (isMounted) {

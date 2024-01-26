@@ -4,7 +4,7 @@ import { Card, Col, Nav, ProgressBar, Row } from "react-bootstrap";
 const PercentageBarCard= ({data, texts}) => {
     // accepts 3 percentage statistics
 
-    console.log(`[PERCENTAGE BAR CARD] DATA: ${data} | TEXTS:${texts}`);
+    
     /*
         example format of data:
         data[

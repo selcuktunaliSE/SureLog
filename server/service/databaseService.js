@@ -456,30 +456,52 @@ const getTenantOfUser = async (sourceUserId, targetUserId) => {
 const fetchTenantsOfMaster = async (sourceUserId) => {
     try {
         const master = await MasterModel.findOne({ where: { userId: sourceUserId } });
-        if (!master) return new DatabaseResponse(ResponseType.AccessDenied);
-    
-        const masterRolePermissions = await MasterRolePermissionModel.findAll({
-          where: { masterId: master.masterId },
-          attributes: ['tenantId'] 
-        });
+        
+        // If the user is a master
+        if (master) {
+            if(master.isSuperMaster == 1){
+                const tenants = await TenantModel.findAll();
+                return new DatabaseResponse(ResponseType.Success, {tenants: tenants});
+            }
 
-        if(!masterRolePermissions) return new DatabaseResponse(ResponseType.AccessDenied);
-    
-        const tenantIds = masterRolePermissions.map(permission => permission.tenantId);
-    
-        const tenants = await TenantModel.findAll({
-          where: {
-            tenantId: tenantIds
-          }
-        });
-    
-        return new DatabaseResponse(ResponseType.Success, {tenants: tenants});
-      } catch (error) {
-        console.error('Error fetching tenants for master user:', error);
+            const masterRolePermissions = await MasterRolePermissionModel.findAll({
+                where: { masterId: master.masterId },
+                attributes: ['tenantId'] 
+            });
+
+            if(!masterRolePermissions) return new DatabaseResponse(ResponseType.AccessDenied);
+
+            const tenantIds = masterRolePermissions.map(permission => permission.tenantId);
+
+            const tenants = await TenantModel.findAll({
+                where: {
+                    tenantId: tenantIds
+                }
+            });
+
+            return new DatabaseResponse(ResponseType.Success, {tenants: tenants});
+        } else {
+            // If the user is not a master, check if the user is a tenant manager
+            const tenantManager = await TenantUserModel.findOne({ where: { userId: sourceUserId } });
+
+            if (!tenantManager)
+                return new DatabaseResponse(ResponseType.AccessDenied);
+
+            // Assuming tenantManager.tenantId provides the IDs of tenants the manager has access to
+            const tenants = await TenantModel.findAll({
+                where: {
+                    tenantId: tenantManager.tenantId
+                }
+            });
+
+            return new DatabaseResponse(ResponseType.Success, {tenants: tenants});
+        }
+    } catch (error) {
+        console.error('Error fetching tenants for user:', error);
         return new DatabaseResponse(ResponseType.Error);
-      }
-    
+    }
 }
+
 
 
 const fetchUserProfile = async (sourceUserId, targetUserId) => {
@@ -691,7 +713,11 @@ const fetchTotalNumberOfUsers = async(sourceUserId) => {
 
 const fetchTotalNumberOfTenants = async(sourceUserId) => {
     console.log(`[DATABASE SERVICE] Processing fetch total number of tenants request for source user ID:${sourceUserId}`);
-
+    const isUserMaster = await MasterModel.findOne({where: {userId: sourceUserId}});
+    if(!isUserMaster){
+         const totalNumberOfTenants = 1;
+         return new DatabaseResponse(ResponseType.Success, {totalNumberOfTenants: totalNumberOfTenants});
+    }
     const totalNumberOfTenants = await TenantModel.count();
     if(totalNumberOfTenants && totalNumberOfTenants > 0)
         return new DatabaseResponse(ResponseType.Success, {totalNumberOfTenants: totalNumberOfTenants});
@@ -730,6 +756,9 @@ const getUserRole = async (userId) => {
         console.log("Tenant User Role:", tenantUserRole);
 
         if (tenantUserRole && tenantUserRole.rolePermissions) {
+            if(tenantUserRole.rolePermissions.roleName == 'TenantManager'){
+                return new DatabaseResponse(ResponseType.Success, { roleName: 'Tenant Manager' });
+            }
             return new DatabaseResponse(ResponseType.Success, { roleName: tenantUserRole.rolePermissions.roleName });
         }
         // Step 3: If no specific role found, default to 'User'
@@ -766,47 +795,7 @@ const fetchUserRoleName = async (tenantId, userId) => {
     }
 }
 
-const fetchUserTypeDistributionData = async(sourceUserId) => {
-    console.log(`[DATABASE SERVICE] Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
 
-    const numTotalUsers = await UserModel.count();
-    if(!numTotalUsers || numTotalUsers < 2) return new DatabaseResponse(ResponseType.NotFound);
-
-    const numMasters = await MasterModel.count();
-    let numTenantAdmins = await TenantRolePermissionModel.findAll({where: {roleName: "Admin"}}).length;
-    let numEndUsers;
-
-    if(! numTenantAdmins){
-        numTenantAdmins = 0;
-        numEndUsers = numTotalUsers - numMasters;
-    }
-    else{
-        numEndUsers = numTotalUsers - numMasters - numTenantAdmins;
-    }
-
-    const percentageMasters = numTotalUsers > 0 ? numMasters / numTotalUsers * 100 : 0;
-    const percentageTenantAdmins = numTotalUsers > 0 ? numTenantAdmins / numTotalUsers * 100 : 0;
-    const percentageEndUsers = numTotalUsers > 0 ? numEndUsers / numTotalUsers * 100 : 0;
-
-    const userTypeCountDistributionData = {
-      percentages: {
-        endUsers: percentageEndUsers,
-        tenantAdmins: percentageTenantAdmins,
-        masters: percentageMasters,
-      },
-      counts: {
-        endUsers: numEndUsers,
-        tenantAdmins: numTenantAdmins,
-        masters: numMasters,
-        totalUsers: numTotalUsers
-      }
-    } 
-
-    console.log(`[DATABASE SERVICE] User Type Count Distribution Data: ${userTypeCountDistributionData}\n
-                [DATABASE SERVICE] Num Masters: ${numMasters} | Num Tenant Admins: ${numTenantAdmins} | Num End Users:${numEndUsers}`);
-
-    return new DatabaseResponse(ResponseType.Success, {userTypeCountDistributionData: userTypeCountDistributionData});
-}
 
 const fetchTotalNumberOfMasters = async(sourceUserId) => {
     console.log(`[DATABASE SERVICE] Processing fetch total number of masters request for source user ID:${sourceUserId}`);
@@ -821,44 +810,108 @@ const fetchTotalNumberOfMasters = async(sourceUserId) => {
 const fetchUserTypeCountDistributionData = async(sourceUserId) => {
     console.log(`[DATABASE SERVICE] Processing fetch user type distribution data request for source user ID:${sourceUserId}`);
 
-    const numTotalUsers = await UserModel.count();
-    if(!numTotalUsers || numTotalUsers < 2) return new DatabaseResponse(ResponseType.NotFound);
+    let numMasters = 0, numTenantAdmins = 0, numEndUsers = 0, numTotalUsers = 0;
 
-    const numMasters = await MasterModel.count();
-    let numTenantAdmins = await TenantRolePermissionModel.findAll({where: {roleName: "Admin"}}).length;
-    let numEndUsers;
+    const masterRecord = await MasterModel.findOne({ where: { userId: sourceUserId } });
 
-    if(! numTenantAdmins){
-        numTenantAdmins = 0;
-        numEndUsers = numTotalUsers - numMasters;
+    if (masterRecord && masterRecord.isSuperMaster) {
+        numTotalUsers = await UserModel.count();
+        numMasters = await MasterModel.count();
+        numTenantAdmins = await TenantRolePermissionModel.count({
+            where: {
+                roleName: "TenantManager"
+            }
+        });
+    } else if (masterRecord) {
+       
+        const managedTenants = await MasterRolePermissionModel.findAll({
+            where: { masterId: masterRecord.masterId },
+            attributes: ['tenantId']
+        });
+        
+
+        const tenantIds = managedTenants.map(permission => permission.tenantId);
+
+        numTotalUsers = await TenantUserModel.count({
+            where: {
+                tenantId: tenantIds
+            }
+        });
+
+        numTenantAdmins = await TenantRolePermissionModel.count({
+            where: {
+                tenantId: tenantIds,
+                roleName: "TenantManager"
+            }
+        });
+        numMasters = await MasterModel.count();
+    } else {
+        // Fetch data for Tenant Manager
+    const managedTenant = await TenantUserModel.findOne({
+            where: { userId: sourceUserId },
+            include: [{
+            model: TenantRolePermissionModel,
+            as: 'rolePermissions',
+            attributes: ['roleName', 'tenantId']
+        }]
+    });
+    if(managedTenant && managedTenant.rolePermissions){
+        const tenantId = managedTenant.rolePermissions.tenantId;
+        numTotalUsers = await TenantUserModel.count({
+            where: {
+                tenantId: tenantId
+            }
+        });
     }
-    else{
-        numEndUsers = numTotalUsers - numMasters - numTenantAdmins;
+    if (managedTenant && managedTenant.rolePermissions.roleName === "TenantManager") {
+        numTotalUsers = await TenantUserModel.count({
+            where: {
+                tenantId: managedTenant.rolePermissions.tenantId
+            }
+        });
+
+        // Count Tenant Managers within the tenant managed by this user
+        numTenantAdmins = await TenantUserModel.count({
+            where: {
+                tenantId: managedTenant.rolePermissions.tenantId,
+                '$rolePermissions.roleName$': "TenantManager"
+            },
+            include: [{
+                model: TenantRolePermissionModel,
+                as: 'rolePermissions',
+                attributes: []
+            }]
+        });
+
+        numMasters = 0;
+    }
     }
 
-    const percentageMasters = numTotalUsers > 0 ? numMasters / numTotalUsers * 100 : 0;
-    const percentageTenantAdmins = numTotalUsers > 0 ? numTenantAdmins / numTotalUsers * 100 : 0;
-    const percentageEndUsers = numTotalUsers > 0 ? numEndUsers / numTotalUsers * 100 : 0;
+    numEndUsers = numTotalUsers ;
+
+    const percentageMasters = numTotalUsers > 0 ? (numMasters / numTotalUsers * 100) : 0;
+    const percentageTenantAdmins = numTotalUsers > 0 ? (numTenantAdmins / numTotalUsers * 100) : 0;
+    const percentageEndUsers = numTotalUsers > 0 ? (numEndUsers / numTotalUsers * 100) : 0;
 
     const userTypeCountDistributionData = {
-      percentages: {
-        endUsers: percentageEndUsers,
-        tenantAdmins: percentageTenantAdmins,
-        masters: percentageMasters,
-      },
-      counts: {
-        endUsers: numEndUsers,
-        tenantAdmins: numTenantAdmins,
-        masters: numMasters,
-        totalUsers: numTotalUsers
-      }
-    } 
+        percentages: {
+            endUsers: percentageEndUsers,
+            tenantAdmins: percentageTenantAdmins,
+            masters: percentageMasters,
+        },
+        counts: {
+            endUsers: numEndUsers,
+            tenantAdmins: numTenantAdmins,
+            masters: numMasters,
+            totalUsers: numTotalUsers
+        }
+    }
 
-    console.log(`[DATABASE SERVICE] User Type Count Distribution Data: ${userTypeCountDistributionData}\n
-                [DATABASE SERVICE] Num Masters: ${numMasters} | Num Tenant Admins: ${numTenantAdmins} | Num End Users:${numEndUsers}`);
-
-    return new DatabaseResponse(ResponseType.Success, {userTypeCountDistributionData: userTypeCountDistributionData});
+    console.log(`[DATABASE SERVICE] User Type Count Distribution Data: ${JSON.stringify(userTypeCountDistributionData)}`);
+    return new DatabaseResponse(ResponseType.Success, { userTypeCountDistributionData: userTypeCountDistributionData });
 }
+
+
 
 module.exports = {
     ResponseType,

@@ -30,6 +30,7 @@ export default function Tenants() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [sortBy, setSortBy] = useState("createdAt");
   const [skinMode, setSkinMode] = useState("");
+  const [userRole, setUserRole] = useState(""); 
   const [tenantDict, setTenantDict] = useState({});
   const [numTenantsStatisticDataDict, setNumTenantsStatisticDataDict] = useState({});
   const [numEndUsersStatisticDataDict, setNumEndUsersStatisticDataDict] = useState({});
@@ -58,7 +59,14 @@ export default function Tenants() {
     const { name, value } = event.target;
     setEditingTenantData({ ...editingTenantData, [name]: value });
   };
-
+  const fetchUserRole = async () => {
+    const response = await fetchService.fetchUserRoleName(userId); // Adjust this to match the actual function you have for fetching user role
+    if (response && response.status === FetchStatus.Success) {
+      return response.data; // Set the fetched role
+    } else {
+        console.error("Error fetching user role: ", response.message);
+    }
+};
   const handleSubmitEditedTenant = async (event) => {
     event.preventDefault();
     const tenantId = editingTenantData.tenantId;
@@ -78,15 +86,24 @@ export default function Tenants() {
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
+   
     if(! userId) {
         navigate("/signin");
         return;
     }
-
-    if(checkMasterUser()){
-      fetchTenants();
-      fetchUserTypeCountDistributionData();
-    }
+   
+    fetchUserRole().then(userRole => {
+      console.log("User role is: ", userRole);
+      setUserRole(userRole); 
+       // For restricted access to this page
+      if(userRole === "User"){
+      navigate("/error/403");
+      }
+      if (checkMasterUser()) {
+          fetchTenants();
+          fetchUserTypeCountDistributionData();
+      }
+  });
   }, [navigate]);
 
 
@@ -115,7 +132,7 @@ export default function Tenants() {
       "amount": "+13.8%"
       },
       "value": numEndUsers,
-      "label": "End Users",
+      "label": "Users",
       "last": {
       "color": "success",
       "amount": "7.1%"
@@ -220,9 +237,6 @@ export default function Tenants() {
 
   const checkMasterUser = async () => {
     const response = await fetchService.checkMasterUser(userId);
-    if(response){
-      console.log("Response: ", response);
-    }
 
     if(response.isError()) handleErrorResponse(response);
     return ! response.isError();
