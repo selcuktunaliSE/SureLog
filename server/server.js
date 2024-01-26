@@ -60,10 +60,6 @@ Object.keys(api.post).forEach(apiFunctionName => app.post(apiFunctionName, api.p
 Object.keys(api.get).forEach(apiFunctionName => app.get(apiFunctionName, api.get[apiFunctionName]));
 
 
-  
-  
-
-
 db.sequelize.sync().then((req) => {
     databaseService.initialize();
 

@@ -1,5 +1,5 @@
 const fetchConfig = require("../config/fetchConfig.json");
-const fetchAddress = `http://${fetchConfig.host}:${fetchConfig.port}`;
+const fetchAddress = `https://${fetchConfig.host}:${fetchConfig.port}`;
 class FetchResponse {
   constructor(fetchStatus = null, data = null, message = null) {
     this.status = fetchStatus;
