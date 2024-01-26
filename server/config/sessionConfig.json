@@ -3,7 +3,7 @@
     "sessionStore": {
         "database": "multitenantdb",
         "user": "root",
-        "password": "root",
+        "password": "1234+BGr",
         "host": "localhost",
         "port": 3306,
         "clearExpired": true, 
