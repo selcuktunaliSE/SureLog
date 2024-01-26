@@ -1,7 +1,7 @@
 {
   "development": {
     "username": "monty",
-    "password": "",
+    "password": "monty",
     "database": "multitenantdb",
     "host": "localhost",
     "port": 3306,
@@ -9,7 +9,7 @@
   },
   "test": {
     "username": "monty",
-    "password": "",
+    "password": "monty",
     "database": "multitenantdb",
     "host": "127.0.0.1",
     "port": 3306,
@@ -17,7 +17,7 @@
   },
   "production": {
     "username": "monty",
-    "password": "",
+    "password": "monty",
     "database": "multitenantdb",
     "host": "127.0.0.1",
     "port": 3306,
