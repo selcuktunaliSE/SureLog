@@ -1,0 +1,14 @@
+{
+    "environments": {
+        "development" : {
+            "host" : "localhost",
+            "httpPort" : 9000,
+            "envName" : "development"
+        },
+        "production" : {
+            "host" : "localhost",
+            "httpPort": 9000,
+            "envName" : "production"
+        }   
+    }
+}
