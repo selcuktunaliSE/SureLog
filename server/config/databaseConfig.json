@@ -3,7 +3,7 @@
     "username": "m1",
     "password": "m1",
     "database": "multitenantdb",
-    "host": "localhost",
+    "host": "161.35.71.72",
     "port": 3306,
     "dialect": "mysql"
   },
@@ -11,7 +11,7 @@
     "username": "m1",
     "password": "m1",
     "database": "multitenantdb",
-    "host": "127.0.0.1",
+    "host": "161.35.71.72",
     "port": 3306,
     "dialect": "mysql"
   },
@@ -19,7 +19,7 @@
     "username": "m1",
     "password": "m1",
     "database": "multitenantdb",
-    "host": "127.0.0.1",
+    "host": "161.35.71.72",
     "port": 3306,
     "dialect": "mysql"
   }
