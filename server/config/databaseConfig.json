@@ -1,23 +1,23 @@
 {
   "development": {
-    "username": "monty",
-    "password": "monty",
+    "username": "m1",
+    "password": "m1",
     "database": "multitenantdb",
     "host": "localhost",
     "port": 3306,
     "dialect": "mysql"
   },
   "test": {
-    "username": "monty",
-    "password": "monty",
+    "username": "m1",
+    "password": "m1",
     "database": "multitenantdb",
     "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql"
   },
   "production": {
-    "username": "monty",
-    "password": "monty",
+    "username": "m1",
+    "password": "m1",
     "database": "multitenantdb",
     "host": "127.0.0.1",
     "port": 3306,
