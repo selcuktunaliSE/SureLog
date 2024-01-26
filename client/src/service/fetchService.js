@@ -648,7 +648,6 @@ const fetchUserTypeCountDistributionData = async (sourceUserId) => {
   }).then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        console.log("data: ", data);
         fetchResponse = new FetchResponse(FetchStatus.Success, { userTypeCountDistributionData: data.userTypeCountDistributionData });
       }
       else if (data.status === 404) {

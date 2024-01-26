@@ -18,10 +18,25 @@ export default class Sidebar extends Component {
         super(props);
         this.state = {
             userData: null,
+            userRole: "",
         };
         this.fetchUserData();
+        this.fetchUserRole();
     }
+    fetchUserRole = async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+            console.error("No userId found in local storage");
+            return;
+        }
 
+        let response = await fetchService.fetchUserRoleName(userId);
+        if (response && response.status === FetchStatus.Success) {
+            this.setState({ userRole: response.data});
+        } else {
+            console.error("Error fetching user role: ", response.message);
+        }
+    };
     fetchUserData = async () => {
         const userId = localStorage.getItem("userId");
         if (!userId) {
@@ -51,7 +66,7 @@ export default class Sidebar extends Component {
                     <Link to="/" className="sidebar-logo">SureLog</Link>
                 </div>
                 <PerfectScrollbar className="sidebar-body" ref={ref => this._scrollBarRef = ref}>
-                    <SidebarMenu onUpdateSize={() => this._scrollBarRef.updateScroll()} />
+                    <SidebarMenu userRole={this.state.userRole} onUpdateSize={() => this._scrollBarRef.updateScroll()} />
                 </PerfectScrollbar>
                 <div className="sidebar-footer">
                     <div className="sidebar-footer-top">
@@ -85,7 +100,16 @@ export default class Sidebar extends Component {
 
 class SidebarMenu extends Component {
     populateMenu = (m) => {
+        const {userRole} = this.props;
         const menu = m.map((m, key) => {
+            if(userRole ==="Tenant Manager" && m.label === "Tenants"){
+                m.label = "My Tenant";
+            }
+           
+            if (userRole == "User" && (m.label == "Tenants" || m.label == "My Tenant")) {
+                return null; // Don't render this menu item
+            }
+
             let sm;
             if (m.submenu) {
                 sm = m.submenu.map((sm, key) => {
@@ -94,7 +118,7 @@ class SidebarMenu extends Component {
                     )
                 })
             }
-
+           
             return (
                 <li key={key} className="nav-item">
                     {(!sm) ? (

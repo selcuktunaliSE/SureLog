@@ -28,8 +28,6 @@ export default function Header({ onSkin }) {
   const fetchUserRole = async () => {
     const response = await fetchService.fetchUserRoleName(userId); // Adjust this to match the actual function you have for fetching user role
     if (response && response.status === FetchStatus.Success) {
-      console.log("Response: ", response);
-      console.log("User role: ", response.data)
         setUserRole(response.data); // Set the fetched role
     } else {
         console.error("Error fetching user role: ", response.message);

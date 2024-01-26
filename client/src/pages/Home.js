@@ -5,12 +5,6 @@ import {useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 
 
-
-import Sidebar from "../layouts/Sidebar";
-import Header from "../layouts/Header";
-import HeaderMobile from "../layouts/HeaderMobile";
-
-
 import LineGraphCard from "../components/LineGraphCard";
 import MinorLineGraphCard from "../components/MinorLineGraphCard";
 import SingleStatisticCard from "../components/SingleStatisticCard";
@@ -119,18 +113,7 @@ export default function Home(){
 
   const navigate = useNavigate();
 
-  const fetchUserTypeDistributionData = async () => {
-    const response = await fetchService.fetchUserTypeDistributionData(userId);
-    
-    if(! response.isError()){
-      setUserTypeCountDistributionData(response.data.userTypeCountDistributionData);
-      setIsError(false);
-      setErrorMessage("");
-    }
-    else{
-      handleErrorResponse(response);
-    }
-  }
+
 
   useEffect(() => {
     fetchTotalNumberOfTenants();
@@ -291,7 +274,6 @@ export default function Home(){
           
             <Col xs={8} className="grid-item-large-horizontal">
               <Row>
-                {console.log("user type distribution data:", userTypeCountDistributionData)}
                 {userTypeCountDistributionData && (<PercentageBarCard data={userTypeCountDistributionData}  texts={userTypeDistributionGraphTexts}/>)}
               </Row>
                 
