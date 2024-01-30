@@ -909,7 +909,7 @@ const fetchUserTypeCountDistributionData = async(sourceUserId) => {
     }
     }
 
-    numEndUsers = numTotalUsers ;
+    numEndUsers = numTotalUsers - numTenantAdmins;
 
     const percentageMasters = numTotalUsers > 0 ? (numMasters / numTotalUsers * 100) : 0;
     const percentageTenantAdmins = numTotalUsers > 0 ? (numTenantAdmins / numTotalUsers * 100) : 0;
