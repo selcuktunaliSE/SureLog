@@ -474,6 +474,30 @@ const getTenantOfUser = async (sourceUserId, targetUserId) => {
         new DatabaseResponse(ResponseType.Success, {tenant: tenant}) : 
         new DatabaseResponse(ResponseType.NotFound);
 };
+const fetchAllUsersLastLogin = async () => {
+    const generateRandomIP = () => {
+        return Array.from({ length: 4 }, () => Math.floor(Math.random() * 255)).join('.');
+    };
+    try {
+        const users = await UserModel.findAll({
+            attributes: ['email','lastLoginAt','lastActivityAt']
+        });
+        
+        // If users are found
+        if (users) {
+            const usersWithIP = users.map(user => ({
+                ...user.get({ plain: true }), // Spread existing user attributes
+                IP: generateRandomIP()  // Add fake IP address
+            }));
+            return new DatabaseResponse(ResponseType.Success, usersWithIP);
+        } else {
+            return new DatabaseResponse(ResponseType.NotFound, 'No users found.');
+        }
+    } catch (error) {
+        console.error("Error fetching users' last login information: ", error);
+        return new DatabaseResponse(ResponseType.Error, 'Error fetching users\' last login information.');
+    }
+};
 
 const fetchTenantsOfMaster = async (sourceUserId) => {
     try {
@@ -617,7 +641,59 @@ const addUser = async(sourceUserId, userData) => {
     
     if(newUser) return new DatabaseResponse(ResponseType.Success, {newUser: newUser});    
 }
+const fetchAllMasters = async () => {
+    try {
+        const masters = await MasterModel.findAll({
+            include: [
+                {
+                    model: UserModel,
+                    as: 'user', // Association alias defined in the model
+                    attributes: ['email'], // Select only the email field from UserModel
+                },
+                {
+                    model: MasterPermissionModel,
+                    as: 'masterPermissions', // Association alias defined in the model
+                    // Select specific fields you want from MasterPermissionModel
+                    attributes: ['assignMaster', 'revokeMaster', 'addTenant', 'viewTenants', 'addMasterRole', 'editMasterRole', 'deleteMasterRole', 'assignMasterRole', 'revokeMasterRole', 'viewAllUsers'],
+                },
+                
+            ],
+            attributes: ['isSuperMaster'], // Select isSuperMaster from MasterModel
+        });
 
+        if (masters && masters.length > 0) {
+            const masterDetails = masters.map(master => {
+                const user = master.user; // User details from the association
+                const permissions = master.masterPermissions; // Master permissions from the association
+                return {
+                    email: user.email,
+                    isSuperMaster: master.isSuperMaster === 1,
+                    assignMaster: permissions.assignMaster,
+                    revokeMaster: permissions.revokeMaster,
+                    addTenant: permissions.addTenant,
+                    viewTenants: permissions.viewTenants,
+                    addMasterRole: permissions.addMasterRole,
+                    editMasterRole: permissions.editMasterRole,
+                    deleteMasterRole: permissions.deleteMasterRole,
+                    assignMasterRole: permissions.assignMasterRole,
+                    revokeMasterRole: permissions.revokeMasterRole,
+                    viewAllUsers: permissions.viewAllUsers,
+                    
+                };
+            });
+
+            return new DatabaseResponse(ResponseType.Success, { masters: masterDetails });
+        } else {
+            return new DatabaseResponse(ResponseType.NotFound, 'No masters found.');
+        }
+    } catch (error) {
+        console.error("Error fetching masters: ", error);
+        return new DatabaseResponse(ResponseType.Error, 'Error fetching masters.');
+    }
+};
+
+
+  
 const registerUserToTenant = async(sourceUserId, userData) => {
     if(!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
@@ -661,8 +737,13 @@ const addUserToTenant = async(sourceUserId, targetUserId, tenantId) => {
 }
 
 const authenticateUser = async(email, password) => {
+    const now = new Date().toISOString();
     const userModel = await UserModel.findOne({ where: { email, password } });
-    if(userModel) return new DatabaseResponse(ResponseType.Success, {userId: userModel.userId});
+    if(userModel){
+        userModel.lastLoginAt = now;
+        await userModel.save();
+        return new DatabaseResponse(ResponseType.Success, {userId: userModel.userId});
+    } 
     else return new DatabaseResponse(ResponseType.NotFound);
 }
 
@@ -964,4 +1045,6 @@ module.exports = {
     deleteTenant,
     updateUserCount,
     getUserRole,
+    fetchAllUsersLastLogin,
+    fetchAllMasters
 }

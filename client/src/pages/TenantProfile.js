@@ -268,6 +268,7 @@ export default function TenantProfile() {
     if (!response.isError()) {
       console.log('Tenant role updated successfully:', response.data);
       setShowEditTenantModal(false);
+      window.location.reload();
       fetchTenantRoles();
     } else {
       handleErrorResponse(response);

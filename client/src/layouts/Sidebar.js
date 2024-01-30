@@ -105,8 +105,11 @@ class SidebarMenu extends Component {
             if(userRole ==="Tenant Manager" && m.label === "Tenants"){
                 m.label = "My Tenant";
             }
+            if(userRole ==="Tenant Manager" && m.label === "Masters"){
+               return null;
+            }
            
-            if (userRole == "User" && (m.label == "Tenants" || m.label == "My Tenant")) {
+            if (userRole === "User" && (m.label === "Tenants" || m.label === "My Tenant" || m.label ==="Masters") ) {
                 return null; // Don't render this menu item
             }
 

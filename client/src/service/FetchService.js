@@ -25,6 +25,8 @@ const FetchStatus = {
   FetchError: "FetchError",
   ResourceNotFound: "ResourceNotFound",
 }
+
+
 const fetchVerifyToken = async (token, secret) => {
   try {
     let response = await fetch(`${fetchAddress}/api/verify-token`, {
@@ -80,7 +82,54 @@ const fetchGenerateQRCode = async () => {
     throw error; 
   }
 };
+const fetchAllMasters = async () => {
+  let fetchResponse = new FetchResponse();
+  try {
+      const response = await fetch(`${fetchAddress}/api/fetch-all-masters`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+      });
 
+      const data = await response.json();
+      if (response.ok) {
+          fetchResponse = new FetchResponse(FetchStatus.Success, data);
+      } else {
+          const errorMessage = data.message || "Failed to fetch masters";
+          fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+      }
+  } catch (error) {
+      console.error('Error fetching masters:', error);
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
+const fetchAllUsersLastLogin = async () => {
+  let fetchResponse = new FetchResponse();
+  try {
+      const response = await fetch(`${fetchAddress}/api/fetch-all-users-last-login`, {
+          method: 'POST', // or 'POST' if you want to send some data like authentication token
+          headers: {
+              'Content-Type': 'application/json'
+          },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+          fetchResponse = new FetchResponse(FetchStatus.Success, data);
+      } else {
+          const errorMessage = data.message || "Failed to fetch all users' last login information";
+          fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+      }
+  } catch (error) {
+      console.error('Error fetching all users\' last login information:', error);
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
 
 
 const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
@@ -732,5 +781,7 @@ export {
   addTenant,
   deleteTenant,
   editTenantName,
-  fetchUserRoleName
+  fetchUserRoleName,
+  fetchAllUsersLastLogin,
+  fetchAllMasters
 }

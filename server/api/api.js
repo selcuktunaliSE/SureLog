@@ -7,6 +7,52 @@ module.exports = {
         "/api/check-logged-in-status": async(req, res) => {
             res.status(200).json({status: 'success', isLoggedIn: req.session.loggedUser ? true : false});
         },
+        "/api/fetch-all-masters": async (req, res) => {
+          try {
+              const databaseResponse = await databaseService.fetchAllMasters();
+              if (databaseResponse.responseType === databaseService.ResponseType.Success) {
+                  res.status(200).json({
+                      status: "success",
+                      masters: databaseResponse.data.masters
+                  });
+              } else {
+                  res.status(404).json({
+                      status: "error",
+                      message: "Masters not found"
+                  });
+              }
+          } catch (error) {
+              console.error("Error fetching masters: ", error);
+              res.status(500).json({
+                  status: "error",
+                  message: "Internal server error"
+              });
+          }
+      },
+        "/api/fetch-all-users-last-login": async (req, res) => {
+          try {
+            console.log("You have come to lastlogin")
+              const databaseResponse = await databaseService.fetchAllUsersLastLogin();
+              if (databaseResponse.responseType === databaseService.ResponseType.Success) {
+                  res.status(200).json({
+                      status: "success",
+                      usersLastLogin: databaseResponse.data
+                  });
+              } else {
+                  res.status(500).json({
+                      status: "error",
+                      message: databaseResponse.data
+                  });
+              }
+          } catch (error) {
+              console.error("Error fetching all users' last login information: ", error);
+              res.status(500).json({
+                  status: "error",
+                  message: "Internal server error"
+              });
+          }
+      },
+      
         "/api/delete-tenant": async (req, res) => {
           const { sourceUserId, tenantId } = req.body;
           console.log(`Deleting tenant with ID:${tenantId}`);

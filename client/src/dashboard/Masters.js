@@ -1,21 +1,18 @@
 import React from "react";
-import { Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
 import { Search } from "react-bootstrap-icons";
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
-import "../scss/customStyle.scss";
-import img6 from "../assets/img/img6.jpg";
-import img7 from "../assets/img/img7.jpg";
-
 import DynamicTable from "../components/tables/DynamicTable";
-
+import { Link } from "react-router-dom";
+import { Col, Table,Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
+import "../scss/customStyle.scss";
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
 
-export default function Users() {
+export default function Masters() {
  
   const [tenants, setTenants] = useState([]);
   const [isUserMaster, setIsUserMaster] = useState(false);
@@ -32,6 +29,8 @@ export default function Users() {
   const [filteredUsers, setFilteredUsers] = useState({}); 
   const [skinMode, setSkinMode] = useState(""); // Define the state for skin mode
   const [userRole, setUserRole] = useState(""); 
+  const [usersLastLogin, setUsersLastLogin] = useState({});
+  const [masters, setMasters] = useState({});
 
   const searchKeys= ["firstName", "lastName", "email"];
 
@@ -47,9 +46,41 @@ export default function Users() {
         console.error("Error fetching user role: ", response.message);
     }
 };
-  
+
+const fetchUsersLastLogin = async () => {
+    const fetchResponse = await fetchService.fetchAllUsersLastLogin();
+    if (fetchResponse.status === FetchStatus.Success) {
+        setUsersLastLogin(fetchResponse.data.usersLastLogin);
+    } else {
+        console.error(fetchResponse.message);
+    }
+};
+const fetchAllMasters = async () => {
+    const fetchResponse = await fetchService.fetchAllMasters();
+    if (fetchResponse.status === FetchStatus.Success) {
+        console.log(fetchResponse.data.masters)
+        setMasters(fetchResponse.data.masters.map(master => ({
+            email: master.email,
+            SuperMaster: master.isSuperMaster,
+           assignMaster: master.assignMaster,
+           revokeMaster: master.revokeMaster,
+           addTenant: master.addTenant,
+           addMasterRole: master.addMasterRole,
+           editMasterRole: master.editMasterRole,
+           deleteMasterRole: master.deleteMasterRole,
+           assignMasterRole: master.assignMasterRole,
+           revokeMasterRole: master.revokeMasterRole
+        })));
+       
+    } else {
+        console.error(fetchResponse.message);
+    }
+};
+
 
   useEffect(() => {
+    fetchAllMasters();
+    fetchUsersLastLogin();
     let isMounted = true; // to handle component unmount
     fetchUserRole();
     const initializeData = async () => {
@@ -57,18 +88,16 @@ export default function Users() {
         navigate("/signin");
         return;
       }
-      
     fetchUserRole().then(userRole => {
       setUserRole(userRole); 
-      if(userRole != "User"){
-       
-      }
+      
   });
-  
+     
       await checkIsUserMaster();
       if (isMounted) {
         fetchTenants();
       }
+      
     };
   
     if (isMounted) {
@@ -80,7 +109,7 @@ export default function Users() {
     };
   }, [userId, navigate, isUserMaster]);
   
-
+ 
   const fetchUsersFromTenant = async (tenantId) => {
     if(!userId) navigate("/signin");
 
@@ -99,7 +128,6 @@ export default function Users() {
               "email": userModel.email,
             };
           });
-
           setUserDict(users);
           setFilteredUsers(users);
           setIsError(false);
@@ -219,6 +247,8 @@ export default function Users() {
     setSelectedSearchKey(key);
     
   };
+ 
+  
 
   const handleProcessSearchQuery = () => {
     console.log("Searching for:", searchQuery, "with key:", selectedSearchKey || "firstName");
@@ -254,130 +284,27 @@ export default function Users() {
     <React.Fragment>
       <HeaderMobile />
       <Header onSkin={handleSkinModeChange}/>
-      <div className="main p-4 p-lg-5">
-          <ol className="breadcrumb fs-sm mb-1">
-              <li className="breadcrumb-item"><a href="#">Dashboard</a></li>
-              <li className="breadcrumb-item active" aria-current="page">Users</li>
+      <div className="main p-4 p-lg-5 mt-5">
+        <div className="d-flex align-items-center justify-content-between mb-4">
+          <div>
+            <ol className="breadcrumb fs-sm mb-1">
+              <li className="breadcrumb-item"><Link to="#">Masters</Link></li>
             </ol>
+            <h4 className="main-title mb-0">Welcome to Masters Page</h4>
+          </div>
+        </div>
         <Row>
-          <Col>
-            <h2 className="main-title"></h2>
-          </Col>
-        </Row>
-
-        {isError && (
-          <Row>
-            <Col>
-              <Alert variant="danger">{errorMessage}</Alert>
-            </Col>
-          </Row>
-        )}
-
-        <Row className="mb-3">
-          {/* Tenant Selector Dropdown */}
-          <Col md={2}>
-            <DropdownButton
-              id="tenant-dropdown"
-              title={selectedTenantName || `Select Tenant`}
-            >
-              {tenants && tenants.length > 0 ? (
-                tenants.map(tenant => {
-                  return <Dropdown.Item key={tenant.tenantId} onClick={() => handleTenantSelect(tenant.tenantId)}>
-                    {tenant.name}
-                  </Dropdown.Item>
-                })
-              ) : (
-                <Dropdown.Item>No tenants available</Dropdown.Item>
-              )}
-            </DropdownButton>
-          </Col>
-
-          {/* Sort Dropdown */}
-          {/* <Col md={6}>
-            <DropdownButton
-              id="sort-dropdown"
-              title={`Sort by ${sortBy} (${sortOrder.toUpperCase()})`}
-            >
-              <Dropdown.Item onClick={handleSortOrderChange}>
-                Toggle Sort Order
-              </Dropdown.Item>
-              <Dropdown.Divider />
-              <Dropdown.Item value="createdAt" onClick={handleSortChange}>
-                Created At
-              </Dropdown.Item>
-              <Dropdown.Item value="updatedAt" onClick={handleSortChange}>
-                Updated At
-              </Dropdown.Item>
-            </DropdownButton>
-          </Col> */}
-
-        </Row>
-
-        <Row>
-          <Col>
-            <InputGroup
-            >
-              {/* Search Input */}
-              <FormControl
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={handleSearch}
-                onKeyDown={handleSearch}
-              />
-
-              {/* Search Button */}
-              <Button 
-                variant="outline-secondary"
-                onClick={handleProcessSearchQuery}
-                style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
-                <Search /> {/* Search icon */}
-              </Button>
-
-              {/* Dropdown for selecting search key */}
-              <DropdownButton
-                as={InputGroup}
-                title={selectedSearchKey || "Select Key"} // Show selected key or "Select Key"
-                id="input-group-dropdown"
-              >
-                {searchKeys.map((key) => (
-                  <Dropdown.Item key={key} onClick={() => handleSearchKeySelect(key)}>
-                    {key}
-                  </Dropdown.Item>
-                ))}
-              </DropdownButton>
-              
-            </InputGroup>  
-          </Col>
-        </Row>
-
-
-        {/* <Row className="g-2 g-xxl-3 mt-3 mb-5">
-          {Object.keys(filteredUsers).map((userId) => {
-            const user = filteredUsers[userId];
-            return (
-              <Col sm="6" md="4" key={userId} onClick={() => goToUserProfile(userId)}>
-                <Card className="card-people hover-tilt-effect">
-                  <Card.Body style={{color: "#e2e5ec"}}>
-                    <Avatar img={user.img} size="xl" />
-                    <h6 className="mt-3">
-                      {user.firstName} {user.middleName} {user.lastName}
-                    </h6>
-                    <p>{user.email}</p>
-                  </Card.Body>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row> */}
-        <Row className="mt-3">
           <Col md={12}> 
-            <DynamicTable dataDict={filteredUsers} onRowClick={handleRowClick}/>  
+            <DynamicTable dataDict={masters} onRowClick={handleRowClick}/>  
           </Col> 
         </Row>
-        
-
+        <Row>
+          <Col md={12}> 
+            <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick}/>  
+          </Col> 
+        </Row>
       </div>
+      
       <Footer />
     </React.Fragment>
   );
