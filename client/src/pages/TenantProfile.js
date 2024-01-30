@@ -5,7 +5,11 @@ import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import "../scss/customStyle.scss";
 import DynamicTable from "../components/tables/DynamicTable";
-import EditTenantRoleModal from "../components/modals/EditTenantRoleModal";
+import EditTenantRoleModal from "../components/modals/multitenancy/EditTenantRoleModal";
+import EditUserModal from "../components/modals/multitenancy/EditUserModal";
+import AddUserModal from "../components/modals/multitenancy/AddUserModal";
+import EditTenantModal from "../components/modals/multitenancy/EditTenantModal";
+import DeleteUserModal from "../components/modals/multitenancy/RemoveUserFromTenantModal";
 
 const { FetchStatus } = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
@@ -19,7 +23,7 @@ export default function TenantProfile() {
   const [tenantUsersDict, setTenantUsersDict] = useState({});
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showAddTenantRoleModal, setShowAddTenantRoleModal] = useState(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
   const [showUserEditModal, setShowUserEditModal] = useState(false);
   const [showEditTenantRoleModal, setShowEditTenantRoleModal] = useState(false);
   const [showEditTenantModal, setShowEditTenantModal] = useState(false);
@@ -133,14 +137,15 @@ export default function TenantProfile() {
 
   const addUtilityModalsToTenantUsersDict = (tenantUsersDict) => {
     const modifiedTenantUsersDict = Object.values(tenantUsersDict).map((user, index) => ({
-      Edit: (
+      "": (
         <>
-          <Button variant="outline-secondary" size="sm" onClick={() => handleEditUser(user.userId)} className="me-2">
+          <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditUser(e, user.userId)} className="me-2">
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
           </Button>
-          <Button variant="outline-secondary" size="sm" onClick={() => {
+          <Button variant="outline-secondary" size="sm" onClick={(e) => {
+            e.stopPropagation();
             setUserIdToDelete(user.userId);
-            setShowConfirmationModal(true);
+            setShowDeleteUserModal(true);
 
           }} className="me-2">
             <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
@@ -154,14 +159,15 @@ export default function TenantProfile() {
 
   const addUtilityModalsToTenantRolesDict = (tenantRolesDict) => {
     const modifiedTenantRolesDict = Object.values(tenantRolesDict).map((tenantRole, index) => ({
-      Edit: (
+      "": (
         <>
-          <Button variant="outline-secondary" size="sm" onClick={() => handleEditTenantRole(tenantRole.tenantRoleId)} className="me-2">
+          <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditTenantRole(e, tenantRole.tenantRoleId)} className="me-2">
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
           </Button>
-          <Button variant="outline-secondary" size="sm" onClick={() => {
+          <Button variant="outline-secondary" size="sm" onClick={(e) => {
+            e.stopPropagation();
             setTenantRoleIdToDelete(tenantRole.tenantRoleId);
-            setShowConfirmationModal(true);
+            setShowDeleteUserModal(true);
           }} className="me-2">
             <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
           </Button>
@@ -190,6 +196,7 @@ export default function TenantProfile() {
     setShowUserEditModal(false);
     setUserToEdit(null); // Reset editing user after submission
   };
+
   const handleEditTenantInputChange = (event) => {
     const { name, value } = event.target;
     setTenantToEdit({ ...tenantToEdit, [name]: value });
@@ -215,7 +222,21 @@ export default function TenantProfile() {
     const { name, value } = e.target;
     if (name === "roleName") {
       setUserRoleToEdit(value);
-    } else {
+    }
+    else if(name === "fullName"){
+      const names = value.split(" ");
+      const firstName = names[0];
+      const middleName = names.length > 2 ? names.slice(1, -1).join(' ') : "";
+      const lastName = names[names.length - 1];
+      console.log(`names: fn:${firstName} mn:${middleName} ln:${lastName}`);
+      setUserToEdit(prevState => ({
+        ...prevState,
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+      }));
+    }
+    else {
       setUserToEdit(prevState => ({
         ...prevState,
         [name]: value
@@ -254,7 +275,8 @@ export default function TenantProfile() {
   }
   
 
-  const handleEditUser = async (userId) => {
+  const handleEditUser = async (e, userId) => {
+    e.stopPropagation();
     const response = await fetchService.fetchUserProfile(userId, userId);
     
     if (! response.isError()) {
@@ -267,7 +289,8 @@ export default function TenantProfile() {
     }
   };
 
-  const handleEditTenantRole = async (tenantRoleId) => {
+  const handleEditTenantRole = async (e, tenantRoleId) => {
+    e.stopPropagation();
     const selectedRole = tenantRoles.find(tenantRole => tenantRole.tenantRoleId === tenantRoleId);
     if (selectedRole) {
       setTenantRoleToEdit(selectedRole);
@@ -275,12 +298,18 @@ export default function TenantProfile() {
     }
   }
 
+  const goToUserProfile = (targetUserId) => {
+    if(!targetUserId) return;
+    console.log("going to profile with user id: ", targetUserId);
+    navigate("/profile", { state: { targetUserId : targetUserId}});
+  };
+
   const handleUserRowClick = (rowData) => {
-  
+    goToUserProfile(rowData?.userId);
   };
 
   const handleRoleRowClick = (rowData) => {
-  
+    
   };
 
   const handleEditUserSubmit = async (event) => {
@@ -304,14 +333,14 @@ export default function TenantProfile() {
     }
   };
 
-  const handleInputChange = (event) => {
+  const handleAddUserInputChange = (event) => {
     const { name, value } = event.target;
     setNewUserData({ ...newUserData, [name]: value });
     console.log("new user data: ", { ...newUserData, [name]: value });
     if (name === "tenantRoleId") setSelectedTenantRoleName(event.target.value);
   };
 
-  const handleCloseConfirmationModal = () => setShowConfirmationModal(false);
+  const handleCloseDeleteUserModal = () => setShowDeleteUserModal(false);
   const handleCloseUserEditModal = () => setShowUserEditModal(false);
   const handleShowAddUserModal = () => setShowAddUserModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
@@ -335,7 +364,7 @@ export default function TenantProfile() {
         handleErrorResponse(response);
       }
 
-      setShowConfirmationModal(false);
+      setShowDeleteUserModal(false);
       setUserIdToDelete(null);
     }
   };
@@ -434,50 +463,21 @@ export default function TenantProfile() {
             <Card className="card-one">
               <Card.Header>
                 <Card.Title as="h6" className="d-flex align-items-center justify-content-between w-100">
-                  <div className="d-flex align-items-center justify-content-between">
                     <span>
                         {tenantData.name}
                     </span>
                       
-                    <div className="d-flex justify-content-center align-items-center ms-3">
+                    <div className="d-flex justify-content-center align-items-center ms-3 w-10">
                       <Button
+                        className="w-100 d-flex justify-content-start align-items-center"
                         variant="outline-info"
                         onClick={handleShowEditTenantModal}
                         style={buttonStyle}
                       >
                         <i className="ri-pencil-fill" style={iconStyle}></i>
-                        <span>Edit</span>
+                        <span className="ms-3">Edit</span>
                       </Button>
                     </div>
-
-                  </div>
-
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex justify-content-center align-items-center me-3">
-                      <Button
-                        variant="primary"
-                        onClick={handleShowAddUserModal}
-                        style={buttonStyle}
-                      >
-                        <i className="ri-user-add-fill" style={iconStyle}></i>
-                        <span>Add User</span>
-                      </Button>
-                    </div>
-
-                    <div className="d-flex justify-content-center align-items-center ">
-                      <Button
-                        variant="primary"
-                        onClick={handleShowAddUserModal}
-                        style={buttonStyle}
-                      >
-                        <i className="ri-user-add-fill" style={iconStyle}></i>
-                        <span>Add Role</span>
-                      </Button>
-                    </div>
-
-                  </div>
-                    
-                    
 
                 </Card.Title>
 
@@ -556,200 +556,96 @@ export default function TenantProfile() {
 
         <Row>
           <Col md={12}>
-            <DynamicTable dataDict={tenantUsersDict} onRowClick={handleUserRowClick} />
+            <Card className="card-one">
+              <Card.Header>
+                <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
+                  <span>Users</span>
+                  <div className="d-flex justify-content-center align-items-center w-10">
+                      <Button
+                        className="w-100 d-flex justify-content-start align-items-center"
+                        variant="primary"
+                        onClick={handleShowAddUserModal}
+                        style={buttonStyle}
+                      >
+                        <i className="ri-user-add-fill" style={iconStyle}></i>
+                        <span>Add User</span>
+                      </Button>
+                    </div>
+                </Card.Title>
+              </Card.Header>
+              
+              <Card.Body>
+                <DynamicTable dataDict={tenantUsersDict} onRowClick={handleUserRowClick} />
+              </Card.Body>
+              
+            </Card>
           </Col>
-
         </Row>
+        
 
         {/* DynamicTable for Tenant Roles */}
 
-        <Row mt="3">
-          <Col md={12} >
-              <DynamicTable dataDict={tenantRolesDict} onRowClick={handleRoleRowClick} />
+        <Row className="mt-3">
+          <Col md={12}>
+            <Card className="card-one">
+              <Card.Header>
+                <Card.Title as="h2" className=" d-flex justify-content-between align-items-center w-100">
+                  <span>Roles</span>
+                  <div className="d-flex justify-content-center align-items-center w-10">
+                      <Button
+                        className="w-100 d-flex justify-content-start align-items-center"
+                        variant="primary"
+                        onClick={handleShowAddUserModal}
+                        style={buttonStyle}
+                      >
+                        <i className="ri-user-add-fill" style={iconStyle}></i>
+                        <span>Add Role</span>
+                      </Button>
+                    </div>
+                </Card.Title>
+              </Card.Header>
+              
+              <Card.Body>
+                <DynamicTable dataDict={tenantRolesDict} onRowClick={handleRoleRowClick} />
+              </Card.Body>
+              
+            </Card>
           </Col>
         </Row>
 
-        <Modal show={showAddUserModal} onHide={handleCloseAddUserModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Add New User</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form onSubmit={handleSubmitNewUser}>
-              <Form.Group className="mb-3">
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  autoComplete="off"
-                  placeholder="User Name"
-                  name="fullName"
-                  value={newUserData.fullName}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
 
-              <Form.Group className="mb-3">
-                <Form.Label>Email Address</Form.Label>
-                <Form.Control
-                  type="email"
-                  placeholder="Enter email"
-                  name="email"
-                  value={newUserData.email}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
+        {/* MODALS */}
 
-              <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Enter password"
-                  name="password"
-                  value={newUserData.password}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
+        <AddUserModal 
+          show={showAddUserModal}
+          handleClose={handleCloseAddUserModal}
+          handleInputChange={handleAddUserInputChange}
+          handleSubmit={handleSubmitNewUser}
+          tenantRoles={tenantRoles}
+        />
 
-              <Form.Group className="mb-3">
-                <Form.Label>Password(Confirm)</Form.Label>
-                <Form.Control
-                  type="password"
-                  placeholder="Confirm password"
-                  name="confirmPassword"
-                  value={newUserData.confirmPassword}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
+        <DeleteUserModal
+          show={showDeleteUserModal}
+          handleClose={handleCloseDeleteUserModal}
+          handleDeleteUser={handleDeleteUser}
+        />
 
-              <Form.Group className="mb-3">
-                <Form.Label>Role</Form.Label>
-                <Form.Select
-                  type="text"
-                  name="tenantRoleId"
-                  value={selectedTenantRoleName}
-                  onChange={handleInputChange}
-                >
-                  <option value="" disabled>
-                    Select
-                  </option>
-                  {tenantRoles.map((tenantRole) => (
-                    <option key={tenantRole.tenantRoleId} value={tenantRole.tenantRoleId}>
-                      {tenantRole.roleName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-              <div className="text-end">
-                <Button variant="primary" type="submit">
-                  Save
-                </Button>
-              </div>
-            </Form>
-          </Modal.Body>
-        </Modal>
-
-        <Modal show={showConfirmationModal} onHide={handleCloseConfirmationModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirm Deletion</Modal.Title>
-          </Modal.Header>
-
-          <Modal.Body>Are you sure you want to delete?</Modal.Body>
-
-          <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseConfirmationModal}>
-              Cancel
-            </Button>
-            <Button variant="danger" onClick={handleDeleteUser}>
-              Delete
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        <Modal show={showUserEditModal} onHide={handleCloseUserEditModal}>
-
-          <Modal.Header closeButton>
-            <Modal.Title>Edit User</Modal.Title>
-          </Modal.Header>
-          
-          <Modal.Body>
-            {userToEdit && (
-              <Form onSubmit={handleFormSubmit}>
-               {/* Email */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email" // Ensure this matches the property in the editingUser object
-                    placeholder={userToEdit.Email}
-                    value={userToEdit.email || ''}
-                    onChange={handleEditUserInputChange}
-                  />
-                </Form.Group>
-
-                {/* Password */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="password"
-                    placeholder="Enter new password"
-                    value={userToEdit.password}
-                    onChange={handleEditUserInputChange}
-                  />
-                </Form.Group>
-                {/* RoleName */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Role</Form.Label>
-                  <Form.Select
-                    name="roleName"
-                    value={userToEdit.roleName}
-                    onChange={handleEditUserInputChange}
-                  >
-                   {tenantRoles.map((role) => (
-                    <option key={role.tenantRoleId} value={role.roleName}>
-                      {role.roleName}
-                    </option>
-                  ))}
-                  </Form.Select>
-                </Form.Group>
-
-                <div className="text-end">
-                  <Button variant="primary" type="submit" onClick={handleEditUserSubmit}>
-                    Save
-                  </Button>
-                </div>
-
-              </Form>
-            )}
-          </Modal.Body>
-        </Modal>
+        <EditUserModal
+          show={showUserEditModal}
+          handleClose={handleCloseUserEditModal}
+          userData={userToEdit}
+          handleInputChange={handleEditUserInputChange}
+          handleSubmit={handleEditUserSubmit}
+          tenantRoles={tenantRoles}
+        />
         
-        
-        <Modal show={showEditTenantModal} onHide={handleCloseEditTenantModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Edit Tenant</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form onSubmit={handleEditTenantSubmit}>
-              <Form.Group className="mb-3">
-                <Form.Label>Tenant Name</Form.Label>
-                <Form.Control 
-                  type="text"
-                  name="name" 
-                  placeholder="Enter Tenant Name"
-                  value={tenantToEdit.name}
-                  onChange={handleEditTenantInputChange}
-                />
-              </Form.Group>
-              
-              <div className="text-end">
-            
-                <Button variant="primary" type="submit">
-                  Save Changes
-                </Button>
-              </div>
-            </Form>
-          </Modal.Body>
-        </Modal>
+        <EditTenantModal 
+          show={showEditTenantModal}
+          handleClose={handleCloseEditTenantModal}
+          handleInputChange={handleEditTenantInputChange}
+          handleSubmit ={handleEditTenantSubmit}
+          tenantData ={tenantToEdit}  
+        />
 
         <EditTenantRoleModal 
           show = {showEditTenantRoleModal}
