@@ -1,25 +1,25 @@
 {
   "development": {
-    "username": "m1",
-    "password": "m1",
+    "username": "root",
+    "password": "root",
     "database": "multitenantdb",
-    "host": "161.35.71.72",
+    "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql"
   },
   "test": {
-    "username": "m1",
-    "password": "m1",
+    "username": "root",
+    "password": "root",
     "database": "multitenantdb",
-    "host": "161.35.71.72",
+    "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql"
   },
-  "production": {
-    "username": "m1",
-    "password": "m1",
+  "production": { 
+    "username": "root",
+    "password": "root",
     "database": "multitenantdb",
-    "host": "161.35.71.72",
+    "host": "127.0.0.1",
     "port": 3306,
     "dialect": "mysql"
   }

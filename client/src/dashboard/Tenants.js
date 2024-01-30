@@ -8,9 +8,9 @@ import Header from "../layouts/Header";
 import Footer from "../layouts/Footer";
 import "../scss/customStyle.scss";
 
-import DynamicTable from "../components/DynamicTable";
-import BarChartCard from "../components/BarChartCard";
-import SingleStatisticCard from "../components/SingleStatisticCard";
+import DynamicTable from "../components/tables/DynamicTable";
+import BarChartCard from "../components/graph_cards/BarChartCard";
+import SingleStatisticCard from "../components/graph_cards/SingleStatisticCard";
 
 import {formatDate, formatDateWithTime} from "../utility/DateFormatter";
 

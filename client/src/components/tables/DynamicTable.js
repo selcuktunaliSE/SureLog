@@ -1,5 +1,7 @@
   import React, { useState, useMemo } from 'react';
+  import "../../scss/custom_components/_dynamicTable.scss";
   import Table from 'react-bootstrap/Table';
+  
 
   const DynamicTable = ({ dataDict, onRowClick }) => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
@@ -39,28 +41,40 @@
       }
     };
 
+    const RenderValue = ({ value }) => {
+      if (typeof value === 'boolean') {
+        return value ? <i className="ri-check-line"></i> : <i className="ri-close-line"></i>;
+      }
+      return value;
+    };
+
     return (
-      <Table responsive="md" className="dynamic-table" striped bordered hover>
-        <thead>
-          <tr className='text-center'>
-            {columns.map(({ label, accessor }) => (
-              <th key={accessor} onClick={() => requestSort(accessor)}>
-                {label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedData.map((item, index) => (
-            <tr className='text-center' key={index} onClick={() => handleRowClick(item)}>
-              {columns.map(({ accessor }) => (
-                <td key={accessor}>{item[accessor]}</td>
+      <div className="dynamic-table-container">
+        <Table responsive="md" className="dynamic-table" striped bordered hover>
+          <thead>
+            <tr className='text-center'>
+              {columns.map(({ label, accessor }) => (
+                <th key={accessor} onClick={() => requestSort(accessor)}>
+                  {label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {sortedData.map((item, index) => (
+              <tr className='text-center' key={index} onClick={() => handleRowClick(item)}>
+                {columns.map(({ accessor }) => (
+                  <td key={accessor}>
+                    <RenderValue value={item[accessor]} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
     );
+    
   };
 
   export default DynamicTable;

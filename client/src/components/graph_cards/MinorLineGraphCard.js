@@ -1,5 +1,5 @@
 import ReactApexChart from "react-apexcharts";
-import {Card, Col, Button} from "react-bootstrap";
+import {Card} from "react-bootstrap";
 
 const MinorLineGraphCard = ({dataSeries, options, displayTexts}) => {
 

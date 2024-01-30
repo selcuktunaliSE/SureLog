@@ -552,38 +552,43 @@ module.exports = {
         },
         // File: api.js (or wherever you define your routes)
 
-"/api/add-tenant": async (req, res) => {
-  const { sourceUserId, tenantData } = req.body;
-  console.log("Adding tenant with data:", tenantData);
-  console.log("Source user ID:", sourceUserId);
-  try {
-      const databaseResponse = await databaseService.addTenant(sourceUserId, tenantData);
-      
-      if (databaseResponse.responseType === databaseService.ResponseType.Success) {
-          res.status(200).json({ 
-              status: "success",
-              message: "Tenant added successfully",
-              tenantId: databaseResponse.data.tenantId 
-          });
-      } else if (databaseResponse.responseType === databaseService.ResponseType.AccessDenied) {
-          res.status(403).json({ 
-              status: "accessDenied",
-              message: "You do not have permission to add a tenant." 
-          });
-      } else {
-          res.status(500).json({ 
-              status: "error",
-              message: databaseResponse.data 
-          });
-      }
-  } catch (error) {
-      console.error("Error adding tenant: ", error);
-      res.status(500).json({ 
-          status: "error",
-          message: "Internal server error" 
-      });
-  }
-},
+        "/api/add-tenant": async (req, res) => {
+          const { sourceUserId, tenantData } = req.body;
+          if(! sourceUserId || ! tenantData){
+            res.status(505).send();
+            return;
+          }
+          console.log("Adding tenant with data:", tenantData);
+          console.log("Source user ID:", sourceUserId);
+          try {
+              const databaseResponse = await databaseService.addTenant(sourceUserId, tenantData);
+              
+              if (databaseResponse.responseType === databaseService.ResponseType.Success) {
+                  res.status(200).json({ 
+                      status: "success",
+                      message: "Tenant added successfully",
+                      tenantId: databaseResponse.data.tenantId 
+                  });
+              } else if (databaseResponse.responseType === databaseService.ResponseType.AccessDenied) {
+                  res.status(403).json({ 
+                      status: "accessDenied",
+                      message: "You do not have permission to add a tenant." 
+                  });
+              } else {
+                  res.status(500).json({ 
+                      status: "error",
+                      message: databaseResponse.data 
+                  });
+              }
+          } catch (error) {
+              console.error("Error adding tenant: ", error);
+              res.status(500).json({ 
+                  status: "error",
+                  message: "Internal server error" 
+              });
+          }
+        },
+
         "/api/update-user": async (req, res) => {
           const { sourceUserId, userId, updatedUserData } = req.body;
           
@@ -593,18 +598,34 @@ module.exports = {
           const response = await databaseService.updateUser(sourceUserId, userId, updatedUserData);
           
           if (response.responseType === databaseService.ResponseType.Success) {
-            console.log("Api side : ",response);
               res.status(200).json({ status: "success", message: "User updated successfully", data: response.data });
           } else {
               res.status(400).json({ status: "error", message: response.data });
           }
-      },
+        },
       
         "/api/update-tenant": async (req, res) => {
           const { sourceUserId, tenantId, updatedTenantData } = req.body;
           const response = await databaseService.updateTenant(sourceUserId, tenantId, updatedTenantData);
           res.status(response.responseType === databaseService.ResponseType.Success ? 200 : 400).json(response);
         },
+
+        "/api/update-tenant-role": async(req, res) => {
+          const { sourceUserId, tenantRoleId, tenantRoleData } = req.body;
+          if(! sourceUserId || !tenantRoleId || ! tenantRoleData ){
+            res.status(505).send();
+            return;
+          }
+      
+          const response = await databaseService.updateTenantRole(sourceUserId, tenantRoleId, tenantRoleData);
+          
+          if (response.responseType === databaseService.ResponseType.Success) {
+              res.status(200).json({ status: "success" });
+          } else {
+              res.status(400).json({ status: "error"});
+          }
+        },
+
         "/api/generate-qrcode": async (req, res) => {
           try {
               const secret = speakeasy.generateSecret({ name:"SureLog" });
@@ -625,6 +646,8 @@ module.exports = {
               res.status(500).send('Internal Server Error');
           }
       },
+
+      
       
     },
     

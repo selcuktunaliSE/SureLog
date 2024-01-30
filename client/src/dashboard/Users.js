@@ -10,7 +10,7 @@ import "../scss/customStyle.scss";
 import img6 from "../assets/img/img6.jpg";
 import img7 from "../assets/img/img7.jpg";
 
-import DynamicTable from "../components/DynamicTable";
+import DynamicTable from "../components/tables/DynamicTable";
 
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");

@@ -67,11 +67,7 @@ db.sequelize.sync().then((req) => {
         envConfig.environments.development.httpPort :
         envConfig.environments.production.httpPort;
 
-    https.createServer({
-        cert: cert,
-        key: privateKey,
-        chain: chain,
-    }, app).listen(httpPort, () => {
+    app.listen(httpPort, () => {
         console.log('Server running on http://localhost:', httpPort)
     });
 

@@ -1,5 +1,5 @@
 const fetchConfig = require("../config/fetchConfig.json");
-const fetchAddress = `https://${fetchConfig.host}:${fetchConfig.port}`;
+const fetchAddress = `http://${fetchConfig.host}:${fetchConfig.port}`;
 class FetchResponse {
   constructor(fetchStatus = null, data = null, message = null) {
     this.status = fetchStatus;
@@ -577,7 +577,6 @@ const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
   return response.json();
 };
 
-
 const updateUser = async (sourceUserId, userId, updatedUserData) => {
   const response = await fetch(`${fetchAddress}/api/update-user`, {
       method: 'POST',
@@ -597,6 +596,46 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
       data.message,
   );
 };
+
+const updateTenantRole = async(sourceUserId, tenantRoleId, tenantRoleData) => {
+  let fetchResponse = new FetchResponse();
+  const requestData = {
+    sourceUserId: sourceUserId,
+    tenantRoleId: tenantRoleId,
+    tenantRoleData: tenantRoleData
+  };
+
+  console.log(`Updating tenant role data for Source User ID:${sourceUserId}`);
+
+  await fetch(`${fetchAddress}/api/update-tenant-role`, {
+    method: "post",
+    body: JSON.stringify(requestData),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }).then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        fetchResponse = new FetchResponse(FetchStatus.Success);
+      }
+      else if (data.status === 404) {
+        fetchResponse = new FetchResponse(FetchStatus.RoleNotFound);
+      }
+      else if (data.status === 500) {
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+      else if (data.status === 505) {
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+    })
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
+
+  return fetchResponse;
+}
+
+
 const addTenant = async (sourceUserId, tenantData) => {
   const response = await fetch(`${fetchAddress}/api/add-tenant`, {
     method: 'POST',
@@ -688,6 +727,7 @@ export {
   fetchVerifyToken,
   updateTenant,
   updateUser,
+  updateTenantRole,
   fetchUserRole,
   addTenant,
   deleteTenant,

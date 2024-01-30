@@ -5,11 +5,11 @@ import {useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 
 
-import LineGraphCard from "../components/LineGraphCard";
-import MinorLineGraphCard from "../components/MinorLineGraphCard";
-import SingleStatisticCard from "../components/SingleStatisticCard";
-import PercentageBarCard  from '../components/PercentageBarCard';
-import GeographicMapTable from "../components/GeographicMapTable";
+import LineGraphCard from "../components/graph_cards/LineGraphCard";
+import MinorLineGraphCard from "../components/graph_cards/MinorLineGraphCard";
+import SingleStatisticCard from "../components/graph_cards/SingleStatisticCard";
+import PercentageBarCard  from '../components/graph_cards/PercentageBarCard';
+import GeographicMapTable from "../components/graph_cards/GeographicMapTable";
 
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");

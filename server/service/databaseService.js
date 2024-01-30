@@ -251,8 +251,6 @@ const fetchOrCreateDefaultTenantMasterRole = async (tenantId) => {
 };
 
 
-
-
 const isUserAuthenticatedFor = async ({sourceUserId: sourceUserId, accessType: accessType, target:target=null}) => {
     return true;
     console.log("SOURCE USER ID:", sourceUserId);
@@ -407,7 +405,7 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
 
 
 
-const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
+const updateTenant = async (sourceUserId, tenantId, tenantData) => {
     if(!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
         accessType: AccessType.EditTenant,
@@ -419,13 +417,37 @@ const updateTenant = async (sourceUserId, tenantId, updatedTenantData) => {
         if (!tenant) {
             return new DatabaseResponse(ResponseType.NotFound, "Tenant not found");
         }
-        await tenant.update(updatedTenantData);
+        await tenant.update(tenantData);
         return new DatabaseResponse(ResponseType.Success, tenant);
     } catch (error) {
         console.error("Error updating tenant in database: ", error);
         return new DatabaseResponse(ResponseType.Error, "Error updating tenant");
     }
 }
+
+const updateTenantRole = async(sourceUserId, tenantRoleId, tenantRoleData) => {
+    console.log(`[DATABASE SERVICE] Updating tenant role data for SOURCE USER ID:${sourceUserId} targeted at Tenant Role ID:${tenantRoleId}`);
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.EditTenantRole,
+        target: tenantRoleData.tenantId})) 
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    try {
+        console.log(`[DATABASE SERVICE] Tenant Role Data: `, tenantRoleData);
+        const tenantRole = await TenantRolePermissionModel.findByPk(tenantRoleId);
+        if (!tenantRole) {
+            return new DatabaseResponse(ResponseType.NotFound);
+        }
+        await tenantRole.update(tenantRoleData);
+        return new DatabaseResponse(ResponseType.Success);
+    } catch (error) {
+        console.error("Error updating tenant in database: ", error);
+        return new DatabaseResponse(ResponseType.Error);
+    }
+}
+
+
 const isUserMaster = async (userId) => {
     console.log(`[DATABASE SERVICE] Checking if user:${userId} is a master user...`);
     return await MasterModel.findOne({where: {userId : userId}}) !== null;
@@ -688,7 +710,7 @@ const fetchTenantRolesOfTenant = async(sourceUserId, tenantId) => {
         sourceUserId: sourceUserId,
         accessType: AccessType.ViewTenantUsers /* TODO !!! Change this AccessType to ViewTenantRoles and add new permission types accordingly */,
         target: tenantId})) 
-        return new DatabaseResponse(ResponseType.AccessDenied);
+            return new DatabaseResponse(ResponseType.AccessDenied);
     
     const tenantRolePermissions = await TenantRolePermissionModel.findAll({where: {tenantId: tenantId}});
     console.log(`[DATABASE SERVICE] Found tenant roles: ${tenantRolePermissions}`)
@@ -936,6 +958,7 @@ module.exports = {
     fetchTotalNumberOfMasters,
     updateUser,
     updateTenant,
+    updateTenantRole,
     fetchUserRoleName,
     addTenant,
     deleteTenant,
