@@ -29,6 +29,16 @@ module.exports = {
               });
           }
       },
+      "/api/fetch-master-roles": async (req, res) => {
+        try {
+            const masterRoles = await databaseService.fetchMasterRoles(); // Implement this method in your database service
+            res.status(200).json(masterRoles);
+        } catch (error) {
+            console.error('Error fetching master roles:', error);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    },
+    
         "/api/fetch-all-users-last-login": async (req, res) => {
           try {
             console.log("You have come to lastlogin")
@@ -634,7 +644,34 @@ module.exports = {
               });
           }
         },
-
+        "/api/update-master": async (req, res) => {
+          const masterData = req.body;
+          const filteredMasterData = {
+          masterId: masterData.masterId,
+          assignMaster: masterData.assignMaster,
+          revokeMaster: masterData.revokeMaster,
+          addTenant: masterData.addTenant,
+          addMasterRole: masterData.addMasterRole,
+          editMasterRole: masterData.editMasterRole,
+          deleteMasterRole: masterData.deleteMasterRole,
+          assignMasterRole: masterData.assignMasterRole,
+          revokeMasterRole: masterData.revokeMasterRole,
+          };
+          console.log("Masterdataapi:", filteredMasterData)
+          try {
+              // Here you will call your service to update the master details.
+              // This is just a placeholder, implement your own logic here.
+              const updateResult = await databaseService.updateMaster(filteredMasterData);
+              if (updateResult.success) {
+                  res.status(200).json({ status: "success", message: "Master updated successfully" });
+              } else {
+                  res.status(400).json({ status: "error", message: "Failed to update master" });
+              }
+          } catch (error) {
+              console.error('Error updating master:', error);
+              res.status(500).json({ status: "error", message: "Internal server error" });
+          }
+      },
         "/api/update-user": async (req, res) => {
           const { sourceUserId, userId, updatedUserData } = req.body;
           

@@ -133,8 +133,6 @@ export default function TenantProfile() {
     fetchTenantRoles();
   }, [tenantData]);
 
-
-
   const addUtilityModalsToTenantUsersDict = (tenantUsersDict) => {
     const modifiedTenantUsersDict = Object.values(tenantUsersDict).map((user, index) => ({
       "": (
@@ -599,7 +597,7 @@ export default function TenantProfile() {
                         onClick={handleShowAddUserModal}
                         style={buttonStyle}
                       >
-                        <i className="ri-user-add-fill" style={iconStyle}></i>
+                        <i className="ri-user-shared-line" style={iconStyle}></i>
                         <span>Add Role</span>
                       </Button>
                     </div>

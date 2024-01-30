@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const env = process.env.NODE_ENV || 'development';
+const bcrypt = require('bcrypt');
 const databaseConfig = require(__dirname + '/../config/databaseConfig.json')[env];
 
 let models;
@@ -480,7 +481,7 @@ const fetchAllUsersLastLogin = async () => {
     };
     try {
         const users = await UserModel.findAll({
-            attributes: ['email','lastLoginAt','lastActivityAt']
+            attributes: ['email','lastLoginAt','lastActivityAt','userId']
         });
         
         // If users are found
@@ -627,19 +628,23 @@ const removeUserFromTenant = async(sourceUserId, tenantId, targetUserId) => {
         return new DatabaseResponse(ResponseType.NotFound);
     }
 }
-
-const addUser = async(sourceUserId, userData) => {
-    if(!await isUserAuthenticatedFor({
+const addUser = async (sourceUserId, userData) => {
+    if (!await isUserAuthenticatedFor({
         sourceUserId: sourceUserId,
-        accessType: AccessType.AddUser}))
-            return new DatabaseResponse(ResponseType.AccessDenied);
-    
-    const user = await UserModel.findOne({where: {email: userData.email}});
-    if(user) return new DatabaseResponse(ResponseType.AlreadyExists);
+        accessType: AccessType.AddUser
+    })) return new DatabaseResponse(ResponseType.AccessDenied);
 
-    const newUser = await UserModel.create(userData);
-    
-    if(newUser) return new DatabaseResponse(ResponseType.Success, {newUser: newUser});    
+    const user = await UserModel.findOne({ where: { email: userData.email } });
+    if (user) return new DatabaseResponse(ResponseType.AlreadyExists);
+
+    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+    userData.password = hashedPassword;
+    const newUser = await UserModel.create({
+        ...userData,
+    });
+    newUser.password = hashedPassword;
+    console.log("New User:", newUser.password);
+    if (newUser) return new DatabaseResponse(ResponseType.Success, { newUser: newUser });
 }
 const fetchAllMasters = async () => {
     try {
@@ -648,17 +653,17 @@ const fetchAllMasters = async () => {
                 {
                     model: UserModel,
                     as: 'user', // Association alias defined in the model
-                    attributes: ['email'], // Select only the email field from UserModel
+                    attributes: ['email','userId'], // Select only the email field from UserModel
                 },
                 {
                     model: MasterPermissionModel,
                     as: 'masterPermissions', // Association alias defined in the model
                     // Select specific fields you want from MasterPermissionModel
-                    attributes: ['assignMaster', 'revokeMaster', 'addTenant', 'viewTenants', 'addMasterRole', 'editMasterRole', 'deleteMasterRole', 'assignMasterRole', 'revokeMasterRole', 'viewAllUsers'],
+                    attributes: ['assignMaster', 'revokeMaster', 'addTenant', 'viewTenants', 'addMasterRole', 'editMasterRole', 'deleteMasterRole', 'assignMasterRole', 'revokeMasterRole', 'viewAllUsers','masterId'],
                 },
                 
             ],
-            attributes: ['isSuperMaster'], // Select isSuperMaster from MasterModel
+            attributes: ['isSuperMaster','masterId'], // Select isSuperMaster from MasterModel
         });
 
         if (masters && masters.length > 0) {
@@ -667,6 +672,8 @@ const fetchAllMasters = async () => {
                 const permissions = master.masterPermissions; // Master permissions from the association
                 return {
                     email: user.email,
+                    userId: user.userId,
+                    masterId: master.masterId,
                     isSuperMaster: master.isSuperMaster === 1,
                     assignMaster: permissions.assignMaster,
                     revokeMaster: permissions.revokeMaster,
@@ -763,6 +770,26 @@ const deleteUser = async(sourceUserId, targetUserId) => {
     });
 
     return new DatabaseResponse(ResponseType.Success);
+}
+const updateMaster = async (masterData) => {
+    try {
+        console.log("masterdata is ",masterData);
+        const master = await MasterModel.findByPk(masterData.masterId);
+        console.log("masterr is ",master);
+        if (!master) {
+            return new DatabaseResponse(ResponseType.NotFound, "Master not found");
+        }
+        console.log("Master data is ",masterData);
+        const masterPermissions = await MasterPermissionModel.findOne({where: {masterId: masterData.masterId}});
+        console.log("Master permissions is ",masterPermissions);
+        
+        await masterPermissions.update(masterData);
+      
+        return new DatabaseResponse(ResponseType.Success);
+    } catch (error) {
+        console.error("Error updating master in database: ", error);
+        return new DatabaseResponse(ResponseType.Error, "Error updating master");
+    }
 }
 
 const fetchUsersOfTenant = async(sourceUserId, tenantId) => {
@@ -872,6 +899,22 @@ const getUserRole = async (userId) => {
         return new DatabaseResponse(ResponseType.Error, 'Error fetching user role');
     }
 };
+
+const fetchMasterRoles = async () => {
+    try {
+        const masterRoles = await MasterPermissionModel.findAll();
+        const filteredMasterRoles = masterRoles.map(role => {
+            const {createdAt, updatedAt, ...filteredData } = role.dataValues;
+            return filteredData;
+        });
+        console.log("Filtered Master roles are ", filteredMasterRoles); 
+        return new DatabaseResponse(ResponseType.Success, filteredMasterRoles);
+    } catch (error) {
+        console.error('Error fetching master roles:', error);
+        return new DatabaseResponse(ResponseType.Error, 'Error fetching master roles.');
+    }
+};
+
 
 const fetchUserRoleName = async (tenantId, userId) => {
     try {
@@ -1046,5 +1089,7 @@ module.exports = {
     updateUserCount,
     getUserRole,
     fetchAllUsersLastLogin,
-    fetchAllMasters
+    fetchAllMasters,
+    fetchMasterRoles,
+    updateMaster
 }

@@ -106,6 +106,32 @@ const fetchAllMasters = async () => {
 
   return fetchResponse;
 };
+const updateMaster = async (masterData) => {
+  let fetchResponse = new FetchResponse();
+  try {
+      const response = await fetch(`${fetchAddress}/api/update-master`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(masterData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+          fetchResponse = new FetchResponse(FetchStatus.Success, data);
+      } else {
+          const errorMessage = data.message || "Failed to update master";
+          fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+      }
+  } catch (error) {
+      console.error('Error updating master:', error);
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
+
 const fetchAllUsersLastLogin = async () => {
   let fetchResponse = new FetchResponse();
   try {
@@ -395,6 +421,30 @@ const fetchTenantUsers = async (userId, tenantId) => {
 
   return fetchResponse;
 }
+const fetchMasterRoles = async () => {
+  let fetchResponse = new FetchResponse();
+  try {
+      const response = await fetch(`${fetchAddress}/api/fetch-master-roles`, {
+          method: 'POST', // Assuming it's a GET request
+          headers: {
+              'Content-Type': 'application/json'
+          },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+          fetchResponse = new FetchResponse(FetchStatus.Success, data);
+      } else {
+          const errorMessage = data.message || "Failed to fetch master roles";
+          fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+      }
+  } catch (error) {
+      console.error('Error fetching master roles:', error);
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
 
 const fetchUserRole = async (tenantId, userId) => {
   let fetchResponse = new FetchResponse();
@@ -783,5 +833,7 @@ export {
   editTenantName,
   fetchUserRoleName,
   fetchAllUsersLastLogin,
-  fetchAllMasters
+  fetchAllMasters,
+  fetchMasterRoles,
+  updateMaster
 }

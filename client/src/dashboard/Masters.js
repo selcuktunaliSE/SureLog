@@ -1,14 +1,17 @@
 import React from "react";
 import { Search } from "react-bootstrap-icons";
 import {useEffect, useState} from "react";
+import { Card, Nav, Modal,Form } from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
 import Footer from "../layouts/Footer";
 import HeaderMobile from "../layouts/HeaderMobile";
 import Header from "../layouts/Header";
 import DynamicTable from "../components/tables/DynamicTable";
 import { Link } from "react-router-dom";
+
 import { Col, Table,Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button} from "react-bootstrap";
 import "../scss/customStyle.scss";
+import EditMasterRoleModal from "../components/modals/multitenancy/EditMasterRoleModal";
 const {FetchStatus} = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
 
@@ -31,13 +34,48 @@ export default function Masters() {
   const [userRole, setUserRole] = useState(""); 
   const [usersLastLogin, setUsersLastLogin] = useState({});
   const [masters, setMasters] = useState({});
+  const [showEditMasterModal, setShowEditMasterModal] = useState(false);
+  const [masterToEdit, setMasterToEdit] = useState(null);
+  const [masterRoles, setMasterRoles] = useState([]); 
+  const [userToEdit, setUserToEdit] = useState(null);
 
   const searchKeys= ["firstName", "lastName", "email"];
 
   const navigate = useNavigate();
 
   const userId = localStorage.getItem("userId");
+  const handleEditMasterInputChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setMasterToEdit(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+    }));
+};
+const handleEditMasterSubmit = async (event) => {
+    event.preventDefault();
+    const updateResponse = await fetchService.updateMaster(masterToEdit);
+    if (updateResponse.status === FetchStatus.Success) {
+        setMasters(prevMasters => prevMasters.map(master => 
+            master.userId === masterToEdit.userId ? masterToEdit : master
+        ));
+        setShowEditMasterModal(false); // Close the modal after successful update
+       
+    } else {
+        console.error("Failed to update master: ", updateResponse.message);
+    }
+    window.location.reload();
+};
 
+
+  const fetchMasterRoles = async () => {
+    const fetchResponse = await fetchService.fetchMasterRoles();
+    if (fetchResponse.status === FetchStatus.Success) {
+        setMasterRoles(fetchResponse.data);
+        console.log("master roles: ", fetchResponse.data)
+    } else {
+        console.error(fetchResponse.message);
+    }
+}
   const fetchUserRole = async () => {
     const response = await fetchService.fetchUserRoleName(userId); // Adjust this to match the actual function you have for fetching user role
     if (response && response.status === FetchStatus.Success) {
@@ -55,32 +93,78 @@ const fetchUsersLastLogin = async () => {
         console.error(fetchResponse.message);
     }
 };
-const fetchAllMasters = async () => {
-    const fetchResponse = await fetchService.fetchAllMasters();
-    if (fetchResponse.status === FetchStatus.Success) {
-        console.log(fetchResponse.data.masters)
-        setMasters(fetchResponse.data.masters.map(master => ({
-            email: master.email,
-            SuperMaster: master.isSuperMaster,
-           assignMaster: master.assignMaster,
-           revokeMaster: master.revokeMaster,
-           addTenant: master.addTenant,
-           addMasterRole: master.addMasterRole,
-           editMasterRole: master.editMasterRole,
-           deleteMasterRole: master.deleteMasterRole,
-           assignMasterRole: master.assignMasterRole,
-           revokeMasterRole: master.revokeMasterRole
-        })));
-       
+const handleEditMaster = (e, userId) => {
+    e.stopPropagation();
+
+    let foundMaster = null;
+
+    // Check if 'masters' is an array
+    if (Array.isArray(masters)) {
+        foundMaster = masters.find(m => m.userId === userId);
+    } 
+    // Check if 'masters' is an object
+    else if (masters && typeof masters === 'object') {
+        Object.values(masters).forEach(master => {
+            if (master.userId === userId) {
+                foundMaster = master;
+            }
+        });
+    }
+
+    if (foundMaster) {
+        setMasterToEdit(foundMaster);
+        setShowEditMasterModal(true);
     } else {
-        console.error(fetchResponse.message);
+        console.error("Master not found: ", userId);
+        // Handle the error case (e.g., show an error message)
     }
 };
+
+const handleDeleteMaster = (userId) => {
+};
+
+  const fetchAllMasters = async () => {
+    const fetchResponse = await fetchService.fetchAllMasters();
+    if (fetchResponse.status === FetchStatus.Success) {
+      setMasters(fetchResponse.data.masters.map(master => ({
+        Actions: (
+            <>
+              <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditMaster(e, master.userId)} className="me-2">
+                <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
+              </Button>
+              <Button variant="outline-secondary" size="sm" onClick={(e) => handleDeleteMaster(e, master.userId)} className="me-2">
+                <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
+              </Button>
+            </>
+          ),
+          // Not displaying userId in the table but holding it here
+        // Include only the properties you want to display
+        email: master.email,
+        SuperMaster: master.isSuperMaster,
+        assignMaster: master.assignMaster,
+        revokeMaster: master.revokeMaster,
+        addTenant: master.addTenant,
+        addMasterRole: master.addMasterRole,
+        editMasterRole: master.editMasterRole,
+        deleteMasterRole: master.deleteMasterRole,
+        assignMasterRole: master.assignMasterRole,
+        revokeMasterRole: master.revokeMasterRole,
+        userId: master.userId,
+        masterId:master.masterId
+        // ... other properties you want to display
+        // Actions column for edit and delete buttons
+       
+      })));
+    } else {
+      console.error(fetchResponse.message);
+    }
+  };
 
 
   useEffect(() => {
     fetchAllMasters();
     fetchUsersLastLogin();
+    fetchMasterRoles();
     let isMounted = true; // to handle component unmount
     fetchUserRole();
     const initializeData = async () => {
@@ -151,7 +235,7 @@ const fetchAllMasters = async () => {
       handleErrorResponse(response);
     }
   }
-
+  
 
   const fetchTenants = async () => {
 
@@ -269,7 +353,8 @@ const fetchAllMasters = async () => {
 };
 
 
-  const goToUserProfile = (targetUserId) => {
+const goToUserProfile = (targetUserId) => {
+    if(!targetUserId) return;
     console.log("going to profile with user id: ", targetUserId);
     navigate("/profile", { state: { targetUserId : targetUserId}});
   };
@@ -294,16 +379,47 @@ const fetchAllMasters = async () => {
           </div>
         </div>
         <Row>
-          <Col md={12}> 
-            <DynamicTable dataDict={masters} onRowClick={handleRowClick}/>  
-          </Col> 
+        <Col md={12}>
+        <Card className="card-one">
+        <Card.Header>
+        <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
+        <span>Masters</span>
+        <div className="d-flex justify-content-center align-items-center w-10">
+        </div>
+        </Card.Title>
+        </Card.Header>
+        <Card.Body>
+        <DynamicTable dataDict={masters} onRowClick={handleRowClick} />
+        </Card.Body>
+        </Card>
+        </Col>
         </Row>
+        <br></br>
         <Row>
-          <Col md={12}> 
-            <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick}/>  
-          </Col> 
+        <Col md={12}>
+        <Card className="card-one">
+        <Card.Header>
+        <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
+        <span>Activities</span>
+        <div className="d-flex justify-content-center align-items-center w-10">
+        </div>
+        </Card.Title>
+        </Card.Header>
+        <Card.Body>
+        <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick} />
+        </Card.Body>
+        </Card>
+        </Col>
         </Row>
       </div>
+      <EditMasterRoleModal
+    show={showEditMasterModal}
+    handleClose={() => setShowEditMasterModal(false)}
+    roleData={masterToEdit || {}}
+    handleInputChange={handleEditMasterInputChange}
+    handleSubmit={handleEditMasterSubmit}
+/>
+ 
       
       <Footer />
     </React.Fragment>
