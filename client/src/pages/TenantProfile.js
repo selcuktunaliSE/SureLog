@@ -433,9 +433,54 @@ export default function TenantProfile() {
           <Col md={12} lg={12}>
             <Card className="card-one">
               <Card.Header>
-                <Card.Title as="h6" className="centered-card-value">
-                  {tenantData.name}
+                <Card.Title as="h6" className="d-flex align-items-center justify-content-between w-100">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>
+                        {tenantData.name}
+                    </span>
+                      
+                    <div className="d-flex justify-content-center align-items-center ms-3">
+                      <Button
+                        variant="outline-info"
+                        onClick={handleShowEditTenantModal}
+                        style={buttonStyle}
+                      >
+                        <i className="ri-pencil-fill" style={iconStyle}></i>
+                        <span>Edit</span>
+                      </Button>
+                    </div>
+
+                  </div>
+
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex justify-content-center align-items-center me-3">
+                      <Button
+                        variant="primary"
+                        onClick={handleShowAddUserModal}
+                        style={buttonStyle}
+                      >
+                        <i className="ri-user-add-fill" style={iconStyle}></i>
+                        <span>Add User</span>
+                      </Button>
+                    </div>
+
+                    <div className="d-flex justify-content-center align-items-center ">
+                      <Button
+                        variant="primary"
+                        onClick={handleShowAddUserModal}
+                        style={buttonStyle}
+                      >
+                        <i className="ri-user-add-fill" style={iconStyle}></i>
+                        <span>Add Role</span>
+                      </Button>
+                    </div>
+
+                  </div>
+                    
+                    
+
                 </Card.Title>
+
                 <Nav className="nav-icon nav-icon-sm ms-auto">
                   {/* Icons or links can be added here if needed */}
                 </Nav>
@@ -510,73 +555,17 @@ export default function TenantProfile() {
         {/* DynamicTable for Tenant Users */}
 
         <Row>
-          <Col md={10}>
+          <Col md={12}>
             <DynamicTable dataDict={tenantUsersDict} onRowClick={handleUserRowClick} />
           </Col>
 
-          <Col md={2} className="d-flex flex-column">
-
-            <Row className="mb-3" style={{ height: "10vh" }}>
-              <Card className="">
-                <Card.Body className="d-flex justify-content-center align-items-center ">
-                  <div className="d-flex justify-content-center align-items-center ">
-                    <Button
-                      variant="primary"
-                      onClick={handleShowAddUserModal}
-                      style={buttonStyle}
-                    >
-                      <i className="ri-user-add-fill" style={iconStyle}></i>
-                      <span>Add User</span>
-                    </Button>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Row>
-
-            <Row className="mb-3" style={{ height: "10vh" }}>
-              <Card className="" >
-                <Card.Body className="d-flex justify-content-center align-items-center ">
-                  <div className="d-flex justify-content-center align-items-center">
-                    <Button
-                      variant="outline-info"
-                      onClick={handleShowEditTenantModal}
-                      style={buttonStyle}
-                    >
-                      <i className="ri-pencil-fill" style={iconStyle}></i>
-                      <span>Edit Tenant</span>
-                    </Button>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Row>
-          </Col>
         </Row>
 
         {/* DynamicTable for Tenant Roles */}
 
         <Row mt="3">
-        <Col md={10} >
-            <DynamicTable dataDict={tenantRolesDict} onRowClick={handleRoleRowClick} />
-          </Col>
-
-          <Col md={2} className="d-flex flex-column">
-
-            <Row className="mb-3" style={{ height: "10vh" }}>
-              <Card className="">
-                <Card.Body className="d-flex justify-content-center align-items-center ">
-                  <div className="d-flex justify-content-center align-items-center ">
-                    <Button
-                      variant="primary"
-                      onClick={handleShowAddUserModal}
-                      style={buttonStyle}
-                    >
-                      <i className="ri-user-add-fill" style={iconStyle}></i>
-                      <span>Add Role</span>
-                    </Button>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Row>
+          <Col md={12} >
+              <DynamicTable dataDict={tenantRolesDict} onRowClick={handleRoleRowClick} />
           </Col>
         </Row>
 
