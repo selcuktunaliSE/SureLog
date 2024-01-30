@@ -11,6 +11,11 @@ const dashboardMenu = [
     "icon": "ri-pie-chart-2-line"
   },
   {
+    "label": "Masters",
+    "link": "/dashboard/masters",
+    "icon": "ri-user-star-line"
+  },
+  {
     "label": "Users",
     "link": "/dashboard/users",
     "icon": "ri-group-line"
@@ -21,6 +26,7 @@ const dashboardMenu = [
     "link": "/dashboard/events",
     "icon": "ri-calendar-todo-line"
   },
+  
   {
     "label": "Correlation",
     "link": "/dashboard/sales",

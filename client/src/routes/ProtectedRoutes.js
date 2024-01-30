@@ -86,6 +86,7 @@ import IconFeather from "../docs/IconFeather";
 
 
 import Users from "../dashboard/Users";
+import Masters from "../dashboard/Masters";
 import Tenants from "../dashboard/Tenants";
 import Profile from "../pages/Profile";
 import TenantProfile from "../pages/TenantProfile";
@@ -167,6 +168,7 @@ const protectedRoutes = [
 
 
   // paths below are developed paths:
+  { path: "dashboard/masters", element: <Masters />},
   { path: "dashboard/users", element: <Users />},
   { path: "dashboard/tenants", element: <Tenants />},
   { path: "profile", element: <Profile /> },

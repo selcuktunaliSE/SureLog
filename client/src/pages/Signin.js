@@ -1,6 +1,6 @@
 import React from "react";
 import {useEffect, useState} from "react";
-import { Button, Card, Col, Form, Row } from "react-bootstrap";
+import { Button, Card,Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 const fetchConfig = require("../config/fetchConfig.json");
@@ -158,7 +158,6 @@ const handleSubmit = (fetchAddress, event, navigate, setError, setTextFieldColor
     event.preventDefault();
     const formData = new FormData(event.target);
     const formDataJson = {};
-
     formData.forEach((value, key) => {
         formDataJson[key] = value;
     });
