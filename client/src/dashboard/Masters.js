@@ -132,7 +132,6 @@ const handleDeleteMaster = (userId) => {
 
 const fetchActivities = async () => {
   const fetchResponse = await fetchService.getActivities();
-  console.log("noooox") 
   if (fetchResponse.status === FetchStatus.Success) {
       setActivities(fetchResponse.data.logs);
       console.log("datasx : ",fetchResponse.data.logs) // Assuming the logs are returned in fetchResponse.data.logs
@@ -432,6 +431,10 @@ const goToUserProfile = (targetUserId) => {
         <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
         <span>Activities</span>
         <div className="d-flex justify-content-center align-items-center w-10">
+        <div className="form-search me-auto">
+        <input type="text" className="form-control" placeholder="Search" />
+        <i className="ri-search-line"></i>
+      </div>
         </div>
         </Card.Title>
         </Card.Header>
