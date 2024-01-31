@@ -126,7 +126,7 @@ const addTenant = async (sourceUserId, tenantData) => {
         
            await LogsModel.create({
             userId: sourceUserId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription: "Tenant Created with  ID: "+newTenantId,
             ipAddress: '127.0.0.1'
         });
@@ -213,7 +213,7 @@ const deleteTenant = async (sourceUserId, tenantId) => {
           });
          await LogsModel.create({
             userId: sourceUserId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription: "Tenant Deleted with  ID: "+tenantId,
             ipAddress: '127.0.0.1'
         });
@@ -402,7 +402,7 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
             await tenantUser.update({ tenantRoleId: tenantRole.tenantRoleId });
             await LogsModel.create({
                 userId: sourceUserId,
-                activityDate: new Date(),
+                activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
                 activityDescription:  "User Updated with Data: "+updatedUserData,
                 ipAddress: '127.0.0.1'
             });
@@ -439,7 +439,7 @@ const updateTenant = async (sourceUserId, tenantId, tenantData) => {
         await tenant.update(tenantData);
         await LogsModel.create({
             userId: sourceUserId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription:  "Tenant Updated with ID: "+tenantId,
             ipAddress: '127.0.0.1'
         });
@@ -467,7 +467,7 @@ const updateTenantRole = async(sourceUserId, tenantRoleId, tenantRoleData) => {
         await tenantRole.update(tenantRoleData);
         await LogsModel.create({
             userId: sourceUserId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription:  "Tenant Role Updated with ID: "+tenantRoleId + "and Data: "+tenantRoleData, 
             ipAddress: '127.0.0.1'
         });
@@ -652,9 +652,21 @@ const removeUserFromTenant = async(sourceUserId, tenantId, targetUserId) => {
 
     if(tenantUser){
         await tenantUser.destroy();
+        await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription: `User ID: ${targetUserId} removed from Tenant ID: ${tenantId}`,
+            ipAddress: '127.0.0.1' // Replace with actual IP if available
+        });
         return new DatabaseResponse(ResponseType.Success);
     }
     else{
+        await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription: `Error removing User ID: ${targetUserId} from Tenant ID: ${tenantId}. Error: ${error.message}`,
+            ipAddress: '127.0.0.1' // Replace with actual IP if available
+        });
         return new DatabaseResponse(ResponseType.NotFound);
     }
 }
@@ -673,7 +685,7 @@ const addUser = async (sourceUserId, userData) => {
     });
     await LogsModel.create({
         userId: sourceUserId,
-        activityDate: new Date(),
+        activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
         activityDescription:  "User Added with Data: "+userData,
         ipAddress: '127.0.0.1'
     });
@@ -778,7 +790,7 @@ const addUserToTenant = async(sourceUserId, targetUserId, tenantId) => {
     if(newTenantUser){
       await LogsModel.create({
         userId: sourceUserId,
-        activityDate: new Date(),
+        activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
         activityDescription:  "User Registered with ID: "+ targetUserId + " to Tenant with ID: "+ tenantId,
         ipAddress: '127.0.0.1'
     });
@@ -806,7 +818,8 @@ const getActivities = async () => {
 
 
 const logout = async(userId) => {
-    const now = new Date().toISOString();
+    const date = new Date();
+    const now = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
     const userModel = await UserModel.findOne({where: {userId: userId}});
     console.log("We have come here");
     if(userModel){
@@ -814,7 +827,7 @@ const logout = async(userId) => {
         await userModel.save();
         await LogsModel.create({
             userId: userId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription: "User Logged Out with ID: "+userId,
             ipAddress: '127.0.0.1'
         });
@@ -823,22 +836,24 @@ const logout = async(userId) => {
     await UserModel.update({lastActivityAt: now}, {where: {userId: userId}});
     await LogsModel.create({
         userId: userId,
-        activityDate: new Date(),
+        activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
         activityDescription: "User Logged Out with ID: "+userId,
         ipAddress: '127.0.0.1'
     });
     return new DatabaseResponse(ResponseType.Success);
 }
+const date = new Date();
 
 const authenticateUser = async(email, password) => {
-    const now = new Date().toISOString();
+    const date = new Date();
+    const now = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
     const userModel = await UserModel.findOne({ where: { email, password } });
     if(userModel){
         userModel.lastLoginAt = now;
         await userModel.save();
         await LogsModel.create({
             userId: userModel.userId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription: "User Logged In with ID: "+userModel.userId,
             ipAddress: '127.0.0.1'
         });
@@ -863,7 +878,7 @@ const deleteUser = async(sourceUserId, targetUserId) => {
     });
     await LogsModel.create({
         userId: sourceUserId,
-        activityDate: new Date(),
+        activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
         activityDescription:  "User Deleted with ID: "+targetUserId,
         ipAddress: '127.0.0.1'
     });
@@ -883,7 +898,7 @@ const updateMaster = async (masterData) => {
         console.log("Master data is ",masterData);
         await LogsModel.create({
             userId: masterData.userId,
-            activityDate: new Date(),
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
             activityDescription: "Updated Master with master ID : "+masterData.masterId,
             ipAddress: '127.0.0.1'
         });
@@ -910,7 +925,15 @@ const fetchUsersOfTenant = async(sourceUserId, tenantId) => {
     });
 
     if(! tenantUsers) return new DatabaseResponse(ResponseType.NotFound)
-    else return new DatabaseResponse(ResponseType.Success, {users: tenantUsers.UserModels})
+    else{
+        await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
+            activityDescription: "Fetched Users of Tenant with ID: "+tenantId,
+            ipAddress: '127.0.0.1'
+        });
+        return new DatabaseResponse(ResponseType.Success, {users: tenantUsers.UserModels})
+        } 
     
 }
 
@@ -976,7 +999,7 @@ const getUserRole = async (userId) => {
             
         }
         
-        // Step 2: If not a master, check tenant role permissions
+        
         const tenantUserRole = await TenantUserModel.findOne({
             where: { userId: userId },
             include: [{

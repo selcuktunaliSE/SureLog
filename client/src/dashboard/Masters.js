@@ -132,10 +132,38 @@ const handleDeleteMaster = (userId) => {
 
 const fetchActivities = async () => {
   const fetchResponse = await fetchService.getActivities();
+
   if (fetchResponse.status === FetchStatus.Success) {
-      setActivities(fetchResponse.data.logs);
-      console.log("datasx : ",fetchResponse.data.logs) // Assuming the logs are returned in fetchResponse.data.logs
-  } else {
+    const formattedLogs = fetchResponse.data.logs.map(log => {
+      // Create a date object from the log's timestamp
+      const date = new Date(log.activityDate);
+  
+      // Define options for formatting the date and time separately
+      const dateOptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
+      const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'UTC' };
+  
+      // Format the date and time separately
+      const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date);
+      const formattedTime = new Intl.DateTimeFormat('en-US', timeOptions).format(date);
+  
+      // Combine the formatted date and time with a space instead of a comma
+      const combinedDateTime = `${formattedDate} ${formattedTime}`;
+  
+      return {
+          ...log,
+          activityDate: combinedDateTime
+      };
+  });
+  
+
+
+    setActivities(formattedLogs);
+
+    console.log("First log date (unformatted): ", fetchResponse.data.logs[0].activityDate);
+    console.log("First log date (formatted): ", formattedLogs[0].activityDate);
+    console.log("All logs (formatted): ", formattedLogs);
+}
+ else {
       console.error("Failed to fetch activities: ", fetchResponse.message);
       // Handle fetch error (e.g., set error message, show error alert, etc.)
   }

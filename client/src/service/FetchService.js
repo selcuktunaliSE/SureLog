@@ -288,7 +288,7 @@ const logout = async (userId) => {
       },
       body: JSON.stringify({ userId }), // assuming you want to send the userId in the body
     });
-
+    console.log("Response in fetch service: ", response);
     const data = await response.json();
     if (response.ok) {
       fetchResponse = new FetchResponse(FetchStatus.Success, data);

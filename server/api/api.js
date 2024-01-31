@@ -674,8 +674,9 @@ module.exports = {
           }
         },
       
-        "api/logout": async (req, res) => {
-          const userId = req.body;
+        "/api/logout": async (req, res) => {
+          const {userId} = req.body;
+          console.log("Logout userid is ",userId);
           const logout = await databaseService.logout(userId);
           if(logout){
             res.status(200).json({status: "success"});
