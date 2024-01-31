@@ -1,7 +1,7 @@
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const databaseService = require("../service/databaseService");
-
+const { ResponseType } = require("../service/databaseService");
 module.exports = {
     "post": {
         "/api/check-logged-in-status": async(req, res) => {
@@ -610,7 +610,7 @@ module.exports = {
         "/api/get-activities": async (req, res) => {
           try {
               const databaseResponse = await databaseService.getActivities();
-
+              console.log("You are here");
               if (databaseResponse.responseType === ResponseType.Success) {
                   res.status(200).json({
                       status: "success",
@@ -634,7 +634,8 @@ module.exports = {
                   message: "Internal server error"
               });
           }
-      },
+        },
+        
           
         "/api/add-tenant": async (req, res) => {
           const { sourceUserId, tenantData } = req.body;

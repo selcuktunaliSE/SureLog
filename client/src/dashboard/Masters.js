@@ -134,8 +134,8 @@ const fetchActivities = async () => {
   const fetchResponse = await fetchService.getActivities();
   console.log("noooox") 
   if (fetchResponse.status === FetchStatus.Success) {
-      console.log("yeeeesx") 
-      setActivities(fetchResponse.data.logs); // Assuming the logs are returned in fetchResponse.data.logs
+      setActivities(fetchResponse.data.logs);
+      console.log("datasx : ",fetchResponse.data.logs) // Assuming the logs are returned in fetchResponse.data.logs
   } else {
       console.error("Failed to fetch activities: ", fetchResponse.message);
       // Handle fetch error (e.g., set error message, show error alert, etc.)
@@ -436,27 +436,12 @@ const goToUserProfile = (targetUserId) => {
         </Card.Title>
         </Card.Header>
         <Card.Body>
-        <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick} />
+        <DynamicTable dataDict={activities} onRowClick={handleRowClick} />
         </Card.Body>
         </Card>
         </Col>
         </Row>
-        <Row>
-        <Col md={12}>
-        <Card className="card-one">
-        <Card.Header>
-        <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
-        <span>LastLogins</span>
-        <div className="d-flex justify-content-center align-items-center w-10">
-        </div>
-        </Card.Title>
-        </Card.Header>
-        <Card.Body>
-        <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick} />
-        </Card.Body>
-        </Card>
-        </Col>
-        </Row>
+       
       </div>
       <EditMasterRoleModal
     show={showEditMasterModal}
