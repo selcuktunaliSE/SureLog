@@ -19,6 +19,7 @@ export default function Masters() {
  
   const [tenants, setTenants] = useState([]);
   const [isUserMaster, setIsUserMaster] = useState(false);
+  const [isMastersLoaded, setIsMastersLoaded] = useState(false);
   const [selectedTenantId, setSelectedTenantId] = useState(null);
   const [userDict, setUserDict] = useState({});
   const [isError, setIsError] = useState(false);
@@ -102,9 +103,9 @@ const fetchUsersLastLogin = async () => {
 };
 const handleEditMaster = (e, userId) => {
     e.stopPropagation();
-
+    console.log("Masters before finding:", masters);
     let foundMaster = null;
-
+   
     // Check if 'masters' is an array
     if (Array.isArray(masters)) {
         foundMaster = masters.find(m => m.userId === userId);
@@ -117,13 +118,13 @@ const handleEditMaster = (e, userId) => {
             }
         });
     }
-
     if (foundMaster) {
         setMasterToEdit(foundMaster);
         setShowEditMasterModal(true);
+        console.log("Found master:", foundMaster);
     } else {
-        console.error("Master not found: ", userId);
-        // Handle the error case (e.g., show an error message)
+      console.log("masters are : ",masters)
+        console.error("Master not found: ", userId); // Handle error (e.g., show alert)
     }
 };
 
@@ -170,8 +171,12 @@ const fetchActivities = async () => {
 };
 
   const fetchAllMasters = async () => {
+    console.log("We are in fetch all masters");
     const fetchResponse = await fetchService.fetchAllMasters();
+    console.log("fetch response is : ",fetchResponse.data.master)
+    
     if (fetchResponse.status === FetchStatus.Success) {
+      setIsMastersLoaded(true);
       setMasters(fetchResponse.data.masters.map(master => ({
         Actions: (
             <>
@@ -217,15 +222,13 @@ const fetchActivities = async () => {
       }
     fetchUserRole().then(userRole => {
       setUserRole(userRole); 
-      
   });
-     
+
       await checkMasterUser();
       if (isMounted) {
         fetchTenants();
       };
      
-      
       
     };
   
@@ -236,7 +239,7 @@ const fetchActivities = async () => {
     return () => {
       isMounted = false;
     };
-  }, [userId, navigate, isUserMaster]);
+  }, [userId, navigate, isUserMaster,isMastersLoaded]);
   
  
   const fetchUsersFromTenant = async (tenantId) => {
