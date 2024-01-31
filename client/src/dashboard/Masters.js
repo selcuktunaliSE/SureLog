@@ -430,12 +430,13 @@ const goToUserProfile = (targetUserId) => {
         <Card.Header>
         <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
         <span>Activities</span>
-        <div className="d-flex justify-content-center align-items-center w-10">
+        <div className="d-flex justify-content-center align-items-center w-12">
         <div className="form-search me-auto">
-        <input type="text" className="form-control" placeholder="Search" />
+        <input type="text" className="form-control" placeholder="Search Activity" />
         <i className="ri-search-line"></i>
       </div>
         </div>
+        
         </Card.Title>
         </Card.Header>
         <Card.Body>
