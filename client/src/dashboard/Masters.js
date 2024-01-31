@@ -183,8 +183,6 @@ const fetchActivities = async () => {
               </Button>
             </>
           ),
-          // Not displaying userId in the table but holding it here
-        // Include only the properties you want to display
         email: master.email,
         SuperMaster: master.isSuperMaster,
         assignMaster: master.assignMaster,
@@ -197,8 +195,6 @@ const fetchActivities = async () => {
         revokeMasterRole: master.revokeMasterRole,
         userId: master.userId,
         masterId:master.masterId
-        // ... other properties you want to display
-        // Actions column for edit and delete buttons
        
       })));
     } else {
@@ -224,10 +220,12 @@ const fetchActivities = async () => {
       
   });
      
-      await checkIsUserMaster();
+      await checkMasterUser();
       if (isMounted) {
         fetchTenants();
-      }
+      };
+     
+      
       
     };
   
@@ -269,25 +267,18 @@ const fetchActivities = async () => {
     }
   }
 
-  const checkIsUserMaster = async () => {
+  const checkMasterUser = async () => {
     const response = await fetchService.checkMasterUser(userId);
-    if(!response.isError()){
-      setIsError(false);
-      setErrorMessage("");
 
-      const isUserMaster = response.data.isUserMaster;
-      setIsUserMaster(isUserMaster);
-    }
-    else{
-      handleErrorResponse(response);
-    }
+    if(response.isError()) handleErrorResponse(response);
+    return ! response.isError();
   }
   
 
   const fetchTenants = async () => {
 
     let response;
-    if(isUserMaster){
+    if(checkMasterUser){
       response = await fetchService.fetchTenantsOfMaster(userId);
     }
     else{
@@ -301,7 +292,7 @@ const fetchActivities = async () => {
       setErrorMessage("");
       
       let tenantsData = [];
-      if(isUserMaster){
+      if(checkMasterUser){
         tenantsData = response.data.tenants;
       }
       else{
@@ -431,9 +422,10 @@ const goToUserProfile = (targetUserId) => {
         <Card.Header>
         <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
         <span>Masters</span>
-        <div className="d-flex justify-content-center align-items-center w-10">
+        
+        <div className="mx-2">
                       <Button
-                        className="w-100 d-flex justify-content-start align-items-center"
+                        className="mx-2 "
                         variant="primary"
                         style={buttonStyle}
                       >

@@ -136,9 +136,7 @@ module.exports = {
         },
         "/api/register-user": async (req, res) => {
             const {sourceUserId, email, password, firstName, middleName, lastName, tenantId, tenantRoleId } = req.body;
-
             console.log(`registering user with data: email:${email}, password:${password}, name:${firstName} ${middleName} ${lastName} to tenant:${tenantId} with tenant role ID:${tenantRoleId}`);
-
             try{
               const databaseResponse = await databaseService.registerUserToTenant(sourceUserId, {email, password, firstName, middleName, lastName, tenantId, tenantRoleId});
               if(databaseResponse.responseType === databaseService.ResponseType.Success){
@@ -276,17 +274,20 @@ module.exports = {
         "/api/check-master-user": async(req, res) => {
             console.log("Checking master user...");
             const {userId} = req.body;
-
-            try{
+          
+            try {
               const isUserMaster = databaseService.isUserMaster(userId);
-              res.json({status: "success", data: {isUserMaster: isUserMaster}});
-            }
-            catch(error){
+              if (isUserMaster) {
+                console.log("User is master")
+                  res.json({ status: "success", data: { isUserMaster: isUserMaster } });
+              } else {
+                console.log("User is not master");
+                  res.json({ status: "success", data: { isUserMaster: false } });
+              }
+          } catch (error) {
               console.log("Error checking master user status: ", error);
-              res.json({
-                  status: 500
-              }).send();
-            }
+              res.status(500).json({ status: "error", message: "Internal Server Error" });
+          }
         },
 
         "/api/fetch-tenants-of-master": async (req, res) => {

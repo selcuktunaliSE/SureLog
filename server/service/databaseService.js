@@ -762,6 +762,12 @@ const registerUserToTenant = async(sourceUserId, userData) => {
         userId: newUser.userId,
         tenantRoleId: userData.tenantRoleId,
     });
+    await LogsModel.create({
+        userId: sourceUserId,
+        activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
+        activityDescription:  "User Registered with Data: "+userData,
+        ipAddress: '127.0.0.1'
+    });
     
    
 
@@ -788,7 +794,7 @@ const addUserToTenant = async(sourceUserId, targetUserId, tenantId) => {
     
     
     if(newTenantUser){
-      await LogsModel.create({
+        await LogsModel.create({
         userId: sourceUserId,
         activityDate: new Date(date.getTime() - (date.getTimezoneOffset() * 60000)),
         activityDescription:  "User Registered with ID: "+ targetUserId + " to Tenant with ID: "+ tenantId,

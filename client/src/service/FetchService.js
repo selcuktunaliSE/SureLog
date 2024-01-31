@@ -439,6 +439,7 @@ const checkMasterUser = async (userId) => {
     .catch((error) => {
       fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
     });
+    console.log("Feetching response", fetchResponse);
   return fetchResponse;
 }
 
