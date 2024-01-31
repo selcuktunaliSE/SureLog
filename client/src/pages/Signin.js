@@ -7,7 +7,7 @@ const fetchConfig = require("../config/fetchConfig.json");
 
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
-
+const fetchService = require("../service/FetchService");
 export default function Signin() {
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -69,10 +69,12 @@ export default function Signin() {
         navigate("/signin"); 
         };
     
-    const handleSignOut = () => {
+    const handleSignOut = async () => {
         if(! localStorage.getItem("userId")) return;
+        const userId = localStorage.getItem("userId");
         localStorage.removeItem("userId");
         setIsLoggedIn(false);
+        await fetchService.logout(userId);
         navigate("/signin");
     };
 

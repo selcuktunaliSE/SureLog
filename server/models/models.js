@@ -39,7 +39,41 @@ module.exports = (sequelize, DataTypes) => {
     tableName: 'users',
     timestamps: false
   });
-
+  const LogsModel = sequelize.define('LogsModel', {
+    logId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      primaryKey: true,
+      allowNull: false,
+      autoIncrement: true
+    },
+    userId: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'userId'
+      }
+    },
+    activityDate: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    activityDescription: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    ipAddress: {
+      type: DataTypes.STRING,
+      allowNull: false
+    }
+  }, {
+    tableName: 'logs',
+    timestamps: false
+  });
+  
+  // Define the association between UserModel and LogsModel
+  UserModel.hasMany(LogsModel, { foreignKey: 'userId', as: 'logs' });
+  LogsModel.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });
   const UserAddressModel = sequelize.define('UserAddressModel', {
     street: DataTypes.STRING,
     city: DataTypes.STRING,
@@ -464,6 +498,7 @@ module.exports = (sequelize, DataTypes) => {
           console.error('Error in afterCreate hook of TenantUserModel:', error);
         }
       });
+      
 
       // Create a direct association between Masters and MasterRolePermissionModel
       MasterModel.hasMany(MasterRolePermissionModel, { 
@@ -558,7 +593,8 @@ module.exports = (sequelize, DataTypes) => {
     MasterModel,
     MasterPermissionModel,
     MasterRolePermissionModel,
-    associate
+    associate,
+    LogsModel
   }
 };
 

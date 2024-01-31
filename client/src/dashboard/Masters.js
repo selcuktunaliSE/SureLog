@@ -37,8 +37,15 @@ export default function Masters() {
   const [showEditMasterModal, setShowEditMasterModal] = useState(false);
   const [masterToEdit, setMasterToEdit] = useState(null);
   const [masterRoles, setMasterRoles] = useState([]); 
+  const [activities, setActivities] = useState([]);
   const [userToEdit, setUserToEdit] = useState(null);
-
+  const buttonStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+  };
+  const iconStyle = {
+    marginRight: '8px', // Adjust the spacing as needed
+  };
   const searchKeys= ["firstName", "lastName", "email"];
 
   const navigate = useNavigate();
@@ -123,6 +130,18 @@ const handleEditMaster = (e, userId) => {
 const handleDeleteMaster = (userId) => {
 };
 
+const fetchActivities = async () => {
+  const fetchResponse = await fetchService.getActivities();
+  console.log("noooox") 
+  if (fetchResponse.status === FetchStatus.Success) {
+      console.log("yeeeesx") 
+      setActivities(fetchResponse.data.logs); // Assuming the logs are returned in fetchResponse.data.logs
+  } else {
+      console.error("Failed to fetch activities: ", fetchResponse.message);
+      // Handle fetch error (e.g., set error message, show error alert, etc.)
+  }
+};
+
   const fetchAllMasters = async () => {
     const fetchResponse = await fetchService.fetchAllMasters();
     if (fetchResponse.status === FetchStatus.Success) {
@@ -163,6 +182,7 @@ const handleDeleteMaster = (userId) => {
 
   useEffect(() => {
     fetchAllMasters();
+    fetchActivities();
     fetchUsersLastLogin();
     fetchMasterRoles();
     let isMounted = true; // to handle component unmount
@@ -385,7 +405,17 @@ const goToUserProfile = (targetUserId) => {
         <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
         <span>Masters</span>
         <div className="d-flex justify-content-center align-items-center w-10">
-        </div>
+                      <Button
+                        className="w-100 d-flex justify-content-start align-items-center"
+                        variant="primary"
+                        style={buttonStyle}
+                      >
+                        <i className="ri-user-star-fill" style={iconStyle}></i>
+                        <span style={{ marginRight: '2.5px' }}> Add </span>
+                    
+                        <span> Master</span>
+                      </Button>
+                    </div>
         </Card.Title>
         </Card.Header>
         <Card.Body>
@@ -401,6 +431,22 @@ const goToUserProfile = (targetUserId) => {
         <Card.Header>
         <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
         <span>Activities</span>
+        <div className="d-flex justify-content-center align-items-center w-10">
+        </div>
+        </Card.Title>
+        </Card.Header>
+        <Card.Body>
+        <DynamicTable dataDict={usersLastLogin} onRowClick={handleRowClick} />
+        </Card.Body>
+        </Card>
+        </Col>
+        </Row>
+        <Row>
+        <Col md={12}>
+        <Card className="card-one">
+        <Card.Header>
+        <Card.Title as="h2" className="d-flex justify-content-between align-items-center w-100">
+        <span>LastLogins</span>
         <div className="d-flex justify-content-center align-items-center w-10">
         </div>
         </Card.Title>

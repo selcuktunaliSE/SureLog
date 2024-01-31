@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 const fetchConfig = require("../config/fetchConfig.json");
-
+const fetchService = require("../service/FetchService");
 const {host, port} = fetchConfig;
 const fetchAddress = `http://${host}:${port}`;
 
@@ -90,6 +90,7 @@ export default function Signup() {
 
   useEffect(() => {
     if (localStorage.getItem('userId')) {
+      
       setIsLoggedIn(true);
       setIsWarning(true);
       setNotifyMessage('You are already logged in.');
@@ -146,8 +147,10 @@ export default function Signup() {
     }
   }; */
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     if(! localStorage.getItem("userId")) return;
+    const userId = localStorage.getItem("userId");
+    await fetchService.logout(userId);
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
     navigate("/signin");

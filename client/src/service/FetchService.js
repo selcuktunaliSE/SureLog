@@ -278,6 +278,33 @@ const fetchTenantRolesOfTenant = async (sourceUserId, tenantId) => {
   
   return fetchResponse;
 }
+const logout = async (userId) => {
+  let fetchResponse = new FetchResponse();
+  try {
+    const response = await fetch(`${fetchAddress}/api/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }), // assuming you want to send the userId in the body
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      fetchResponse = new FetchResponse(FetchStatus.Success, data);
+    
+    } else {
+      const errorMessage = data.message || "Logout failed";
+      fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+    }
+  } catch (error) {
+    console.error('Error during logout:', error);
+    fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
+
 
 const registerUser = async (userData) => {
   const response = await fetch(`${fetchAddress}/api/register-user`, {
@@ -322,7 +349,30 @@ const fetchTenantsOfMaster = async (userId) => {
     });
   return fetchResponse;
 }
+const getActivities = async () => {
+  let fetchResponse = new FetchResponse();
+  try {
+      const response = await fetch(`${fetchAddress}/api/get-activities`, {
+          method: 'POST', 
+          headers: {
+              'Content-Type': 'application/json'
+          }
+      });
 
+      const data = await response.json();
+      if (data.status ==="success") {
+          fetchResponse = new FetchResponse(FetchStatus.Success, data);
+      } else {
+          const errorMessage = data.message || "Failed to fetch activities";
+          fetchResponse = new FetchResponse(FetchStatus.Error, null, errorMessage);
+      }
+  } catch (error) {
+      console.error('Error fetching activities:', error);
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error.message);
+  }
+
+  return fetchResponse;
+};
 const fetchTenantOfUser = async (sourceUserId, targetUserId) => {
   let fetchResponse = new FetchResponse();
   console.log("test");
@@ -835,5 +885,7 @@ export {
   fetchAllUsersLastLogin,
   fetchAllMasters,
   fetchMasterRoles,
-  updateMaster
+  updateMaster,
+  logout,
+  getActivities
 }

@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const databaseConfig = require(__dirname + '/../config/databaseConfig.json')[env];
 
 let models;
-let UserModel,TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterPermissionModel, MasterRolePermissionModel, associate;
+let UserModel,TenantModel, TenantUserModel, MasterModel, TenantRolePermissionModel, MasterPermissionModel, MasterRolePermissionModel, associate,LogsModel;
 
 let initialized = false;
 let sequelize;
@@ -27,7 +27,6 @@ const initialize = () => {
     else {
         sequelize = new Sequelize(databaseConfig.database, databaseConfig.username, databaseConfig.password, databaseConfig);
     }
-
     models = require('../models/models')(sequelize, DataTypes);
     UserModel = models.UserModel; 
     TenantModel = models.TenantModel
@@ -36,8 +35,8 @@ const initialize = () => {
     TenantRolePermissionModel = models.TenantRolePermissionModel;
     MasterPermissionModel = models.MasterPermissionModel;
     MasterRolePermissionModel = models.MasterRolePermissionModel;
+    LogsModel = models.LogsModel;
     associate = models.associate;
-    
     associate();
     initialized = true;
 
@@ -124,7 +123,16 @@ const addTenant = async (sourceUserId, tenantData) => {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+        
+           await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription: "Tenant Created with  ID: "+newTenantId,
+            ipAddress: '127.0.0.1'
+        });
+      
         console.log('Tenant Created:', tenant); // Debug Log
+       
 
         if (!tenant) {
             console.error('Tenant creation failed, tenant is undefined.');
@@ -203,7 +211,12 @@ const deleteTenant = async (sourceUserId, tenantId) => {
             where: { tenantId: tenantId },
             transaction: transaction
           });
-      
+         await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription: "Tenant Deleted with  ID: "+tenantId,
+            ipAddress: '127.0.0.1'
+        });
           // Step 2: Delete TenantRolePermissionModel records
           await TenantRolePermissionModel.destroy({
             where: { tenantId: tenantId },
@@ -220,7 +233,7 @@ const deleteTenant = async (sourceUserId, tenantId) => {
             where: { tenantId: tenantId },
             transaction: transaction
           });
-      
+          
           // Commit transaction
           await transaction.commit();
           return new DatabaseResponse(ResponseType.Success);
@@ -387,7 +400,12 @@ const updateUser = async (sourceUserId, userId, updatedUserData) => {
                 return new DatabaseResponse(ResponseType.NotFound, "TenantRole not found");
             }
             await tenantUser.update({ tenantRoleId: tenantRole.tenantRoleId });
-
+            await LogsModel.create({
+                userId: sourceUserId,
+                activityDate: new Date(),
+                activityDescription:  "User Updated with Data: "+updatedUserData,
+                ipAddress: '127.0.0.1'
+            });
             roleName = tenantRole.roleName; // Update roleName to be returned in the response
         }
 
@@ -419,6 +437,12 @@ const updateTenant = async (sourceUserId, tenantId, tenantData) => {
             return new DatabaseResponse(ResponseType.NotFound, "Tenant not found");
         }
         await tenant.update(tenantData);
+        await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription:  "Tenant Updated with ID: "+tenantId,
+            ipAddress: '127.0.0.1'
+        });
         return new DatabaseResponse(ResponseType.Success, tenant);
     } catch (error) {
         console.error("Error updating tenant in database: ", error);
@@ -441,6 +465,12 @@ const updateTenantRole = async(sourceUserId, tenantRoleId, tenantRoleData) => {
             return new DatabaseResponse(ResponseType.NotFound);
         }
         await tenantRole.update(tenantRoleData);
+        await LogsModel.create({
+            userId: sourceUserId,
+            activityDate: new Date(),
+            activityDescription:  "Tenant Role Updated with ID: "+tenantRoleId + "and Data: "+tenantRoleData, 
+            ipAddress: '127.0.0.1'
+        });
         return new DatabaseResponse(ResponseType.Success);
     } catch (error) {
         console.error("Error updating tenant in database: ", error);
@@ -637,13 +667,16 @@ const addUser = async (sourceUserId, userData) => {
     const user = await UserModel.findOne({ where: { email: userData.email } });
     if (user) return new DatabaseResponse(ResponseType.AlreadyExists);
 
-    const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
-    userData.password = hashedPassword;
+
     const newUser = await UserModel.create({
         ...userData,
     });
-    newUser.password = hashedPassword;
-    console.log("New User:", newUser.password);
+    await LogsModel.create({
+        userId: sourceUserId,
+        activityDate: new Date(),
+        activityDescription:  "User Added with Data: "+userData,
+        ipAddress: '127.0.0.1'
+    });
     if (newUser) return new DatabaseResponse(ResponseType.Success, { newUser: newUser });
 }
 const fetchAllMasters = async () => {
@@ -717,6 +750,8 @@ const registerUserToTenant = async(sourceUserId, userData) => {
         userId: newUser.userId,
         tenantRoleId: userData.tenantRoleId,
     });
+    
+   
 
     
     if(newTenantUser) return new DatabaseResponse(ResponseType.Success, {userId: newTenantUser.userId});
@@ -740,7 +775,59 @@ const addUserToTenant = async(sourceUserId, targetUserId, tenantId) => {
       });
     
     
-    if(newTenantUser) return new DatabaseResponse(ResponseType.Success, {newTenantUser: newTenantUser});
+    if(newTenantUser){
+      await LogsModel.create({
+        userId: sourceUserId,
+        activityDate: new Date(),
+        activityDescription:  "User Registered with ID: "+ targetUserId + " to Tenant with ID: "+ tenantId,
+        ipAddress: '127.0.0.1'
+    });
+    return new DatabaseResponse(ResponseType.Success, {newTenantUser: newTenantUser});
+    } 
+}
+const getActivities = async () => {
+    try{
+        const logs = await LogsModel.findAll({
+            attributes: ['userId','activityDate','activityDescription','ipAddress']
+        });
+        if(logs){
+            return new DatabaseResponse(ResponseType.Success, {logs: logs});
+        }
+        else{
+            return new DatabaseResponse(ResponseType.NotFound, 'No logs found.');
+        }
+    
+    }
+    catch(error){
+        console.error("Error fetching logs: ", error);
+        return new DatabaseResponse(ResponseType.Error, 'Error fetching logs.');
+    }
+}
+
+
+const logout = async(userId) => {
+    const now = new Date().toISOString();
+    const userModel = await UserModel.findOne({where: {userId: userId}});
+    console.log("We have come here");
+    if(userModel){
+        userModel.lastActivityAt = now;
+        await userModel.save();
+        await LogsModel.create({
+            userId: userId,
+            activityDate: new Date(),
+            activityDescription: "User Logged Out with ID: "+userId,
+            ipAddress: '127.0.0.1'
+        });
+        return new DatabaseResponse(ResponseType.Success, {userId: userModel.userId});
+    }
+    await UserModel.update({lastActivityAt: now}, {where: {userId: userId}});
+    await LogsModel.create({
+        userId: userId,
+        activityDate: new Date(),
+        activityDescription: "User Logged Out with ID: "+userId,
+        ipAddress: '127.0.0.1'
+    });
+    return new DatabaseResponse(ResponseType.Success);
 }
 
 const authenticateUser = async(email, password) => {
@@ -749,6 +836,12 @@ const authenticateUser = async(email, password) => {
     if(userModel){
         userModel.lastLoginAt = now;
         await userModel.save();
+        await LogsModel.create({
+            userId: userModel.userId,
+            activityDate: new Date(),
+            activityDescription: "User Logged In with ID: "+userModel.userId,
+            ipAddress: '127.0.0.1'
+        });
         return new DatabaseResponse(ResponseType.Success, {userId: userModel.userId});
     } 
     else return new DatabaseResponse(ResponseType.NotFound);
@@ -768,23 +861,32 @@ const deleteUser = async(sourceUserId, targetUserId) => {
             userId: targetUserId
         }
     });
-
+    await LogsModel.create({
+        userId: sourceUserId,
+        activityDate: new Date(),
+        activityDescription:  "User Deleted with ID: "+targetUserId,
+        ipAddress: '127.0.0.1'
+    });
     return new DatabaseResponse(ResponseType.Success);
 }
 const updateMaster = async (masterData) => {
     try {
-        console.log("masterdata is ",masterData);
         const master = await MasterModel.findByPk(masterData.masterId);
-        console.log("masterr is ",master);
+       
         if (!master) {
             return new DatabaseResponse(ResponseType.NotFound, "Master not found");
         }
-        console.log("Master data is ",masterData);
+     
         const masterPermissions = await MasterPermissionModel.findOne({where: {masterId: masterData.masterId}});
-        console.log("Master permissions is ",masterPermissions);
         
         await masterPermissions.update(masterData);
-      
+        console.log("Master data is ",masterData);
+        await LogsModel.create({
+            userId: masterData.userId,
+            activityDate: new Date(),
+            activityDescription: "Updated Master with master ID : "+masterData.masterId,
+            ipAddress: '127.0.0.1'
+        });
         return new DatabaseResponse(ResponseType.Success);
     } catch (error) {
         console.error("Error updating master in database: ", error);
@@ -1091,5 +1193,7 @@ module.exports = {
     fetchAllUsersLastLogin,
     fetchAllMasters,
     fetchMasterRoles,
-    updateMaster
+    updateMaster,
+    logout,
+    getActivities
 }

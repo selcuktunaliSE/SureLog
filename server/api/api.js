@@ -606,8 +606,36 @@ module.exports = {
             res.status(500).send();
           }
         },
-        // File: api.js (or wherever you define your routes)
+       
+        "/api/get-activities": async (req, res) => {
+          try {
+              const databaseResponse = await databaseService.getActivities();
 
+              if (databaseResponse.responseType === ResponseType.Success) {
+                  res.status(200).json({
+                      status: "success",
+                      logs: databaseResponse.data.logs
+                  });
+              } else if (databaseResponse.responseType === ResponseType.NotFound) {
+                  res.status(404).json({
+                      status: "error",
+                      message: "No logs found."
+                  });
+              } else {
+                  res.status(500).json({
+                      status: "error",
+                      message: "Error fetching logs."
+                  });
+              }
+          } catch (error) {
+              console.error("Error in /api/get-activities:", error);
+              res.status(500).json({
+                  status: "error",
+                  message: "Internal server error"
+              });
+          }
+      },
+          
         "/api/add-tenant": async (req, res) => {
           const { sourceUserId, tenantData } = req.body;
           if(! sourceUserId || ! tenantData){
@@ -644,9 +672,21 @@ module.exports = {
               });
           }
         },
+      
+        "api/logout": async (req, res) => {
+          const userId = req.body;
+          const logout = await databaseService.logout(userId);
+          if(logout){
+            res.status(200).json({status: "success"});
+          }
+          else{
+            res.status(500).json({status: "error"});
+          }
+        },
         "/api/update-master": async (req, res) => {
           const masterData = req.body;
           const filteredMasterData = {
+          userId: masterData.userId,
           masterId: masterData.masterId,
           assignMaster: masterData.assignMaster,
           revokeMaster: masterData.revokeMaster,
