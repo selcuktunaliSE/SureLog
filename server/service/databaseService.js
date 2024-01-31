@@ -691,6 +691,7 @@ const addUser = async (sourceUserId, userData) => {
     });
     if (newUser) return new DatabaseResponse(ResponseType.Success, { newUser: newUser });
 }
+
 const fetchAllMasters = async () => {
     try {
         const masters = await MasterModel.findAll({
@@ -915,6 +916,25 @@ const updateMaster = async (masterData) => {
     }
 }
 
+const deleteTenantRole = async(sourceUserId, tenantId, tenantRoleId) => {
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.DeleteTenantRole,
+        target: tenantId}))
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    const tenantRole = await TenantRolePermissionModel.findOne({where: {tenantRoleId: tenantRoleId}});
+    if(!tenantRole) return new DatabaseResponse(ResponseType.NotFound);
+
+    await TenantRolePermissionModel.destroy({
+        where: {
+            tenantRoleId: tenantRoleId
+        }
+    });
+
+    return new DatabaseResponse(ResponseType.Success);
+}
+
 const fetchUsersOfTenant = async(sourceUserId, tenantId) => {
     console.log(`[DATABASE SERVICE] Processing fetch users of tenant request for source user ID:${sourceUserId} targeted at tenant ID:${tenantId}`);
     if(! await isUserAuthenticatedFor({
@@ -1063,7 +1083,7 @@ const fetchUserRoleName = async (tenantId, userId) => {
 
         if (!tenantUser) {
             return new DatabaseResponse(ResponseType.NotFound, "Tenant or user not found");
-        }
+        }   
 
         return new DatabaseResponse(ResponseType.Success, { roleName: tenantUser.rolePermissions.roleName });
     } catch (error) {
@@ -1188,6 +1208,20 @@ const fetchUserTypeCountDistributionData = async(sourceUserId) => {
     return new DatabaseResponse(ResponseType.Success, { userTypeCountDistributionData: userTypeCountDistributionData });
 }
 
+const addTenantRole = async(sourceUserId, tenantRoleData) => {
+    console.log(`[DATABASE SERVICE] Processing add tenant role request for source user ID:${sourceUserId} with tenant role data:${tenantRoleData}`);
+
+    if(!await isUserAuthenticatedFor({
+        sourceUserId: sourceUserId,
+        accessType: AccessType.AddTenantRole,
+        target: tenantRoleData.tenantId}))
+            return new DatabaseResponse(ResponseType.AccessDenied);
+
+    const newTenantRole = await TenantRolePermissionModel.create(tenantRoleData);
+    
+    if(newTenantRole) return new DatabaseResponse(ResponseType.Success);    
+    else return new DatabaseResponse(ResponseType.Error);
+}
 
 
 module.exports = {
@@ -1216,7 +1250,9 @@ module.exports = {
     updateTenantRole,
     fetchUserRoleName,
     addTenant,
+    addTenantRole,
     deleteTenant,
+    deleteTenantRole,
     updateUserCount,
     getUserRole,
     fetchAllUsersLastLogin,

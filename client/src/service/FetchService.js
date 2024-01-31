@@ -182,8 +182,34 @@ const removeUserFromTenant = async (sourceUserId, tenantId, targetUserId) => {
       }
     })
   return fetchResponse;
-
 };
+
+const deleteTenantRole = async (sourceUserId, tenantId, tenantRoleId) => {
+  let fetchResponse = new FetchResponse();
+  await fetch(`${fetchAddress}/api/delete-tenant-role`, {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ sourceUserId, tenantId, tenantRoleId })
+  }).then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        fetchResponse = new FetchResponse(FetchStatus.Success);
+      }
+      else if (data.status === 505) {
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+      else if (data.status === 404) {
+        fetchResponse = new FetchResponse(FetchStatus.RoleNotFound);
+      }
+      else if (data.status === 500) {
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+    })
+  return fetchResponse;
+};
+
 const editTenantName = async (sourceUserId, tenantId, newTenantName) => {
   const updatedTenantData = {
     name: newTenantName // assuming the tenant's name field is 'name'
@@ -794,8 +820,39 @@ const addTenant = async (sourceUserId, tenantData) => {
     },
     body: JSON.stringify({ sourceUserId, tenantData })
   });
-  return response.json(); // You can further process the response as needed
+  return response.json(); 
 };
+
+const addTenantRole = async(sourceUserId, tenantRoleData) => {
+  let fetchResponse = new FetchResponse();
+  await fetch(`${fetchAddress}/api/add-tenant-role`, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sourceUserId, sourceUserId,
+      tenantRoleData: tenantRoleData
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        fetchResponse = new FetchResponse(FetchStatus.Success);
+      }
+      else if (data.status === 404) {
+        fetchResponse = new FetchResponse(FetchStatus.AccessDenied);
+      }
+      else if (data.status === 500) {
+        fetchResponse = new FetchResponse(FetchStatus.ServerException);
+      }
+    })
+    .catch((error) => {
+      fetchResponse = new FetchResponse(FetchStatus.FetchError, null, error);
+    });
+  return fetchResponse;
+}
+
 const deleteTenant = async (sourceUserId, tenantId) => {
   const response = await fetch(`${fetchAddress}/api/delete-tenant`, {
       method: 'POST',
@@ -803,7 +860,9 @@ const deleteTenant = async (sourceUserId, tenantId) => {
           'Content-Type': 'application/json'
       },
       body: JSON.stringify({ sourceUserId, tenantId })
-  });
+});
+
+  
 
   const data = await response.json();
   
@@ -880,7 +939,9 @@ export {
   updateTenantRole,
   fetchUserRole,
   addTenant,
+  addTenantRole,
   deleteTenant,
+  deleteTenantRole,
   editTenantName,
   fetchUserRoleName,
   fetchAllUsersLastLogin,

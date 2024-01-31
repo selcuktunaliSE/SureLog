@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const DeleteTenantRoleModal = ({ show, handleClose, handleDeleteUser }) => {
+const DeleteTenantRoleModal = ({ show, handleClose, handleDeleteTenantRole }) => {
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -15,7 +15,7 @@ const DeleteTenantRoleModal = ({ show, handleClose, handleDeleteUser }) => {
             <Button variant="secondary" onClick={handleClose}>
               Cancel
             </Button>
-            <Button variant="danger" onClick={handleDeleteUser}>
+            <Button variant="danger" onClick={handleDeleteTenantRole}>
               Delete
             </Button>
           </Modal.Footer>
@@ -23,4 +23,4 @@ const DeleteTenantRoleModal = ({ show, handleClose, handleDeleteUser }) => {
   );
 };
 
-export default DeleteUserModal;
+export default DeleteTenantRoleModal;

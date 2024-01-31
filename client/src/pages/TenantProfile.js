@@ -9,11 +9,23 @@ import EditTenantRoleModal from "../components/modals/multitenancy/EditTenantRol
 import EditUserModal from "../components/modals/multitenancy/EditUserModal";
 import AddUserModal from "../components/modals/multitenancy/AddUserModal";
 import EditTenantModal from "../components/modals/multitenancy/EditTenantModal";
-import DeleteUserModal from "../components/modals/multitenancy/RemoveUserFromTenantModal";
+import RemoveUserFromTenantModal from "../components/modals/multitenancy/RemoveUserFromTenantModal";
+import DeleteTenantRoleModal from "../components/modals/multitenancy/DeleteTenantRoleModal";
+import AddTenantRoleModal from "../components/modals/multitenancy/AddTenantRoleModal";
 
 const { FetchStatus } = require("../service/FetchService");
 const fetchService = require("../service/FetchService");
 const DateFormatter = require("../utility/DateFormatter");
+
+const permissions = ["removeUserFromTenant",
+                       "editTenant",
+                        "deleteTenant",
+                         "addTenantRole",
+                          "editTenantRole",
+                           "deleteTenantRole",
+                            "assignTenantRole",
+                             "revokeTenantRole",
+                              "viewTenantUsers"];
 
 export default function TenantProfile() {
   const [tenantRoles, setTenantRoles] = useState([]);
@@ -27,11 +39,25 @@ export default function TenantProfile() {
   const [showUserEditModal, setShowUserEditModal] = useState(false);
   const [showEditTenantRoleModal, setShowEditTenantRoleModal] = useState(false);
   const [showEditTenantModal, setShowEditTenantModal] = useState(false);
+  const [showDeleteTenantRoleModal, setShowDeleteTenantRoleModal] = useState(false);
   const [tenantToEdit, setTenantToEdit] = useState({ name: '', description: '' });
   const [userIdToDelete, setUserIdToDelete] = useState(null);
   const [tenantRoleIdToDelete, setTenantRoleIdToDelete] = useState(null);
   const [userToEdit, setUserToEdit] = useState(null);
   const [tenantRoleToEdit, setTenantRoleToEdit] = useState({roleName: ''});
+  
+  const [tenantRoleToAdd, setTenantRoleToAdd] = useState({
+              "roleName": null,
+              "removeUserFromTenant":  false,
+              "editTenant": false,
+              "deleteTenant": false,
+              "addTenantRole": false,
+              "editTenantRole": false,
+              "deleteTenantRole": false,
+              "assignTenantRole": false,
+              "revokeTenantRole": false,
+              "viewTenantUsers": false,
+              });
   const [selectedTenantRoleName, setSelectedTenantRoleName] = useState("");
   const [userRoleToEdit, setUserRoleToEdit] = useState("");
   const [newUserData, setNewUserData] = useState({
@@ -165,7 +191,7 @@ export default function TenantProfile() {
           <Button variant="outline-secondary" size="sm" onClick={(e) => {
             e.stopPropagation();
             setTenantRoleIdToDelete(tenantRole.tenantRoleId);
-            setShowDeleteUserModal(true);
+            setShowDeleteTenantRoleModal(true);
           }} className="me-2">
             <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
           </Button>
@@ -272,6 +298,28 @@ export default function TenantProfile() {
       handleErrorResponse(response);
     }
   }
+
+  const handleAddTenantRoleSubmit = async(event) => {
+    event.preventDefault();
+    if(!tenantRoleToAdd) return;
+    const tenantRoleData = Object.entries(tenantRoleToAdd).reduce((acc, [key, value]) => {
+      if(key === "roleName") {
+          acc[key] = value;
+      } else {
+          acc[key] = value === "on" ? true : false;
+      }
+      return acc;
+    }, { tenantId: tenantData.tenantId });
+
+    const response = await fetchService.addTenantRole(userId, tenantRoleData);
+    if (!response.isError()) {
+      console.log('Tenant role added successfully:', response.data);
+      setShowAddTenantRoleModal(false);
+      fetchTenantRoles();
+    } else {
+      handleErrorResponse(response);
+    }
+  }
   
 
   const handleEditUser = async (e, userId) => {
@@ -339,13 +387,22 @@ export default function TenantProfile() {
     if (name === "tenantRoleId") setSelectedTenantRoleName(event.target.value);
   };
 
+  const handleAddTenantRoleInputChange = (event) => {
+    const { name, value } = event.target;
+    setTenantRoleToAdd({ ...tenantRoleToAdd, [name]: value });
+    console.log("new tenantRole data: ", { ...tenantRoleToAdd, [name]: value });
+  }
+
   const handleCloseDeleteUserModal = () => setShowDeleteUserModal(false);
   const handleCloseUserEditModal = () => setShowUserEditModal(false);
   const handleShowAddUserModal = () => setShowAddUserModal(true);
+  const handleShowAddTenantRoleModal = () => setShowAddTenantRoleModal(true);
   const handleCloseAddUserModal = () => setShowAddUserModal(false);
   const handleShowEditTenantModal = () => setShowEditTenantModal(true);
   const handleCloseEditTenantModal = () => setShowEditTenantModal(false);
   const handleCloseEditTenantRoleModal = () => setShowEditTenantRoleModal(false);
+  const handleCloseDeleteTenantRoleModal = () => setShowDeleteTenantRoleModal(false);
+  const handleCloseAddTenantRoleModal = () => setShowAddTenantRoleModal(false);
 
   
 
@@ -367,6 +424,23 @@ export default function TenantProfile() {
       setUserIdToDelete(null);
     }
   };
+
+  const handleDeleteTenantRole = async () => {
+    if(!tenantRoleIdToDelete) return;
+
+    const response = await fetchService.deleteTenantRole(userId, tenantId, tenantRoleIdToDelete);
+
+      if (!response.isError()) {
+        fetchTenantRoles();
+      }
+      else {
+        console.error("ERROR Deleting from Tenants: ", response.message);
+        handleErrorResponse(response);
+      }
+
+      setShowDeleteTenantRoleModal(false);
+      setTenantRoleIdToDelete(null);
+  }
 
   const handleSubmitNewUser = async (event) => {
     event.preventDefault();
@@ -594,7 +668,7 @@ export default function TenantProfile() {
                       <Button
                         className="w-100 d-flex justify-content-start align-items-center"
                         variant="primary"
-                        onClick={handleShowAddUserModal}
+                        onClick={handleShowAddTenantRoleModal}
                         style={buttonStyle}
                       >
                         <i className="ri-user-shared-line" style={iconStyle}></i>
@@ -623,10 +697,23 @@ export default function TenantProfile() {
           tenantRoles={tenantRoles}
         />
 
-        <DeleteUserModal
+        <AddTenantRoleModal 
+          show={showAddTenantRoleModal}
+          handleClose={handleCloseAddTenantRoleModal}
+          handleInputChange={handleAddTenantRoleInputChange}
+          handleSubmit={handleAddTenantRoleSubmit}
+        />
+
+        <RemoveUserFromTenantModal
           show={showDeleteUserModal}
           handleClose={handleCloseDeleteUserModal}
           handleDeleteUser={handleDeleteUser}
+        />
+
+        <DeleteTenantRoleModal
+          show={showDeleteTenantRoleModal}
+          handleClose={handleCloseDeleteTenantRoleModal}
+          handleDeleteTenantRole={handleDeleteTenantRole}
         />
 
         <EditUserModal

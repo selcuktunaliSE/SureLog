@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const DeleteUserModal = ({ show, handleClose, handleDeleteUser }) => {
+const RemoveUserFromTenantModal = ({ show, handleClose, handleDeleteUser }) => {
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -23,4 +23,4 @@ const DeleteUserModal = ({ show, handleClose, handleDeleteUser }) => {
   );
 };
 
-export default DeleteUserModal;
+export default RemoveUserFromTenantModal;

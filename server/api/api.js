@@ -87,6 +87,32 @@ module.exports = {
             });
           }
         },
+
+        "/api/delete-tenant-role": async(req, res) => {
+          const { sourceUserId, tenantId, tenantRoleId } = req.body;
+          console.log(`Deleting tenant role with ID:${tenantRoleId}`);
+          try {
+            const databaseResponse = await databaseService.deleteTenantRole(sourceUserId, tenantId, tenantRoleId);
+            if(databaseResponse.responseType === databaseService.ResponseType.Success){
+              res.status(200).json({
+                status: "success"});
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.AccessDenied){
+              res.status(505).send();
+            }
+            else if(databaseResponse.responseType === databaseService.ResponseType.NotFound){
+              res.status(404).send();
+            }
+          } 
+          catch (error) {
+            console.error("Error deleting tenant: ", error);
+            res.status(500).json({
+                status: "error",
+                message: "Internal server error"
+            });
+          }
+        },
+
         "/api/get-user-role": async (req, res) => {
           const { userId } = req.body;
           // Input validation (ensure userId is provided)
@@ -773,7 +799,23 @@ module.exports = {
           }
       },
 
-      
+      "/api/add-tenant-role": async (req, res) => {
+        const { sourceUserId, tenantRoleData } = req.body;
+        if(!sourceUserId || ! tenantRoleData){
+          res.status(503);
+          return;
+        }
+          
+        console.log("Adding new tenant role :", tenantRoleData);
+    
+        const response = await databaseService.addTenantRole(sourceUserId, tenantRoleData);
+        
+        if (response.responseType === databaseService.ResponseType.Success) {
+            res.status(200).json({ status: "success"});
+        } else {
+            res.status(400).json({ status: "error", message: response.data });
+        }
+      }
       
     },
     
