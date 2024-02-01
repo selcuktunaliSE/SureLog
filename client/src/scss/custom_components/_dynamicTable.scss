@@ -1,24 +1,93 @@
 @import "../variables";
 
-.dynamic-table-container {
+.dynamic-table-container{
     max-width: 100%;
     overflow-x: auto;
-    white-space: nowrap;
-}
+    white-space: nowrap;    
+    width: 100%; 
+    padding-bottom: 1rem;
+  
+    th{
+      html:not([data-skin="dark"]) & {
+        background-color: darken($body-bg, 2.5%);
+        color: $dark-highlight;
+      }
+      html[data-skin="dark"] & {
+        background-color : darken($dark-highlight, 5%);
+        color: $body-bg;
+      }
+    }    
+  
+    span, label{
+      html:not([data-skin="dark"]) & {
+        color: $dark-highlight;
+      }
+      html[data-skin="dark"] & {
+        color: $body-bg;
+      }
+    }
+  
+    td{
+      html:not([data-skin="dark"]) & {
+        background-color: $body-bg !important;
+        color: $dark-highlight !important;
+      }
+      html[data-skin="dark"] & {
+        background-color : $dark-highlight !important;
+        color: $body-bg !important;
+      }
+    }
+    
+    tr:hover {
+      transition: all 0.5s ease-out;
+      height: 120%;
+      box-shadow: $box-shadow-lg;
+  
+      html:not([data-skin="dark"]) & {
+        background-color: lighten($body-bg, 50%);
+      }
+    
+      html[data-skin="dark"] & {
+        background-color: darken($dark-highlight, 5%);
+      }
+    }
+  }
 
   
 .dynamic-table-container::-webkit-scrollbar {
-    height: 16px;
+    margin-top: 1rem;
+    height: 12px;
     width: 100%;
-    background-color: $dark-primary;
+
+    html[data-skin="dark"] & {
+        background-color: darken($dark-highlight, 2.5%);
+    }
+
+    html:not([data-skin="dark"]) & {
+        background-color: $body-bg;
+    }
 }
 
 .dynamic-table-container::-webkit-scrollbar-thumb {
-    background-color: #333;
     border-radius: 10px;
-    border: 2px solid $dark-highlight;
+    
+    html[data-skin="dark"] & {
+        background-color: darken($dark-highlight, 5%);
+    }
+
+    html:not([data-skin="dark"]) & {
+        background-color: darken($body-bg, 2.5%);
+    }
 }
   
 .dynamic-table-container::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
+    
+    
+    html[data-skin="dark"] & {
+        background-color: darken($dark-highlight, 7.5%);
+    }
+
+    html:not([data-skin="dark"]) & {
+        background-color: darken($body-bg, 5%);
+    }
 }

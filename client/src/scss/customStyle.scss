@@ -20,45 +20,6 @@
     }
 }
 
-.dynamic-table{
-  width: 100%; 
-
-  th{
-    html[data-skin="light"] & {
-      background-color: darken($body-bg, 10%) !important;
-      color: $dark-highlight;
-    }
-    html[data-skin="dark"] & {
-      background-color : darken($dark-highlight, 10%) !important;
-      color: $body-bg;
-    }
-  }
-
-  td{
-    html[data-skin="light"] & {
-      background-color: $body-bg !important;
-      color: $dark-highlight !important;
-    }
-    html[data-skin="dark"] & {
-      background-color : $dark-highlight !important;
-      color: $body-bg !important;
-    }
-  }
-  
-  tr:hover {
-    transition: all 0.5s ease-out;
-    height: 120%;
-    box-shadow: $box-shadow-lg;
-
-    html[data-skin="light"] & {
-      background-color: lighten($body-bg, 50%);
-    }
-  
-    html[data-skin="dark"] & {
-      background-color: darken($dark-highlight, 5%);
-    }
-  }
-}
 
 .cursor-pointer {
   cursor: pointer;

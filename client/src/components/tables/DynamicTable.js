@@ -5,7 +5,7 @@ import Table from 'react-bootstrap/Table';
 const DynamicTable = ({ dataDict, onRowClick }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12; // Number of items to display per page
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   // Extract columns from the first item in the dictionary
   const columns = dataDict[Object.keys(dataDict)[0]]
@@ -32,6 +32,11 @@ const DynamicTable = ({ dataDict, onRowClick }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentData = sortedData.slice(startIndex, endIndex);
+
+  const handleItemsPerPageChange = (e) => {
+    const value = Math.max(5, Math.min(200, Number(e.target.value)));
+    setItemsPerPage(value);
+  };
 
   const requestSort = (key) => {
     let direction = 'ascending';
@@ -71,6 +76,7 @@ const DynamicTable = ({ dataDict, onRowClick }) => {
   return (
     <div className="dynamic-table-container">
       <Table responsive="md" className="dynamic-table" >
+        
         <thead>
           <tr className='text-center'>
             {columns.map(({ label, accessor }) => (
@@ -92,17 +98,35 @@ const DynamicTable = ({ dataDict, onRowClick }) => {
           ))}
         </tbody>
       </Table>
+      
       <div className="pagination-container">
-      <div className="pagination d-flex justify-content-end align-items-center mt-3">
-        <button className="btn btn-secondary" onClick={handlePreviousPage} disabled={currentPage === 1}>
-          Previous
-        </button>
-        <span className="mx-2">{`Page ${currentPage} of ${totalPages}`}</span>
-        <button className="btn btn-primary" onClick={handleNextPage} disabled={currentPage === totalPages}>
-          Next
-        </button>
+        <div className="pagination d-flex justify-content-end align-items-center mt-3">
+          <div className="items-per-page-container d-flex align-items-center me-auto">
+            <label htmlFor="itemsPerPage" className="me-2">Items per page:</label>
+            <input  
+              type="number"
+              id="itemsPerPage"
+              className="form-control"
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              min="5"
+              max="200"
+              style={{ width: '80px' }}
+            />
+          </div>
+          
+          <button className="btn btn-secondary" onClick={handlePreviousPage} disabled={currentPage === 1}>
+            Previous
+          </button>
+          
+          <span className="mx-2">{`Page ${currentPage} of ${totalPages}`}</span>
+          
+          <button className="btn btn-primary" onClick={handleNextPage} disabled={currentPage === totalPages}>
+            Next
+          </button>
+
+        </div>
       </div>
-    </div>
     </div>
   );
 };
