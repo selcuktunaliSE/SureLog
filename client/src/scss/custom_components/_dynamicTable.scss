@@ -6,7 +6,8 @@
     white-space: nowrap;    
     width: 100%; 
     padding-bottom: 1rem;
-  
+
+
     th{
       html:not([data-skin="dark"]) & {
         background-color: darken($body-bg, 2.5%);
@@ -28,30 +29,36 @@
     }
   
     td{
+      transition: all 0.25s ease-out;
       html:not([data-skin="dark"]) & {
-        background-color: $body-bg !important;
-        color: $dark-highlight !important;
+        background-color: $body-bg;
+        color: $dark-highlight;
       }
       html[data-skin="dark"] & {
-        background-color : $dark-highlight !important;
-        color: $body-bg !important;
+        background-color : $dark-highlight;
+        color: $body-bg;
       }
     }
-    
+
+
     tr:hover {
-      transition: all 0.5s ease-out;
-      height: 120%;
-      box-shadow: $box-shadow-lg;
-  
-      html:not([data-skin="dark"]) & {
-        background-color: lighten($body-bg, 50%);
-      }
-    
       html[data-skin="dark"] & {
-        background-color: darken($dark-highlight, 5%);
+        background-image: linear-gradient(to right, $dark-highlight, $color-ui-01, $dark-highlight);
+      } 
+
+      html:not([data-skin="dark"]) & {
+        background-image: linear-gradient(to right, $body-bg, $color-ui-04, $body-bg); 
+      }
+
+      td{
+        padding-top: .75rem;
+        padding-bottom: .75rem;
+        background-color: transparent;
       }
     }
-  }
+}
+
+
 
   
 .dynamic-table-container::-webkit-scrollbar {
