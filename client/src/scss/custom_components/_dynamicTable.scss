@@ -43,11 +43,11 @@
 
     tr:hover {
       html[data-skin="dark"] & {
-        background-image: linear-gradient(to right, $dark-highlight, $color-ui-01, $dark-highlight);
+        background-image: linear-gradient(to right, $dark-highlight, rgba($color-ui-01, .25), $dark-highlight);
       } 
 
       html:not([data-skin="dark"]) & {
-        background-image: linear-gradient(to right, $body-bg, $color-ui-04, $body-bg); 
+        background-image: linear-gradient(to right, $body-bg, rgba($color-ui-04, .75), $body-bg); 
       }
 
       td{
@@ -55,7 +55,7 @@
         padding-bottom: .75rem;
         background-color: transparent;
       }
-    }
+  }
 }
 
 
