@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button,Modal,Form } from "react-bootstrap";
+import { Col, Row, DropdownButton, Dropdown, Alert, FormControl, InputGroup, Button,Modal,Form, Card } from "react-bootstrap";
 import {Search} from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import HeaderMobile from "../layouts/HeaderMobile";
@@ -399,55 +399,68 @@ const handleSubmitNewTenant = async (event) => {
             {isError && <Alert variant="danger" className="mb-3">{errorMessage}</Alert>}
             <Row className="mt-3">
               <Col md={12}>
-                <InputGroup
-                >
-                  {/* Search Input */}
-                  <FormControl
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleProcessSearchQuery();
-                      }
-                    }}
-                  />
+                <Card className="card-one">
+                  <Card.Header>
+                    <Card.Title as="h4">
+                      <span>All Tenants</span>
+                    </Card.Title>
+                  </Card.Header>
 
-                  {/* Search Button */}
-                  <Button 
-                    variant="outline-secondary"
-                    onClick={handleProcessSearchQuery}
-                    style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
-                    <Search /> {/* Search icon */}
-                  </Button>
-                    
-                  {/* Dropdown for selecting search key */}
-                  <DropdownButton
-                    as={InputGroup}
-                    title={selectedSearchKey || "Select Key"} // Show selected key or "Select Key"
-                    id="input-group-dropdown"
-                  >
-                    {searchKeys.map((key) => (
-                      <Dropdown.Item key={key} onClick={() => handleSearchKeySelect(key)}>
-                        {key}
-                      </Dropdown.Item>
-                    ))}
-                  </DropdownButton>
-                  <div className="mx-2 text-muted"></div> {/* 'veya' yazısı ekleyin */}
-                      <Button variant="outline-success" onClick={handleShowAddTenantModal}>
-                      Add Tenant
+                  <Card.Body>
+                    <InputGroup
+                      >
+                      {/* Search Input */}
+                      <FormControl
+                        type="text"
+                        placeholder="Search..."
+                        value={searchQuery}
+                        onChange={handleSearch}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleProcessSearchQuery();
+                          }
+                        }}
+                      />
+
+                      {/* Search Button */}
+                      <Button 
+                        variant="outline-secondary"
+                        onClick={handleProcessSearchQuery}
+                        style= {{borderColor: "rgba(200,200,200, 0.25)"}}>
+                        <Search /> {/* Search icon */}
                       </Button>
-              
-                </InputGroup>  
+                        
+                      {/* Dropdown for selecting search key */}
+                      <DropdownButton
+                        as={InputGroup}
+                        title={selectedSearchKey || "Select Key"} // Show selected key or "Select Key"
+                        id="input-group-dropdown"
+                      >
+                        {searchKeys.map((key) => (
+                          <Dropdown.Item key={key} onClick={() => handleSearchKeySelect(key)}>
+                            {key}
+                          </Dropdown.Item>
+                        ))}
+                      </DropdownButton>
+                      <div className="mx-2 text-muted"></div> {/* 'veya' yazısı ekleyin */}
+                          <Button variant="outline-success" onClick={handleShowAddTenantModal}>
+                          Add Tenant
+                          </Button>
+                  
+                    </InputGroup>  
+
+                    <div className="cursor-pointer mt-3">
+                      <DynamicTable dataDict={filteredTenants} onRowClick={handleRowClick}/>
+                    </div>
+
+                  </Card.Body>
+                </Card>
               </Col>
             </Row>
             
             <Row className="mt-3">
               <Col md={12}>
-                <div className="cursor-pointer">
-                  <DynamicTable dataDict={filteredTenants} onRowClick={handleRowClick}/>
-                </div>
+                
               </Col>
             </Row>
             
