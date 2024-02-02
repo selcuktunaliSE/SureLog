@@ -1,7 +1,11 @@
 import { Card, Col, Nav, ProgressBar, Row } from "react-bootstrap";
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
 
 const PercentageBarCard= ({data, texts}) => {
+    const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
+
     // accepts 3 percentage statistics
 
     
@@ -26,7 +30,11 @@ const PercentageBarCard= ({data, texts}) => {
     
     if(data && texts && data.length > 0)
         return(
-            <Card style={{padding:"0"}} className="card-one">
+            <Card
+                  className="card-one card-tilt-effect"
+                  style={style}
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}>
                 <Card.Header className="border-0 pb-2">
                     <Card.Title>
                         {texts.title} (%)

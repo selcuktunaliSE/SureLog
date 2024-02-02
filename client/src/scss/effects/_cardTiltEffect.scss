@@ -1,0 +1,12 @@
+@import '../_variables';
+
+
+.card-tilt-effect {
+    perspective: 1000px; 
+    transition: transform 0.5s, box-shadow 0.5s;
+}
+
+.card-tilt-effect:hover {
+    transform-style: preserve-3d;
+    cursor: pointer;
+}

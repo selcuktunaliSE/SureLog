@@ -1,11 +1,19 @@
 import ReactApexChart from "react-apexcharts";
 import {Card, Col, Button} from "react-bootstrap";
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
+
 const LineGraphCard = ({dataSeries, options, displayTexts}) => {
+    const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
 
 
     return (
-        <Card className="card-one card-line-graph">
+        <Card
+              className="card-one card-tilt-effect card-line-graph"
+              style={style}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}>
             <Card.Body className="d-flex flex-column p-4">
             <h1 className="card-value mb-3 fs-40 ls--2">{displayTexts.majorNumeric.toLocaleString()}</h1>
             <label className="card-label fw-semibold text-dark mb-1">{displayTexts.majorNumericText}</label>

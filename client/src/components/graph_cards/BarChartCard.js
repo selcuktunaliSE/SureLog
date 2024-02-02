@@ -2,7 +2,11 @@ import {Card, Nav} from "react-bootstrap";
 import { Bar } from 'react-chartjs-2';
 import {React} from 'react';
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
 const BarChartCard = ({tenants,theme}) => {
+    const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
+
     const tenantArray = Object.values(tenants).sort((a, b) => b.userCount - a.userCount);
     const tenantNames = tenantArray.map(tenant => tenant.name);
     const userCounts = tenantArray.map(tenant => tenant.userCount);
@@ -61,7 +65,12 @@ const BarChartCard = ({tenants,theme}) => {
 
 
     return(
-        <Card className="card-one">
+        <Card 
+            className="card-one card-tilt-effect"
+            style={style}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}>
+
             <Card.Header>
             <Card.Title as="h6">Tenants with Most Users </Card.Title>
             <Nav as="nav" className="nav-icon nav-icon-sm ms-auto">

@@ -1,11 +1,19 @@
 import ReactApexChart from "react-apexcharts";
 import {Card} from "react-bootstrap";
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
+
 const MinorLineGraphCard = ({dataSeries, options, displayTexts}) => {
+    const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
 
 
     return (
-        <Card className="card-one card-ticket-earnings">
+        <Card
+            className="card-one card-tilt-effect card-ticket-earnings"
+            style={style}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}>
             <Card.Body className="d-flex flex-column p-1">
                 <ReactApexChart series={dataSeries} options={options} type="area" height={390} style={{position: "absolute", marginTop:"13rem"}} className="apex-chart-two d-flex align-items-end" />
       

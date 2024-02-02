@@ -2,9 +2,11 @@ import {Card, Nav, Table} from "react-bootstrap";
 import { usAea } from "@react-jvectormap/unitedstates";
 import { VectorMap } from "@react-jvectormap/core";
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
 
 const GeographicMapTable = ({}) => {
-
+    const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
     const currentSkin = (localStorage.getItem('skin-mode'))? 'dark' : '';
 
     const regStyle = {
@@ -17,7 +19,11 @@ const GeographicMapTable = ({}) => {
     };
 
     return(
-        <Card className="card-one card-vmap">
+        <Card 
+          className="card-one card-tilt-effect card-vmap"
+          style={style}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}>
             <Card.Header>
                 <Card.Title as="h6">States With Most Users</Card.Title>
                 <Nav as="nav" className="nav-icon nav-icon-sm ms-auto">

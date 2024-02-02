@@ -1,14 +1,22 @@
 import { Card, Col, Row } from "react-bootstrap";
 import React from "react";
 
+import useCardTiltEffect from "../../effects/CardTiltEffect";
+
+
 const SingleStatisticCard = ({dataDict}) =>{    
+  const { style, handleMouseMove, handleMouseLeave } = useCardTiltEffect();
+
 
     if(!dataDict || Object.keys(dataDict).length === 0) return;
 
     const dataList = [dataDict];
 
     return dataList.map((item, index) => (
-        <Card className="card-one card-product">
+        <Card className="card-one card-tilt-effect card-product"
+              style={style}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}>
           <Card.Body className="p-3">
           <div className="d-flex align-items-center justify-content-between mb-5">
             <div className="card-icon">
