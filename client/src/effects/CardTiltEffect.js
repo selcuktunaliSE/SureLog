@@ -12,7 +12,7 @@ const useCardTiltEffect = () => {
         const y = e.clientY - rect.top;
 
         const xPercent = (x - (rect.width / 2)) / (rect.width / 2);
-        const yPercent = (y - (rect.height / 2)) / (rect.height / 2);
+        const yPercent = -(y - (rect.height / 2)) / (rect.height / 2);
 
         const tiltXMax = 15;
         const tiltYMax = 10;

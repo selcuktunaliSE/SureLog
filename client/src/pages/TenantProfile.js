@@ -161,7 +161,7 @@ export default function TenantProfile() {
 
   const addUtilityModalsToTenantUsersDict = (tenantUsersDict) => {
     const modifiedTenantUsersDict = Object.values(tenantUsersDict).map((user, index) => ({
-      "": (
+      Actions: (
         <>
           <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditUser(e, user.userId)} className="me-2">
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
@@ -183,7 +183,7 @@ export default function TenantProfile() {
 
   const addUtilityModalsToTenantRolesDict = (tenantRolesDict) => {
     const modifiedTenantRolesDict = Object.values(tenantRolesDict).map((tenantRole, index) => ({
-      "": (
+      Actions: (
         <>
           <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditTenantRole(e, tenantRole.tenantRoleId)} className="me-2">
             <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>

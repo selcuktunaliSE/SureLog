@@ -175,10 +175,7 @@ export default function Tenants() {
     if(!response.isError()){
       const data = response.data;
       const tenantsWithActions = data.tenants.map(tenant => ({
-        ...tenant,
-        createdAt: formatDateWithTime(tenant.createdAt),
-        updatedAt: formatDateWithTime(tenant.updatedAt),
-        Edit: (
+        Actions: (
           <>
             <Button variant="outline-secondary" size="sm" onClick={(e) => handleEditTenant(e, tenant.tenantId)} className="me-2">
               <i className="ri-edit-2-line" style={{ color: '#17a2b8' }}></i>
@@ -187,7 +184,10 @@ export default function Tenants() {
               <i className="ri-delete-bin-line" style={{ color: '#dc3545' }}></i>
             </Button>
           </>
-        )
+        ),
+        ...tenant,
+        createdAt: formatDateWithTime(tenant.createdAt),
+        updatedAt: formatDateWithTime(tenant.updatedAt),        
       }));      
   
       setTenantDict(tenantsWithActions);
