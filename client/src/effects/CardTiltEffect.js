@@ -23,15 +23,15 @@ const useCardTiltEffect = () => {
         const gradientX = x;
         const gradientY = y;
 
-        const shadowStrength = 20;
+        const shadowStrength = 10;
         const shadowX = -shadowStrength * xPercent; 
-        const shadowY = -shadowStrength * yPercent;
+        const shadowY = shadowStrength * yPercent;
 
         const newStyle = {
             transform: `rotateX(${tiltY}deg) rotateY(${tiltX}deg)`,
             transition: 'transform 0.2s ease-out', // Smooth transition for transform
             background: `radial-gradient(circle ${gradientSize}px at ${gradientX}px ${gradientY}px, rgba(150,150,255,0.15), rgba(255,255,255,0))`,
-            boxShadow: `${shadowX}px ${shadowY}px 30px rgba(0,0,0,0.2)` // Dynamic shadow
+            boxShadow: `${shadowX}px ${shadowY}px 20px rgba(0,0,0,0.1)` // Dynamic shadow
         };
 
         setStyle(newStyle);
