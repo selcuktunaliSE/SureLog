@@ -2,7 +2,7 @@ import { useState } from 'react';
 import "../scss/effects/_cardTiltEffect.scss";
 
 const useCardTiltEffect = () => {
-    const [style, setStyle] = useState({});
+    const [style, setStyle] = useState({});    
 
     const handleMouseMove = (e) => {
         const card = e.currentTarget;
@@ -19,7 +19,7 @@ const useCardTiltEffect = () => {
         const tiltX = tiltXMax * xPercent;
         const tiltY = tiltYMax * yPercent;
 
-        const gradientSize = 350; // Reduced gradient size for subtlety
+        const gradientSize = 350;
         const gradientX = x;
         const gradientY = y;
 
@@ -29,13 +29,15 @@ const useCardTiltEffect = () => {
 
         const newStyle = {
             transform: `rotateX(${tiltY}deg) rotateY(${tiltX}deg)`,
-            transition: 'transform 0.2s ease-out', // Smooth transition for transform
+            transition: 'transform 0.2s ease-out',
             background: `radial-gradient(circle ${gradientSize}px at ${gradientX}px ${gradientY}px, rgba(150,150,255,0.15), rgba(255,255,255,0))`,
-            boxShadow: `${shadowX}px ${shadowY}px 20px rgba(0,0,0,0.1)` // Dynamic shadow
+            boxShadow: `${shadowX}px ${shadowY}px 20px rgba(0,0,0,0.1)`
         };
 
         setStyle(newStyle);
     };
+
+    
 
     const handleMouseLeave = () => {
         const resetStyle = {
@@ -49,5 +51,6 @@ const useCardTiltEffect = () => {
 
     return { style, handleMouseMove, handleMouseLeave };
 };
+
 
 export default useCardTiltEffect;
